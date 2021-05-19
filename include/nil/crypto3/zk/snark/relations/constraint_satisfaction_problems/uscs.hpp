@@ -91,6 +91,7 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct uscs_constraint_system {
+                    typedef FieldType field_type;
 
                     std::size_t primary_input_size;
                     std::size_t auxiliary_input_size;

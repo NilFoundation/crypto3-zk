@@ -76,6 +76,8 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct ssp_instance {
+                    typedef FieldType field_type;
+
                     std::size_t num_variables;
                     std::size_t degree;
                     std::size_t num_inputs;
@@ -160,6 +162,8 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct ssp_instance_evaluation {
+                    typedef FieldType field_type;
+
                     std::size_t num_variables;
                     std::size_t degree;
                     std::size_t num_inputs;
@@ -265,6 +269,8 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct ssp_witness {
+                    typedef FieldType field_type;
+
                     std::size_t num_variables;
                     std::size_t degree;
                     std::size_t num_inputs;

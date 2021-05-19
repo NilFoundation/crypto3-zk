@@ -76,10 +76,11 @@ namespace nil {
                  */
                 template<typename FieldType>
                 class qap_instance {
-                    using field_type = FieldType;
-                    using field_value_type = typename field_type::value_type;
+                    typedef typename FieldType::value_type field_value_type;
 
                 public:
+                    typedef FieldType field_type;
+
                     std::size_t num_variables;
                     std::size_t degree;
                     std::size_t num_inputs;

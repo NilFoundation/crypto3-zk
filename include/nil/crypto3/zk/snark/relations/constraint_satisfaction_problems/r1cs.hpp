@@ -61,6 +61,7 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct r1cs_constraint {
+                    typedef FieldType field_type;
 
                     linear_combination<FieldType> a, b, c;
 
@@ -124,6 +125,7 @@ namespace nil {
                  */
                 template<typename FieldType>
                 struct r1cs_constraint_system {
+                    typedef FieldType field_type;
 
                     std::size_t primary_input_size;
                     std::size_t auxiliary_input_size;
@@ -149,10 +151,9 @@ namespace nil {
                         if (this->num_inputs() > this->num_variables())
                             return false;
 
-                        for (std::size_t c = 0; c < constraints.size(); ++c) {
-                            if (!(constraints[c].a.is_valid(this->num_variables()) &&
-                                  constraints[c].b.is_valid(this->num_variables()) &&
-                                  constraints[c].c.is_valid(this->num_variables()))) {
+                        for (const auto &v : constraints) {
+                            if (!(v.a.is_valid(this->num_variables()) && v.b.is_valid(this->num_variables()) &&
+                                  v.c.is_valid(this->num_variables()))) {
                                 return false;
                             }
                         }
@@ -162,8 +163,8 @@ namespace nil {
 
                     bool is_satisfied(const r1cs_primary_input<FieldType> &primary_input,
                                       const r1cs_auxiliary_input<FieldType> &auxiliary_input) const {
-                        assert(primary_input.size() == num_inputs());
-                        assert(primary_input.size() + auxiliary_input.size() == num_variables());
+                        BOOST_ASSERT(primary_input.size() == num_inputs());
+                        BOOST_ASSERT(primary_input.size() + auxiliary_input.size() == num_variables());
 
                         r1cs_variable_assignment<FieldType> full_variable_assignment = primary_input;
                         full_variable_assignment.insert(
@@ -222,7 +223,6 @@ namespace nil {
                                 this->auxiliary_input_size == other.auxiliary_input_size);
                     }
                 };
-
             }    // namespace snark
         }        // namespace zk
     }            // namespace crypto3

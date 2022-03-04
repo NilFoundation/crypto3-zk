@@ -51,7 +51,7 @@ std::vector<CurveType::basic_field_type::value_type> protocol(int n, int k, std:
     return p_i;
 }
 
-template <typename CurveType typename MultiexpMethod>
+template <typename CurveType, typename MultiexpMethod>
 void scheme(PrivateKey& prik_0, PublicKey& pubk, std::vector<PrivateKey>& prik) {
 	pubk.E_0 = commitment<CurveType, MultiexpMethod>(pubk, prik_0);
     

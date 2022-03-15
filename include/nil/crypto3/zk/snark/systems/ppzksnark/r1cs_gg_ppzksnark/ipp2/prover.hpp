@@ -51,6 +51,7 @@
 #include <nil/crypto3/zk/snark/systems/ppzksnark/r1cs_gg_ppzksnark/ipp2/srs.hpp>
 #include <nil/crypto3/zk/snark/systems/ppzksnark/r1cs_gg_ppzksnark/ipp2/transcript.hpp>
 #include <nil/crypto3/zk/snark/systems/ppzksnark/r1cs_gg_ppzksnark/proof.hpp>
+#include <nil/crypto3/zk/snark/systems/ppzksnark/r1cs_gg_ppzksnark/prover.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -167,7 +168,7 @@ namespace nil {
                         std::is_same<
                             typename GroupType::curve_type::scalar_field_type::value_type,
                             typename std::iterator_traits<typename InputScalarRange::iterator>::value_type>::value,
-                    kzg_opening<GroupType>>::type
+                    typename kzg_ipp2<CurveType>::template opening_type<GroupType>>::type
                     prove_commitment_key_kzg_opening(
                         InputGroupIterator srs_powers_alpha_first, InputGroupIterator srs_powers_alpha_last,
                         InputGroupIterator srs_powers_beta_first, InputGroupIterator srs_powers_beta_last,
@@ -181,14 +182,24 @@ namespace nil {
                     BOOST_ASSERT(poly.size() == std::distance(srs_powers_beta_first, srs_powers_beta_last));
 
                     // f_v(X) - f_v(z) / (X - z)
-                    poly_type f_vX_sub_f_vZ = poly - poly_type({eval_poly});
-                    poly_type q = f_vX_sub_f_vZ / poly_type({
-                                                      neg_kzg_challenge,
-                                                      GroupType::curve_type::scalar_field_type::value_type::one(),
-                                                  });
+                    std::vector<typename GroupType::curve_type::scalar_field_type::value_type> f_vX_sub_f_vZ;
+                    math::polynomial::subtraction(f_vX_sub_f_vZ,
+                                                  poly,
+                                                  {{
+                                                      eval_poly,
+                                                  }});
+                    std::vector<typename GroupType::curve_type::scalar_field_type::value_type> quotient_polynomial,
+                        remainder_polynomial;
+                    math::polynomial::division<typename GroupType::curve_type::scalar_field_type>(
+                        quotient_polynomial, remainder_polynomial, f_vX_sub_f_vZ,
+                        {{
+                            neg_kzg_challenge,
+                            GroupType::curve_type::scalar_field_type::value_type::one(),
+                        }});
 
-                    if (q.size() < poly.size()) {
-                        q.resize(poly.size(), GroupType::curve_type::scalar_field_type::value_type::zero());
+                    if (quotient_polynomial.size() < poly.size()) {
+                        quotient_polynomial.resize(poly.size(),
+                                                   GroupType::curve_type::scalar_field_type::value_type::zero());
                     }
                     BOOST_ASSERT(q.size() == poly.size());
 
@@ -196,7 +207,7 @@ namespace nil {
                     // on the curve we are on). that's the extra cost of the commitment scheme
                     // used which is compatible with Groth16 CRS insteaf of the original paper
                     // of Bunz'19
-                    return kzg_opening<GroupType> {
+                    return typename kzg_ipp2<CurveType>::template opening_type<GroupType> {
                         algebra::multiexp<algebra::policies::multiexp_method_bos_coster>(
                             srs_powers_alpha_first, srs_powers_alpha_last, q.begin(), q.end(), 1),
                         algebra::multiexp<algebra::policies::multiexp_method_bos_coster>(
@@ -209,7 +220,7 @@ namespace nil {
                                  typename std::iterator_traits<InputG2Iterator>::value_type>::value &&
                         std::is_same<typename CurveType::scalar_field_type::value_type,
                                      typename std::iterator_traits<InputScalarIterator>::value_type>::value,
-                    kzg_opening<typename CurveType::template g2_type<>>>::type
+                    typename kzg_ipp2<CurveType>::template opening_type<typename CurveType::template g2_type<>>>::type
                     prove_commitment_v(InputG2Iterator srs_powers_alpha_first, InputG2Iterator srs_powers_alpha_last,
                                        InputG2Iterator srs_powers_beta_first, InputG2Iterator srs_powers_beta_last,
                                        InputScalarIterator transcript_first, InputScalarIterator transcript_last,
@@ -217,8 +228,8 @@ namespace nil {
                     math::polynomial<typename CurveType::scalar_field_type::value_type> vkey_poly(
                         polynomial_coefficients_from_transcript<typename CurveType::scalar_field_type>(
                             transcript_first, transcript_last, CurveType::scalar_field_type::value_type::one()));
-                    vkey_poly.condense();
-                    BOOST_ASSERT(!vkey_poly.is_zero());
+                    math::polynomial::condense(vkey_poly);
+                    BOOST_ASSERT(!math::polynomial::is_zero(vkey_poly));
 
                     typename CurveType::scalar_field_type::value_type vkey_poly_z =
                         polynomial_evaluation_product_form_from_transcript<typename CurveType::scalar_field_type>(
@@ -236,7 +247,7 @@ namespace nil {
                                  typename std::iterator_traits<InputG1Iterator>::value_type>::value &&
                         std::is_same<typename CurveType::scalar_field_type::value_type,
                                      typename std::iterator_traits<InputScalarIterator>::value_type>::value,
-                    kzg_opening<typename CurveType::template g1_type<>>>::type
+                    typename kzg_ipp2<CurveType>::template opening_type<typename CurveType::template g1_type<>>>::type
                     prove_commitment_w(InputG1Iterator srs_powers_alpha_first, InputG1Iterator srs_powers_alpha_last,
                                        InputG1Iterator srs_powers_beta_first, InputG1Iterator srs_powers_beta_last,
                                        InputScalarIterator transcript_first, InputScalarIterator transcript_last,
@@ -596,37 +607,36 @@ namespace nil {
                     return {com_ab, com_c, ip_ab, agg_c, proof};
                 }
 
-                template<typename CurveType, typename BasicProver>
-                class r1cs_gg_ppzksnark_aggregate_prover {
-                    typedef detail::r1cs_gg_ppzksnark_basic_policy<CurveType, proving_mode::aggregate> policy_type;
+                template<typename CurveType>
+                class r1cs_gg_ppzksnark_prover<CurveType, ProvingMode::Aggregate> {
+                    typedef detail::r1cs_gg_ppzksnark_basic_policy<CurveType, ProvingMode::Aggregate> policy_type;
+                    typedef r1cs_gg_ppzksnark_prover<CurveType, ProvingMode::Basic> basic_prover;
+                    typedef typename basic_prover::proof_type basic_proof_type;
 
                 public:
-                    typedef BasicProver basic_prover;
-
                     typedef typename policy_type::primary_input_type primary_input_type;
                     typedef typename policy_type::auxiliary_input_type auxiliary_input_type;
                     typedef typename policy_type::proving_key_type proving_key_type;
                     typedef typename policy_type::proving_srs_type proving_srs_type;
                     typedef typename policy_type::proof_type proof_type;
-                    typedef typename policy_type::aggregate_proof_type aggregate_proof_type;
 
                     // aggregate prove
                     template<typename Hash, typename InputTranscriptIncludeIterator, typename InputProofIterator>
-                    static inline aggregate_proof_type process(const proving_srs_type &srs,
-                                                               InputTranscriptIncludeIterator transcript_include_first,
-                                                               InputTranscriptIncludeIterator transcript_include_last,
-                                                               InputProofIterator proofs_first,
-                                                               InputProofIterator proofs_last) {
+                    static inline proof_type process(const proving_srs_type &srs,
+                                                     InputTranscriptIncludeIterator transcript_include_first,
+                                                     InputTranscriptIncludeIterator transcript_include_last,
+                                                     InputProofIterator proofs_first,
+                                                     InputProofIterator proofs_last) {
                         return aggregate_proofs<CurveType, Hash>(srs, transcript_include_first, transcript_include_last,
                                                                  proofs_first, proofs_last);
                     }
 
                     // Basic prove
-                    static inline proof_type process(const proving_key_type &pk,
-                                                     const primary_input_type &primary_input,
-                                                     const auxiliary_input_type &auxiliary_input) {
+                    static inline basic_proof_type process(const proving_key_type &pk,
+                                                           const primary_input_type &primary_input,
+                                                           const auxiliary_input_type &auxiliary_input) {
 
-                        return BasicProver::process(pk, primary_input, auxiliary_input);
+                        return basic_prover::process(pk, primary_input, auxiliary_input);
                     }
                 };
             }    // namespace snark

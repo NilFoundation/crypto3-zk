@@ -26,37 +26,88 @@
 #ifndef CRYPTO3_ZK_COMMITMENTS_TYPE_TRAITS_HPP
 #define CRYPTO3_ZK_COMMITMENTS_TYPE_TRAITS_HPP
 
-#include <complex>
-
-#include <boost/type_traits.hpp>
 #include <boost/tti/tti.hpp>
-#include <boost/mpl/placeholders.hpp>
-#include <boost/type_traits/is_same.hpp>
 
 namespace nil {
     namespace crypto3 {
-        namespace algebra {
-
-            using namespace boost::mpl::placeholders;
+        namespace zk {
 
             BOOST_TTI_HAS_TYPE(commitment_type)
             BOOST_TTI_HAS_TYPE(proof_type)
+
+            BOOST_TTI_MEMBER_TYPE(commitment_type)
             // BOOST_TTI_HAS_TYPE(proving_key)
             // BOOST_TTI_HAS_TYPE(verification_key)
 
-            BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(commit)
-            BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(proof_eval)
-            BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(verify_eval)
-            
+            template<typename T>
+            class has_available_static_member_function_commit {
+                struct no { };
+
+            protected:
+                template<typename C>
+                static void test(std::nullptr_t) {
+                    struct t{
+                        using C::commit;
+                    };
+                }
+
+                template<typename>
+                static no test(...);
+
+            public:
+                constexpr static const bool value = !std::is_same<no, decltype(test<T>(nullptr))>::value;
+            };
+
+            template<typename T>
+            class has_available_static_member_function_proof_eval {
+                struct no { };
+
+            protected:
+                template<typename C>
+                static void test(std::nullptr_t) {
+                    struct t{
+                        using C::proof_eval;
+                    };
+                }
+
+                template<typename>
+                static no test(...);
+
+            public:
+                constexpr static const bool value = !std::is_same<no, decltype(test<T>(nullptr))>::value;
+            };
+
+            template<typename T>
+            class has_available_static_member_function_verify_eval {
+                struct no { };
+
+            protected:
+                template<typename C>
+                static void test(std::nullptr_t) {
+                    struct t{
+                        using C::verify_eval;
+                    };
+                }
+
+                template<typename>
+                static no test(...);
+
+            public:
+                constexpr static const bool value = !std::is_same<no, decltype(test<T>(nullptr))>::value;
+            };
+
             template<typename T>
             struct is_commitment {
-                static const bool value = has_type_base_field_type<T>::value && has_type_scalar_field_type<T>::value &&
-                                          has_type_g1_type<T>::value && has_type_g2_type<T>::value &&
-                                          has_type_gt_type<T>::value;
+                using commitment_type = typename member_type_commitment_type<T>::type;
+
+                static const bool value = has_type_commitment_type<T>::value && has_type_proof_type<T>::value &&
+                                          has_available_static_member_function_commit<T>::value &&
+                                          has_available_static_member_function_proof_eval<T>::value &&
+                                          has_available_static_member_function_verify_eval<T>::value;
                 typedef T type;
             };
 
-        }    // namespace algebra
+        }    // namespace zk
     }        // namespace crypto3
 }    // namespace nil
 

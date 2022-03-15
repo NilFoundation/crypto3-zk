@@ -67,12 +67,12 @@ namespace nil {
                         math::non_linear_combination<VariableType>(terms) {
                     }
 
-                    template<std::size_t WitnessColumns, std::size_t SelectorColumns, 
-                        std::size_t PublicInputColumns, std::size_t ConstantColumns>
+                    template<std::size_t WitnessColumns, std::size_t PublicInputColumns,
+                         std::size_t ConstantColumns, std::size_t SelectorColumns>
                     typename VariableType::assignment_type
                         evaluate(std::size_t row_index,
                                  const plonk_assignment_table<FieldType, WitnessColumns, 
-                                    SelectorColumns, PublicInputColumns, ConstantColumns> &assignments) const {
+                                    PublicInputColumns, ConstantColumns, SelectorColumns> &assignments) const {
                         typename VariableType::assignment_type acc = VariableType::assignment_type::zero();
                         for (const math::non_linear_term<VariableType> &nlt : this->terms) {
                             typename VariableType::assignment_type term_value = nlt.coeff;
@@ -84,14 +84,14 @@ namespace nil {
                                     case VariableType::column_type::witness:
                                         assignment = assignments.witness(var.index)[row_index + var.rotation];
                                         break;
-                                    case VariableType::column_type::selector:
-                                        assignment = assignments.selector(var.index)[row_index + var.rotation];
-                                        break;
                                     case VariableType::column_type::public_input:
                                         assignment = assignments.public_input(var.index)[row_index + var.rotation];
                                         break;
                                     case VariableType::column_type::constant:
                                         assignment = assignments.constant(var.index)[row_index + var.rotation];
+                                        break;
+                                    case VariableType::column_type::selector:
+                                        assignment = assignments.selector(var.index)[row_index + var.rotation];
                                         break;
                                 }
 
@@ -102,11 +102,11 @@ namespace nil {
                         return acc;
                     }
 
-                    template<std::size_t WitnessColumns, std::size_t SelectorColumns, 
-                        std::size_t PublicInputColumns, std::size_t ConstantColumns>
+                    template<std::size_t WitnessColumns, std::size_t PublicInputColumns, 
+                            std::size_t ConstantColumns, std::size_t SelectorColumns>
                     math::polynomial<typename VariableType::assignment_type>
                         evaluate(const plonk_polynomial_table<FieldType, WitnessColumns,
-                                    SelectorColumns, PublicInputColumns, ConstantColumns> &assignments) const {
+                                    PublicInputColumns, ConstantColumns, SelectorColumns> &assignments) const {
                         math::polynomial<typename VariableType::assignment_type> acc = {0};
                         for (const math::non_linear_term<VariableType> &nlt : this->terms) {
                             math::polynomial<typename VariableType::assignment_type> term_value = {nlt.coeff};
@@ -118,20 +118,20 @@ namespace nil {
                                     case VariableType::column_type::witness:
                                         assignment = assignments.witness(var.index);
                                         break;
-                                    case VariableType::column_type::selector:
-                                        assignment = assignments.selector(var.index);
-                                        break;
                                     case VariableType::column_type::public_input:
                                         assignment = assignments.public_input(var.index);
                                         break;
                                     case VariableType::column_type::constant:
                                         assignment = assignments.constant(var.index);
                                         break;
+                                    case VariableType::column_type::selector:
+                                        assignment = assignments.selector(var.index);
+                                        break;
                                 }
 
                                 term_value = term_value * assignment;
                             }
-                            acc = acc + term_value * nlt.coeff;
+                            acc = acc + term_value;
                         }
                         return acc;
                     }
@@ -148,7 +148,7 @@ namespace nil {
                                     key = std::make_tuple(var.index, var.rotation, var.type);
                                 term_value = term_value * assignments[key];
                             }
-                            acc = acc + term_value * nlt.coeff;
+                            acc = acc + term_value;
                         }
                         return acc;
                     }

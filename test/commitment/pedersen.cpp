@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
 
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     
-    math::polinomial<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    math::polynomial<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     BOOST_CHECK(idx.size() >= k);
     BOOST_CHECK(w == pedersen_type::message_eval(params, proof, idx));
 }

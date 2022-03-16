@@ -150,7 +150,7 @@ namespace nil {
                         return answer;
                     }
 
-                    static evaluation_type message_eval(params_type params, proof_type prf, math::polynomial<int> idx) {
+                    static evaluation_type message_eval(params_type params, proof_type prf, math::polynomial<std::size_t> idx) {
                         //for a given number of people learns if they can open message
                         //and if so, opens it
                         if ((idx.size() < params.k) || (!verify_eval(params, prf))) {

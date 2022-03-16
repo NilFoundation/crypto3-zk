@@ -45,19 +45,22 @@ namespace nil {
 
                     struct params_type {
                         //setup as an open key (non trusted, so uniform for both sides)
-                        std::size_t n = 0;                      //n - number of parties
-                        std::size_t k = 0;                      //k <= n - number of parties needed to open the secret message
-                        commitment_type g = 0;
-                        commitment_type h = 0;
+                        std::size_t n;                      //n - number of parties
+                        std::size_t k;                      //k <= n - number of parties needed to open the secret message
+                        commitment_type g;
+                        commitment_type h;
                     };
 
                     struct private_key {
                         evaluation_type s;              //power of g
                         evaluation_type t;              //power of h
+                        
+                        private_key() : s(0), t(0) {}
+                        private_key(evaluation_type a, evaluation_type b) : s(a), t(b) {}
                     };
 
                     struct proof_type {
-                        commitment_type E_0 = 0;        //initial commitment
+                        commitment_type E_0;        //initial commitment
                         math::polynomial<commitment_type> E; //commitments open for everyone
                         math::polynomial<private_key> pk;    //private keys for each party
                     };
@@ -76,7 +79,7 @@ namespace nil {
                         return params_type(n, k, g, h);
                     }
 
-                    static commitment_type commit(params_type params, private_key pk) {
+                    static commitment_type commitment(params_type params, private_key pk) {
                         //pedersen commitment: g^s * h^t
                         return profile_multiexp<group_type, field_type, multiexp>({params.g, params.h}, {pk.s, pk.t});
                     }
@@ -119,7 +122,7 @@ namespace nil {
                         math::polynomial<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
                         math::polynomial<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
                         for (std::size_t i = 0; i < params.n; ++i) {
-                            prf.pk.push_back(PrivateKey(s_i[i], t_i[i]));
+                            prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
                         for (std::size_t i = 1; i < params.k; ++ i) {
                             prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i])));
@@ -138,7 +141,7 @@ namespace nil {
                         commitment_type mult;
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = commitment(params, prf.pk[i -1]);
-                            mult = params.E_0;
+                            mult = prf.E_0;
                             pow = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 pow *= i;
@@ -163,7 +166,7 @@ namespace nil {
                             mult = 1;
                             for (std::size_t l = 0; l < params.k; ++l) {
                                 if (l != j) {
-                                    mult *= static_cast<field_type>(idx[l]) * static_cast<field_type>(idx[l] - idx[j]).inversed();
+                                    mult *= field_type::value_type(idx[l]) * field_type::value_type(idx[l] - idx[j]).inversed();
                                 }
                             }
                             sum += mult * prf.pk[idx[j] - 1].s;

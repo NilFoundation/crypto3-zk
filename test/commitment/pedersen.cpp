@@ -88,8 +88,6 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     proof_type proof = pedersen_type::proof_eval(params, w);
 
     // verify
-    zk::transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript_verifier(init_blob);
-
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     
     math::polynomial<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};

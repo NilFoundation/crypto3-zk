@@ -26,8 +26,13 @@
 #ifndef CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 #define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 
+#include <vector>
+
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
+
 #include <nil/crypto3/algebra/random_element.hpp>
+#include <nil/crypto3/algebra/multiexp/multiexp.hpp>
+
 using namespace nil::crypto3;
 
 namespace nil {
@@ -41,7 +46,6 @@ namespace nil {
                     typedef typename CurveType::template g1_type<> group_type;
                     typedef typename field_type::value_type evaluation_type;
                     typedef typename group_type::value_type commitment_type;
-                    typedef typename MultiexpMethod<group_type, field_type> multiexp;
 
                     struct params_type {
                         //setup as an open key (non trusted, so uniform for both sides)
@@ -81,7 +85,9 @@ namespace nil {
 
                     static commitment_type commitment(params_type params, private_key pk) {
                         //pedersen commitment: g^s * h^t
-                        return profile_multiexp<group_type, field_type, multiexp>({params.g, params.h}, {pk.s, pk.t});
+                        std::vector<commitment_type> com = {params.g, params.h};
+                        std::vector<evaluation_type> eval = {pk.s, pk.t};
+                        return algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                     }
 
                     math::polynomial<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
@@ -139,13 +145,18 @@ namespace nil {
                         evaluation_type pow;
                         commitment_type E;
                         commitment_type mult;
+                        std::vector<commitment_type> com = {commitment_type::one()};
+                        std::vector<evaluation_type> eval = {1};
+                        
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = commitment(params, prf.pk[i -1]);
                             mult = prf.E_0;
                             pow = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 pow *= i;
-                                mult *= profile_multiexp<group_type, field_type, multiexp>({pubk.E[j - 1]}, {pow});
+                                com[0] = pubk.E[j - 1];
+                                eval[0] = pow;
+                                mult *= algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                             }
                             answer *= (E == mult);
                         }

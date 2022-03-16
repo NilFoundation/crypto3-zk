@@ -41,7 +41,7 @@ namespace nil {
                     typedef typename CurveType::template g1_type<> group_type;
                     typedef typename field_type::value_type evaluation_type;
                     typedef typename group_type::value_type commitment_type;
-                    typedef typename MultiexpMethod multiexp;
+                    typedef typename MultiexpMethod<group_type, field_type> multiexp;
 
                     struct params_type {
                         //setup as an open key (non trusted, so uniform for both sides)

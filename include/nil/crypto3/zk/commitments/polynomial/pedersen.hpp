@@ -42,7 +42,7 @@ namespace nil {
                 template<typename CurveType, typename MultiexpMethod>
                 class pedersen {
                 public:
-                    typedef typename CurveType::scalar_field_type field_type;
+                    typedef typename CurveType::field_type field_type;
                     typedef typename CurveType::template g1_type<> group_type;
                     typedef typename field_type::value_type evaluation_type;
                     typedef typename group_type::value_type commitment_type;
@@ -65,8 +65,8 @@ namespace nil {
 
                     struct proof_type {
                         commitment_type E_0;        //initial commitment
-                        math::polynomial<commitment_type> E; //commitments open for everyone
-                        math::polynomial<private_key> pk;    //private keys for each party
+                        std::vector<commitment_type> E; //commitments open for everyone
+                        std::vector<private_key> pk;    //private keys for each party
                     };
 
                     static params_type key_generator(std::size_t n, std::size_t k, commitment_type g = commitment_type::one(), commitment_type h = commitment_type::one()) {
@@ -154,7 +154,7 @@ namespace nil {
                             pow = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 pow *= i;
-                                com[0] = pubk.E[j - 1];
+                                com[0] = prf.E[j - 1];
                                 eval[0] = pow;
                                 mult *= algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                             }

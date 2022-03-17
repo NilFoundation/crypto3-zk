@@ -27,6 +27,7 @@
 #define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 
 #include <vector>
+#include <typeinfo>
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 
@@ -87,7 +88,7 @@ namespace nil {
                         //pedersen commitment: g^s * h^t
                         std::vector<commitment_type> com = {params.g, params.h};
                         std::vector<evaluation_type> eval = {pk.s, pk.t};
-                        return algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                        return algebra::multiexp<MultiexpMethod, typeid(com.begin()).name(), typeid(eval.begin()).name()>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                     }
 
                     std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
@@ -158,7 +159,7 @@ namespace nil {
                                 pow *= i;
                                 com[0] = prf.E[j - 1];
                                 eval[0] = pow;
-                                mult *= algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                                mult *= algebra::multiexp<MultiexpMethod, typeid(com.begin()).name(), typeid(eval.begin()).name()>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                             }
                             answer *= (E == mult);
                         }
@@ -179,7 +180,7 @@ namespace nil {
                             mult = 1;
                             for (std::size_t l = 0; l < params.k; ++l) {
                                 if (l != j) {
-                                    mult *= field_type::value_type(idx[l]) * field_type::value_type(idx[l] - idx[j]).inversed();
+                                    mult *= typename field_type::value_type(idx[l]) * typename field_type::value_type(idx[l] - idx[j]).inversed();
                                 }
                             }
                             sum += mult * prf.pk[idx[j] - 1].s;

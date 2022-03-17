@@ -90,9 +90,9 @@ namespace nil {
                         return algebra::multiexp<group_type, field_type, MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                     }
 
-                    math::polynomial<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
+                    std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
                         //computes F(i) for i in range 1..n for polynom F of degree k - proof.E
-                        math::polynomial<evaluation_type> p_i;
+                        std::vector<evaluation_type> p_i;
                         evaluation_type spare;
                         evaluation_type sum;
                         for (std::size_t i = 1; i <= params.n; ++i) {
@@ -125,8 +125,8 @@ namespace nil {
                             spare = algebra::random_element<field_type>();
                             g_coeffs.push_back(spare);
                         }
-                        math::polynomial<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
-                        math::polynomial<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
+                        std::vector<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
+                        std::vector<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
                         for (std::size_t i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }

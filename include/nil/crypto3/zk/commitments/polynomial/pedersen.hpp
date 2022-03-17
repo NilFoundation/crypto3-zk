@@ -88,7 +88,7 @@ namespace nil {
                         //pedersen commitment: g^s * h^t
                         std::vector<commitment_type> com = {params.g, params.h};
                         std::vector<evaluation_type> eval = {pk.s, pk.t};
-                        return algebra::multiexp<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                        return algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                     }
 
                     std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
@@ -159,7 +159,7 @@ namespace nil {
                                 pow *= i;
                                 com[0] = prf.E[j - 1];
                                 eval[0] = pow;
-                                mult *= algebra::multiexp<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                                mult *= algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                             }
                             answer *= (E == mult);
                         }

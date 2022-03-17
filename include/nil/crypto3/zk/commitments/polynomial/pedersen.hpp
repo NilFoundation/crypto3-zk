@@ -145,7 +145,7 @@ namespace nil {
                         //vefifies that everyone is sure one knows the secret message
                         bool answer = true;
 
-                        evaluation_type pow;
+                        evaluation_type power;
                         commitment_type E;
                         commitment_type mult;
                         std::vector<commitment_type> com = {commitment_type::one()};
@@ -156,10 +156,10 @@ namespace nil {
                             mult = prf.E_0;
                             pow = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
-                                pow *= i;
+                                power *= i;
                                 com[0] = prf.E[j - 1];
-                                eval[0] = pow;
-                                mult *= algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                                eval[0] = power;
+                                mult = mult * algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                             }
                             answer *= (E == mult);
                         }

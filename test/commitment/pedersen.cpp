@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // setup
     using curve_type = algebra::curves::bls12<381>;
     using curve_group_type = curve_type::template g1_type<>;
-    using field_type = typename curve_type::field_type;
+    using field_type = typename curve_type::scalar_field_type;
     using multiexp_type = typename algebra::policies::multiexp_method_naive_plain<curve_group_type, field_type>;
 
     constexpr static const std::size_t n = 30;
     constexpr static const std::size_t k = 10;
-    static const curve_group_type::value_type g = algebra::random_element<curve_group_type>();
-    static const curve_group_type::value_type h = algebra::random_element<curve_group_type>();
+    static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
+    static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }

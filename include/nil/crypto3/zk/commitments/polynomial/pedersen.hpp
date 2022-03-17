@@ -125,8 +125,10 @@ namespace nil {
                             spare = algebra::random_element<field_type>();
                             g_coeffs.push_back(spare);
                         }
-                        std::vector<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
-                        std::vector<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
+                        std::vector<evaluation_type> s_i;
+                        std::vector<evaluation_type> t_i;
+                        s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
+                        t_i = poly_eval(params, g_coeffs); //to party number j
                         for (std::size_t i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }

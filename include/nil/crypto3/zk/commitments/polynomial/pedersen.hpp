@@ -91,7 +91,7 @@ namespace nil {
                         return algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
                     }
 
-                    std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
+                    static std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
                         //computes F(i) for i in range 1..n for polynom F of degree k - proof.E
                         std::vector<evaluation_type> p_i;
                         evaluation_type spare;
@@ -126,10 +126,9 @@ namespace nil {
                             spare = algebra::random_element<field_type>();
                             g_coeffs.push_back(spare);
                         }
-                        std::vector<evaluation_type> s_i;
-                        std::vector<evaluation_type> t_i;
-                        s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
-                        t_i = poly_eval(params, g_coeffs); //to party number j
+                        
+                        std::vector<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
+                        std::vector<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
                         for (std::size_t i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
@@ -154,7 +153,7 @@ namespace nil {
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = commitment(params, prf.pk[i -1]);
                             mult = prf.E_0;
-                            pow = 1;
+                            power = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 power *= i;
                                 com[0] = prf.E[j - 1];

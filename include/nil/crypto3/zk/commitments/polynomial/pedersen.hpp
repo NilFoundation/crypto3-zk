@@ -150,7 +150,7 @@ namespace nil {
                         commitment_type part_mult;
                         std::vector<commitment_type> com = {commitment_type::one()};
                         std::vector<evaluation_type> eval = {1};
-                        std::vector<evaluation_type> double_com = {1, 1};
+                        std::vector<commitment_type> double_com = {1, 1};
                         std::vector<evaluation_type> double_eval = {1, 1};
                         
                         for (std::size_t i = 1; i <= params.n; ++i) {

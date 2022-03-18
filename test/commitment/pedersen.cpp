@@ -26,6 +26,8 @@
 
 #define BOOST_TEST_MODULE pedersen_test
 
+#include <vector>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // verify
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     
-    math::polynomial<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    std::vector<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     BOOST_CHECK(idx.size() >= k);
     BOOST_CHECK(w == pedersen_type::message_eval(params, proof, idx));
 }

@@ -159,7 +159,7 @@ namespace nil {
                                 com[0] = prf.E[j - 1];
                                 eval[0] = power;
                                 typename group_type::value_type part_mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
-                                mult = mult * part_mult;
+                                mult = mult * commitment_type(part_mult);
                             }
                             answer *= (E == mult);
                         }

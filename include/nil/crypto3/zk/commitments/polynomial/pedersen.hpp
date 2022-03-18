@@ -147,8 +147,11 @@ namespace nil {
                         evaluation_type power;
                         commitment_type E;
                         commitment_type mult;
+                        commitment_type part_mult;
                         std::vector<commitment_type> com = {commitment_type::one()};
                         std::vector<evaluation_type> eval = {1};
+                        std::vector<evaluation_type> double_com = {1, 1};
+                        std::vector<evaluation_type> double_eval = {1, 1};
                         
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = commitment(params, prf.pk[i -1]);
@@ -158,8 +161,10 @@ namespace nil {
                                 power *= i;
                                 com[0] = prf.E[j - 1];
                                 eval[0] = power;
-                                typename group_type::value_type part_mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
-                                mult = mult * commitment_type(part_mult);
+                                part_mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                                double_com[0] = mult;
+                                double_com[1] = part_mult;
+                                mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(double_com.begin(), double_com.end(), double_eval.begin(), double_eval.end(), 1);
                             }
                             answer *= (E == mult);
                         }

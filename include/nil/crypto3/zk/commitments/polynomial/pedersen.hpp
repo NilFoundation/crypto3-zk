@@ -27,7 +27,7 @@
 #define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 
 #include <vector>
-#include <typeinfo>
+#include <iostream>
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 
@@ -113,6 +113,7 @@ namespace nil {
                         proof_type prf;
 
                         evaluation_type t = algebra::random_element<field_type>();
+                        std::cout << "blinding value: " << t.data << '\n';
                         prf.E_0 = commitment(params, private_key(w, t));
 
                         math::polynomial<evaluation_type> f_coeffs;
@@ -153,6 +154,7 @@ namespace nil {
                         std::vector<commitment_type> double_com = {commitment_type::one(), commitment_type::one()};
                         std::vector<evaluation_type> double_eval = {1, 1};
                         
+                        std::cout << "verif: ";
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = commitment(params, prf.pk[i -1]);
                             mult = prf.E_0;
@@ -166,8 +168,10 @@ namespace nil {
                                 double_com[1] = part_mult;
                                 mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(double_com.begin(), double_com.end(), double_eval.begin(), double_eval.end(), 1);
                             }
+                            std::cout << (E == mult) << ' ';
                             answer *= (E == mult);
                         }
+                        std::cout << '\n';
 
                         return answer;
                     }

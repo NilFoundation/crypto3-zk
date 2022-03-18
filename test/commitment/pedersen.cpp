@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(pedersen_long_test) {
     for (size_t i = 1; i < k + 100 + 1; ++i) {
         idx.push_back(k + 100 - i);
     }
-    BOOST_CHECK(idx.size() <= k);
+    BOOST_CHECK(idx.size() >= k);
     BOOST_CHECK(w == pedersen_type::message_eval(params, proof, idx));
 }
 

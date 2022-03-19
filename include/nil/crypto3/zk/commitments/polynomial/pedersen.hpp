@@ -112,7 +112,7 @@ namespace nil {
 
                         evaluation_type t = algebra::random_element<field_type>();
                         std::cout << "blinding value: " << t.data << '\n';
-                        prf.E_0 = commitment(params, private_key(w, t));
+                        prf.E_0 = params.g * w + params.h * t;
 
                         math::polynomial<evaluation_type> f_coeffs;
                         f_coeffs.push_back(w);
@@ -132,7 +132,7 @@ namespace nil {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
                         for (std::size_t i = 1; i < params.k; ++ i) {
-                            prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i])));
+                            prf.E.push_back(params.g * f_coeffs[i] + params.h * g_coeffs[i]);
                         }
 
                         return prf;
@@ -149,7 +149,7 @@ namespace nil {
                         
                         std::cout << "verif: ";
                         for (std::size_t i = 1; i <= params.n; ++i) {
-                            E = commitment(params, prf.pk[i -1]);
+                            E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
                             mult = prf.E_0;
                             power = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {

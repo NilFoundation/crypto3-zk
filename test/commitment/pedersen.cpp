@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }
-    std::cout << "g and h: " << g.data << ' ' << h.data << '\n';
+    std::cout << "g and h: " << g.X.data << ' ' << g.Y.data << ' ' << g.Z.data << ', ' << h.X.data << ' ' << h.Y.data << ' ' << h.Z.data << '\n';
 
     typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
-    std::cout << "commitment value: " << proof.E_0.data << '\n';
+    std::cout << "commitment value: " << proof.E_0.X.data << ' ' << proof.E_0.Y.data << ' ' << proof.E_0.Z.data << '\n';
 
     // verify
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));

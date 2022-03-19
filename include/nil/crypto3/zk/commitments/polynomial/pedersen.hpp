@@ -84,12 +84,12 @@ namespace nil {
                         return params_type(n, k, g, h);
                     }
 
-                    static commitment_type commitment(params_type params, private_key pk) {
+                    static commitment_type commitment(const params_type& params, const private_key& pk) {
                         //pedersen commitment
                         return params.g * pk.s + params.h * pk.t;
                     }
 
-                    static std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
+                    static std::vector<evaluation_type> poly_eval(const params_type& params, const std::vector<evaluation_type>& coeffs) {
                         //computes F(i) for i in range 1..n for polynom F of degree k - proof.E
                         std::vector<evaluation_type> p_i;
                         evaluation_type spare;
@@ -106,17 +106,16 @@ namespace nil {
                         return p_i;
                     }
 
-                    static proof_type proof_eval(params_type params, evaluation_type w) {
+                    static proof_type proof_eval(const params_type& params, const evaluation_type w) {
                         //evaluates proof according to pedersen commitment '81
                         proof_type prf;
 
                         evaluation_type t = algebra::random_element<field_type>();
-                        std::cout << "blinding value: " << t.data << '\n';
                         prf.E_0 = params.g * w + params.h * t;
 
-                        math::polynomial<evaluation_type> f_coeffs;
+                        std::vector<evaluation_type> f_coeffs;
                         f_coeffs.push_back(w);
-                        math::polynomial<evaluation_type> g_coeffs;
+                        std::vector<evaluation_type> g_coeffs;
                         g_coeffs.push_back(t);
                         evaluation_type spare;
                         for (std::size_t i = 1; i < params.k; ++i) {
@@ -131,12 +130,11 @@ namespace nil {
                         for (std::size_t i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
-                        for (std::size_t i = 1; i < params.k; ++ i) {
+                        for (std::size_t i = 1; i < params.k; ++i) {
                             prf.E.push_back(params.g * f_coeffs[i] + params.h * g_coeffs[i]);
                         }
 
                         return prf;
-
                     }
 
                     static bool verify_eval(params_type params, proof_type prf) {

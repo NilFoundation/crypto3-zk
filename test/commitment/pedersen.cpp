@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
     constexpr static const std::size_t n = 31;
-    constexpr static const std::size_t k = 1;
+    constexpr static const std::size_t k = 2;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {

@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
-    constexpr static const std::size_t n = 1;
+    constexpr static const std::size_t n = 2;
     constexpr static const std::size_t k = 1;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // std::cout << "commitment value: " << proof.E_0.X.data << ' ' << proof.E_0.Y.data << ' ' << proof.E_0.Z.data << '\n';
 
     // verify
-    BOOST_CHECK(proof.E_0 == params.g * proof.pk[0].s + params.h * proof.pk[0].t);
-    BOOST_CHECK(proof.pk[0].s == w);
+    // BOOST_CHECK(proof.E_0 == params.g * proof.pk[0].s + params.h * proof.pk[0].t);
+    // BOOST_CHECK(proof.pk[0].s == w);
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     
     std::vector<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};

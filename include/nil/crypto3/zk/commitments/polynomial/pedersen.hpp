@@ -154,7 +154,7 @@ namespace nil {
                             power = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 power *= i;
-                                mult += prf.E[j - 1] * power;
+                                mult = mult + prf.E[j - 1] * power;
                             }
                             std::cout << (E == mult) << ' ';
                             answer *= (E == mult);

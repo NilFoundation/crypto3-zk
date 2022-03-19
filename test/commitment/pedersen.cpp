@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // setup
     using curve_type = algebra::curves::bls12<381>;
     using curve_group_type = curve_type::template g1_type<>;
-    using field_type = typename curve_type::base_field_type;
+    using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
     constexpr static const std::size_t n = 1;
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }
-    std::cout << "g and h: " << g.X.data << ' ' << g.Y.data << ' ' << g.Z.data << ', ' << h.X.data << ' ' << h.Y.data << ' ' << h.Z.data << '\n';
+    std::cout << "g and h: " << g.X.data << ' ' << g.Y.data << ' ' << g.Z.data << ", " << h.X.data << ' ' << h.Y.data << ' ' << h.Z.data << '\n';
 
     typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
 

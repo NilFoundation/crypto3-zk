@@ -173,8 +173,8 @@ namespace nil {
                             mult = 1;
                             for (std::size_t l = 0; l < params.k; ++l) {
                                 if (l != j) {
-                                    val1 = evaluation_type(idx[l]);
-                                    val2 = evaluation_type(idx[l] - idx[j]);
+                                    val1 = evaluation_type(idx[j]);
+                                    val2 = evaluation_type(idx[j] - idx[l]);
                                     mult *= val1 * val2.inversed();
                                 }
                             }

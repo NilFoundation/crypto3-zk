@@ -143,17 +143,17 @@ namespace nil {
 
                         evaluation_type power;
                         commitment_type E;
-                        commitment_type mult;
+                        commitment_type sum;
                         
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
-                            mult = prf.E_0;
+                            sum = prf.E_0;
                             power = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 power *= i;
-                                mult = mult + prf.E[j - 1] * power;
+                                sum = sum + prf.E[j - 1] * power;
                             }
-                            answer *= (E == mult);
+                            answer *= (E == sum);
                         }
                         return answer;
                     }
@@ -167,18 +167,21 @@ namespace nil {
 
                         evaluation_type sum = 0;
                         evaluation_type mult = 1;
+                        evaluation_type val1;
+                        evaluation_type val2;
                         for (std::size_t j = 0; j < params.k; ++j) {
                             mult = 1;
                             for (std::size_t l = 0; l < params.k; ++l) {
                                 if (l != j) {
-                                    mult *= typename field_type::value_type(idx[l]) * typename field_type::value_type(idx[l] - idx[j]).inversed();
+                                    val1 = evaluation_type(idx[l]);
+                                    val2 = evaluation_type(idx[l] - idx[j]);
+                                    mult *= val1 * val2.inversed();
                                 }
                             }
                             sum += mult * prf.pk[idx[j] - 1].s;
                         }
                         return sum;
                     }
-
                 };
 
             }    // namespace commitments

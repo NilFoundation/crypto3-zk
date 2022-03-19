@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
 
     // commit
     constexpr static const field_type::value_type w = field_type::value_type(543);
-    std::cout << w.inversed().data << ' ' << (w * w.inversed()).data << '\n';
+    std::cout << (typename field_type::value_type(2) * typename field_type::value_type(2-1).inversed() + typename field_type::value_type(1) * typename field_type::value_type(1 - 2).inversed * typename field_type::value_type(2)).data << '\n';
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);

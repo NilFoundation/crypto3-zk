@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(1);
-    std::cout << "secret message: " << w.data << '\n';
+    constexpr static const field_type::value_type w = field_type::value_type(5);
+    std::cout << "secret message: " << w.data << ' ' << (g + g + g + g + g == w * g) << '\n';
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);

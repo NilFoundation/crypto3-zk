@@ -85,10 +85,8 @@ namespace nil {
                     }
 
                     static commitment_type commitment(params_type params, private_key pk) {
-                        //pedersen commitment: g^s * h^t
-                        std::vector<commitment_type> com = {params.g, params.h};
-                        std::vector<evaluation_type> eval = {pk.s, pk.t};
-                        return algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
+                        //pedersen commitment
+                        return params.g * pk.s + params.h * pk.t;
                     }
 
                     static std::vector<evaluation_type> poly_eval(params_type params, math::polynomial<evaluation_type> coeffs) {
@@ -148,11 +146,6 @@ namespace nil {
                         evaluation_type power;
                         commitment_type E;
                         commitment_type mult;
-                        commitment_type part_mult;
-                        std::vector<commitment_type> com = {commitment_type::one()};
-                        std::vector<evaluation_type> eval = {1};
-                        std::vector<commitment_type> double_com = {commitment_type::one(), commitment_type::one()};
-                        std::vector<evaluation_type> double_eval = {1, 1};
                         
                         std::cout << "verif: ";
                         for (std::size_t i = 1; i <= params.n; ++i) {
@@ -161,12 +154,7 @@ namespace nil {
                             power = 1;
                             for (std::size_t j = 1; j < params.k; ++j) {
                                 power *= i;
-                                com[0] = prf.E[j - 1];
-                                eval[0] = power;
-                                part_mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(com.begin(), com.end(), eval.begin(), eval.end(), 1);
-                                double_com[0] = mult;
-                                double_com[1] = part_mult;
-                                mult = algebra::multiexp_with_mixed_addition<MultiexpMethod>(double_com.begin(), double_com.end(), double_eval.begin(), double_eval.end(), 1);
+                                mult += prf.E[j - 1] * power;
                             }
                             std::cout << (E == mult) << ' ';
                             answer *= (E == mult);

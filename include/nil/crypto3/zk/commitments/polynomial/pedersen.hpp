@@ -145,7 +145,6 @@ namespace nil {
                         commitment_type E;
                         commitment_type mult;
                         
-                        std::cout << "verif: ";
                         for (std::size_t i = 1; i <= params.n; ++i) {
                             E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
                             mult = prf.E_0;
@@ -154,11 +153,8 @@ namespace nil {
                                 power *= i;
                                 mult = mult + prf.E[j - 1] * power;
                             }
-                            std::cout << (E == mult) << ' ';
                             answer *= (E == mult);
                         }
-                        std::cout << '\n';
-
                         return answer;
                     }
 

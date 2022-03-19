@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(381);
+    constexpr static const field_type::value_type w = field_type::value_type(1);
     std::cout << "secret message: " << w.data << '\n';
 
     // eval

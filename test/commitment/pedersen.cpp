@@ -65,11 +65,9 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }
-    std::cout << "g and h: " << g.X.data << ' ' << g.Y.data << ' ' << g.Z.data << ", " << h.X.data << ' ' << h.Y.data << ' ' << h.Z.data << '\n';
+    // std::cout << "g and h: " << g.X.data << ' ' << g.Y.data << ' ' << g.Z.data << ", " << h.X.data << ' ' << h.Y.data << ' ' << h.Z.data << '\n';
 
     typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
-
-    // static_assert(zk::is_commitment<pedersen_type>::value);
 
     typedef typename pedersen_type::proof_type proof_type;
     typedef typename pedersen_type::params_type params_type;
@@ -87,13 +85,15 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
 
     // commit
     constexpr static const field_type::value_type w = field_type::value_type(5);
-    std::cout << "secret message: " << w.data << ' ' << (g + g + g + g + g == w * g) << '\n';
+    // std::cout << "secret message: " << w.data << ' ' << (g + g + g + g + g == w * g) << '\n';
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
-    std::cout << "commitment value: " << proof.E_0.X.data << ' ' << proof.E_0.Y.data << ' ' << proof.E_0.Z.data << '\n';
+    // std::cout << "commitment value: " << proof.E_0.X.data << ' ' << proof.E_0.Y.data << ' ' << proof.E_0.Z.data << '\n';
 
     // verify
+    BOOST_CHECK(proof.E_0 == proof.E[0]);
+    BOOST_CHECK(proof.pk[0].s == w);
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     
     std::vector<std::size_t> idx = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};

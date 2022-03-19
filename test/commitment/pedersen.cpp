@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // std::cout << "commitment value: " << proof.E_0.X.data << ' ' << proof.E_0.Y.data << ' ' << proof.E_0.Z.data << '\n';
 
     // verify
-    BOOST_CHECK(proof.E_0 == proof.E[0]);
+    BOOST_CHECK(proof.E_0 == params.g * proof.pk[0].s + params.h * proof.pk[0].t);
     BOOST_CHECK(proof.pk[0].s == w);
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
     

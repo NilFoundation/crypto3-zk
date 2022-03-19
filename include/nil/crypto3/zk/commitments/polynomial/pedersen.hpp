@@ -178,6 +178,7 @@ namespace nil {
                                     mult *= val1 * val2.inversed();
                                 }
                             }
+                            std:cout << "mult-in: " << mult.data << '\n';
                             sum += mult * prf.pk[idx[j] - 1].s;
                         }
                         return sum;

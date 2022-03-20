@@ -131,7 +131,7 @@ namespace nil {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
                         for (int i = 1; i < params.k; ++i) {
-                            prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i]));//params.g * f_coeffs[i] + params.h * g_coeffs[i]);
+                            prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i])));//params.g * f_coeffs[i] + params.h * g_coeffs[i]);
                         }
 
                         return prf;

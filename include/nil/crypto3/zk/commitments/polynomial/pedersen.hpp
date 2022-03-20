@@ -27,12 +27,8 @@
 #define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 
 #include <vector>
-#include <iostream>
-
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
-
 #include <nil/crypto3/algebra/random_element.hpp>
-#include <nil/crypto3/algebra/multiexp/multiexp.hpp>
 
 using namespace nil::crypto3;
 
@@ -40,7 +36,7 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace commitments {
-                template<typename CurveType, typename MultiexpMethod>
+                template<typename CurveType>
                 class pedersen {
                 public:
                     typedef typename CurveType::scalar_field_type field_type;

@@ -29,6 +29,7 @@
 #include <vector>
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
+#include <nil/crypto3/algebra/multiexp/multiexp.hpp>
 
 using namespace nil::crypto3;
 

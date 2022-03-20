@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
     constexpr static const int n = 31;
-    constexpr static const int k = 2;
+    constexpr static const int k = 10;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
@@ -84,11 +84,6 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
 
     // commit
     constexpr static const field_type::value_type w = field_type::value_type(543);
-    field_type::value_type a = field_type::value_type(2);
-    field_type::value_type b = field_type::value_type(1);
-    field_type::value_type c = field_type::value_type(1 - 2);
-    std::cout << "-1: " << c.data << '\n';
-    std::cout << "mult-out: " << a.data << ' ' << (b * c.inversed()).data << '\n';
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
@@ -102,7 +97,6 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     }
     BOOST_CHECK(idx.size() >= k);
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);
-    std::cout << "secret: " << secret.data << '\n';
     BOOST_CHECK((secret == 0) || (w == secret));
 }
 

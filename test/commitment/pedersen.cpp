@@ -5,6 +5,16 @@
 //
 // MIT License
 //
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+// Copyright (c) 2021 Mikhail Komarov <nemo@nil.foundation>
+// Copyright (c) 2021 Nikita Kaskov <nbering@nil.foundation>
+// Copyright (c) 2022 Ilia Shirobokov <i.shirobokov@nil.foundation>
+//
+// MIT License
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -34,9 +44,16 @@
 #include <boost/test/data/monomorphic.hpp>
 
 #include <nil/crypto3/algebra/curves/bls12.hpp>
+#include <iostream>
+
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/data/monomorphic.hpp>
+
+#include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
-//#include <nil/crypto3/algebra/fields/bls12/base_field.hpp>
+#include <nil/crypto3/algebra/fields/bls12/base_field.hpp>
 #include <nil/crypto3/algebra/fields/bls12/scalar_field.hpp>
 #include <nil/crypto3/algebra/curves/params/multiexp/bls12.hpp>
 #include <nil/crypto3/algebra/multiexp/multiexp.hpp>
@@ -58,8 +75,15 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
-    constexpr static const int n = 70;
-    constexpr static const int k = 29;
+    constexpr static const int n = 50;
+    constexpr static const int k = 21;
+    static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
+    static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
+    while (g == h) {
+        h = algebra::random_element<curve_group_type>();
+    }
+    constexpr static const int n = 50;
+    constexpr static const int k = 21;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
@@ -83,22 +107,21 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(5421);
+    constexpr static const field_type::value_type w = field_type::value_type(54321);
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
 
     // verify
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
-    
+
     std::vector<int> idx;
     for (int i = 1; i <= k; ++i) {
-        idx.push_back(k + 20 - i);
+        idx.push_back(i);
     }
     BOOST_CHECK(idx.size() >= k);
-    
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);
-    BOOST_CHECK_EQUAL(w, secret);
+    BOOST_CHECK((secret == 0) || (w == secret));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

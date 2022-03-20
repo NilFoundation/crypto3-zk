@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     
     std::vector<int> idx;
     for (int i = 1; i <= k; ++i) {
-        idx.push_back(i);
+        idx.push_back(k + 20 - i);
     }
     BOOST_CHECK(idx.size() >= k);
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);

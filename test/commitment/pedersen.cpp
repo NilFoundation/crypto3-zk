@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
         h = algebra::random_element<curve_group_type>();
     }
 
-    typedef typename zk::commitments::pedersen<curve_type> pedersen_type;
+    typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
 
     typedef typename pedersen_type::proof_type proof_type;
     typedef typename pedersen_type::params_type params_type;

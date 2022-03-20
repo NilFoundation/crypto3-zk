@@ -58,15 +58,15 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
-    constexpr static const int n = 50;
-    constexpr static const int k = 21;
+    constexpr static const int n = 70;
+    constexpr static const int k = 29;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }
 
-    typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
+    typedef typename zk::commitments::pedersen<curve_type> pedersen_type;
 
     typedef typename pedersen_type::proof_type proof_type;
     typedef typename pedersen_type::params_type params_type;
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(54321);
+    constexpr static const field_type::value_type w = field_type::value_type(5421);
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
@@ -96,8 +96,9 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
         idx.push_back(k + 20 - i);
     }
     BOOST_CHECK(idx.size() >= k);
+    
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);
-    BOOST_CHECK((secret == 0) || (w == secret));
+    BOOST_CHECK_EQUAL(w, secret);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

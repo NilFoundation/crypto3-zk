@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // setup
     using curve_type = algebra::curves::bls12<381>;
     using curve_group_type = curve_type::template g1_type<>;
-    using field_type = typename curve_type::scalar_field_type;
+    using field_type = typename curve_type::base_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
     constexpr static const std::size_t n = 31;
@@ -87,6 +87,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     field_type::value_type a = field_type::value_type(2);
     field_type::value_type b = field_type::value_type(1);
     field_type::value_type c = field_type::value_type(1 - 2);
+    std::cout << "-1: " << c.data << '\n';
     std::cout << "mult-out: " << a.data << ' ' << (b * c.inversed()).data << '\n';
 
     // eval

@@ -50,8 +50,8 @@ namespace nil {
 
                     struct params_type {
                         //setup as an open key (non trusted, so uniform for both sides)
-                        std::size_t n;                      //n - number of parties
-                        std::size_t k;                      //k <= n - number of parties needed to open the secret message
+                        int n;                      //n - number of parties
+                        int k;                      //k <= n - number of parties needed to open the secret message
                         commitment_type g;
                         commitment_type h;
                     };
@@ -70,7 +70,7 @@ namespace nil {
                         std::vector<private_key> pk;    //private keys for each party
                     };
 
-                    static params_type key_generator(std::size_t n, std::size_t k, commitment_type g = commitment_type::one(), commitment_type h = commitment_type::one()) {
+                    static params_type key_generator(int n, int k, commitment_type g = commitment_type::one(), commitment_type h = commitment_type::one()) {
                         //evaluates setup for current protocol
                         if (g == commitment_type::one()) {
                             g = algebra::random_element<group_type>();
@@ -94,10 +94,10 @@ namespace nil {
                         std::vector<evaluation_type> p_i;
                         evaluation_type spare;
                         evaluation_type sum;
-                        for (std::size_t i = 1; i <= params.n; ++i) {
+                        for (int i = 1; i <= params.n; ++i) {
                             spare = 1;
                             sum = coeffs[0];
-                            for (std::size_t j = 1; j < params.k; ++ j) {
+                            for (int j = 1; j < params.k; ++ j) {
                                 spare *= i;
                                 sum += spare * coeffs[j];
                             }
@@ -118,7 +118,7 @@ namespace nil {
                         std::vector<evaluation_type> g_coeffs;
                         g_coeffs.push_back(t);
                         evaluation_type spare;
-                        for (std::size_t i = 1; i < params.k; ++i) {
+                        for (int i = 1; i < params.k; ++i) {
                             spare = algebra::random_element<field_type>();
                             f_coeffs.push_back(spare);
                             spare = algebra::random_element<field_type>();
@@ -127,10 +127,10 @@ namespace nil {
                         
                         std::vector<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
                         std::vector<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
-                        for (std::size_t i = 0; i < params.n; ++i) {
+                        for (int i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
-                        for (std::size_t i = 1; i < params.k; ++i) {
+                        for (int i = 1; i < params.k; ++i) {
                             prf.E.push_back(params.g * f_coeffs[i] + params.h * g_coeffs[i]);
                         }
 
@@ -145,11 +145,11 @@ namespace nil {
                         commitment_type E;
                         commitment_type sum;
                         
-                        for (std::size_t i = 1; i <= params.n; ++i) {
+                        for (int i = 1; i <= params.n; ++i) {
                             E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
                             sum = prf.E_0;
                             power = 1;
-                            for (std::size_t j = 1; j < params.k; ++j) {
+                            for (int j = 1; j < params.k; ++j) {
                                 power *= i;
                                 sum = sum + prf.E[j - 1] * power;
                             }
@@ -158,7 +158,7 @@ namespace nil {
                         return answer;
                     }
 
-                    static evaluation_type message_eval(params_type params, proof_type prf, std::vector<std::size_t> idx) {
+                    static evaluation_type message_eval(params_type params, proof_type prf, std::vector<int> idx) {
                         //for a given number of people learns if they can open message
                         //and if so, opens it
                         if ((idx.size() < params.k) || (!verify_eval(params, prf))) {
@@ -169,9 +169,9 @@ namespace nil {
                         evaluation_type mult = 1;
                         evaluation_type val1;
                         evaluation_type val2;
-                        for (std::size_t j = 0; j < params.k; ++j) {
+                        for (int j = 0; j < params.k; ++j) {
                             mult = 1;
-                            for (std::size_t l = 0; l < params.k; ++l) {
+                            for (int l = 0; l < params.k; ++l) {
                                 if (l != j) {
                                     val1 = evaluation_type(idx[l]);
                                     val2 = evaluation_type(idx[l] - idx[j]);

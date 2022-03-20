@@ -27,6 +27,7 @@
 #define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
 
 #include <vector>
+#include <iostream>
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
 #include <nil/crypto3/algebra/multiexp/multiexp.hpp>

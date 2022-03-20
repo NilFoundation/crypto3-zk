@@ -36,7 +36,7 @@
 #include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
-#include <nil/crypto3/algebra/fields/bls12/base_field.hpp>
+//#include <nil/crypto3/algebra/fields/bls12/base_field.hpp>
 #include <nil/crypto3/algebra/fields/bls12/scalar_field.hpp>
 #include <nil/crypto3/algebra/curves/params/multiexp/bls12.hpp>
 #include <nil/crypto3/algebra/multiexp/multiexp.hpp>

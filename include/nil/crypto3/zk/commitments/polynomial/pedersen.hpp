@@ -43,7 +43,7 @@ namespace nil {
                 template<typename CurveType, typename MultiexpMethod>
                 class pedersen {
                 public:
-                    typedef typename CurveType::scalar_field_type field_type;
+                    typedef typename CurveType::base_field_type field_type;
                     typedef typename CurveType::template g1_type<> group_type;
                     typedef typename field_type::value_type evaluation_type;
                     typedef typename group_type::value_type commitment_type;

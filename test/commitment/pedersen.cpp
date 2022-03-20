@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
-    constexpr static const int n = 31;
+    constexpr static const int n = 50;
     constexpr static const int k = 10;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(543);
+    constexpr static const field_type::value_type w = field_type::value_type(54321);
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(pedersen_long_test) {
     using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
-    constexpr static const int n = 1234567890;
-    constexpr static const int k = 1000000000;
+    constexpr static const int n = 15007;
+    constexpr static const int k = 12345;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(pedersen_long_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(123456789);
+    constexpr static const field_type::value_type w = field_type::value_type(7812395);
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);

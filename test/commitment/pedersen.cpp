@@ -82,13 +82,6 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     while (g == h) {
         h = algebra::random_element<curve_group_type>();
     }
-    constexpr static const int n = 50;
-    constexpr static const int k = 21;
-    static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
-    static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
-    while (g == h) {
-        h = algebra::random_element<curve_group_type>();
-    }
 
     typedef typename zk::commitments::pedersen<curve_type, multiexp_type> pedersen_type;
 

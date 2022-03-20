@@ -167,20 +167,13 @@ namespace nil {
 
                         evaluation_type sum = 0;
                         evaluation_type mult = 1;
-                        evaluation_type val1;
-                        evaluation_type val2;
                         for (int j = 0; j < params.k; ++j) {
                             mult = 1;
                             for (int l = 0; l < params.k; ++l) {
                                 if (l != j) {
-                                    val1 = evaluation_type(idx[l]);
-                                    val2 = evaluation_type(idx[l] - idx[j]);
-                                    std::cout << "idxs: " << idx[l] << ' ' << idx[l] - idx[j] << '\n';
-                                    std::cout << "vals: " << val1.data << ' ' << val2.data << '\n';
-                                    mult *= val1 * val2.inversed();
+                                    mult *= evaluation_type(idx[l]) * evaluation_type(idx[l] - idx[j]).inversed();
                                 }
                             }
-                            std::cout << "mult-in: " << mult.data << '\n';
                             sum += mult * prf.pk[idx[j] - 1].s;
                         }
                         return sum;

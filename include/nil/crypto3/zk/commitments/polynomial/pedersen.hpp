@@ -28,7 +28,45 @@
 
 #include <vector>
 #include <iostream>
+
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
+
+#include <nil/crypto3/algebra/random_element.hpp>
+#include <nil/crypto3/algebra/multiexp/multiexp.hpp>
+
+//---------------------------------------------------------------------------//
+// Copyright (c) 2021 Mikhail Komarov <nemo@nil.foundation>
+// Copyright (c) 2021 Nikita Kaskov <nbering@nil.foundation>
+//
+// MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//---------------------------------------------------------------------------//
+
+#ifndef CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
+#define CRYPTO3_ZK_PICKLES_COMMITMENT_SCHEME_HPP
+
+#include <vector>
+#include <iostream>
+
+#include <nil/crypto3/math/polynomial/polynomial.hpp>
+
 #include <nil/crypto3/algebra/random_element.hpp>
 #include <nil/crypto3/algebra/multiexp/multiexp.hpp>
 
@@ -57,7 +95,7 @@ namespace nil {
                     struct private_key {
                         evaluation_type s;              //power of g
                         evaluation_type t;              //power of h
-                        
+
                         private_key() : s(0), t(0) {}
                         private_key(evaluation_type a, evaluation_type b) : s(a), t(b) {}
                     };
@@ -109,7 +147,7 @@ namespace nil {
                         proof_type prf;
 
                         evaluation_type t = algebra::random_element<field_type>();
-                        prf.E_0 = commitment(params, private_key(w, t));//params.g * w + params.h * t;
+                        prf.E_0 = params.g * w + params.h * t;
 
                         std::vector<evaluation_type> f_coeffs;
                         f_coeffs.push_back(w);
@@ -122,29 +160,29 @@ namespace nil {
                             spare = algebra::random_element<field_type>();
                             g_coeffs.push_back(spare);
                         }
-                        
+
                         std::vector<evaluation_type> s_i = poly_eval(params, f_coeffs); //pair (s_i[j], t_i[j]) is given exclusively
                         std::vector<evaluation_type> t_i = poly_eval(params, g_coeffs); //to party number j
                         for (int i = 0; i < params.n; ++i) {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
                         for (int i = 1; i < params.k; ++i) {
-                            prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i])));//params.g * f_coeffs[i] + params.h * g_coeffs[i]);
+                            prf.E.push_back(params.g * f_coeffs[i] + params.h * g_coeffs[i]);
                         }
 
                         return prf;
                     }
 
-                    static bool verify_eval(const params_type& params, const proof_type& prf) {
+                    static bool verify_eval(params_type params, proof_type prf) {
                         //vefifies that everyone is sure one knows the secret message
                         bool answer = true;
 
                         evaluation_type power;
                         commitment_type E;
                         commitment_type sum;
-                        
+
                         for (int i = 1; i <= params.n; ++i) {
-                            E = commitment(params, prf.pk[i - 1]);//params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
+                            E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
                             sum = prf.E_0;
                             power = 1;
                             for (int j = 1; j < params.k; ++j) {

@@ -175,6 +175,7 @@ namespace nil {
                                 if (l != j) {
                                     val1 = evaluation_type(idx[l]);
                                     val2 = evaluation_type(idx[l] - idx[j]);
+                                    std::cout << "vals: " << val1 << ' ' << val2 << '\n';
                                     mult *= val1 * val2.inversed();
                                 }
                             }

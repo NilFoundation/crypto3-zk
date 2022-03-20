@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // setup
     using curve_type = algebra::curves::bls12<381>;
     using curve_group_type = curve_type::template g1_type<>;
-    using field_type = typename curve_type::base_field_type;
+    using field_type = typename curve_type::scalar_field_type;
     typedef typename algebra::policies::multiexp_method_BDLO12 multiexp_type;
 
     constexpr static const std::size_t n = 31;

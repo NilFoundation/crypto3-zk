@@ -111,7 +111,7 @@ namespace nil {
                         proof_type prf;
 
                         evaluation_type t = algebra::random_element<field_type>();
-                        prf.E_0 = params.g * w + params.h * t;
+                        prf.E_0 = commitment(params, private_key(w, t));
 
                         std::vector<evaluation_type> f_coeffs;
                         f_coeffs.push_back(w);
@@ -131,7 +131,7 @@ namespace nil {
                             prf.pk.push_back(private_key(s_i[i], t_i[i]));
                         }
                         for (int i = 1; i < params.k; ++i) {
-                            prf.E.push_back(params.g * f_coeffs[i] + params.h * g_coeffs[i]);
+                            prf.E.push_back(commitment(params, private_key(f_coeffs[i], g_coeffs[i])));
                         }
 
                         return prf;
@@ -146,7 +146,7 @@ namespace nil {
                         commitment_type sum;
 
                         for (int i = 1; i <= params.n; ++i) {
-                            E = params.g * prf.pk[i - 1].s + params.h * prf.pk[i - 1].t;
+                            E = commitment(params, prf.pk[i - 1]);
                             sum = prf.E_0;
                             power = 1;
                             for (int j = 1; j < params.k; ++j) {

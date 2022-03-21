@@ -40,7 +40,7 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace commitments {
-                template<typename CurveType, typename MultiexpMethod>
+                template<typename CurveType>
                 class pedersen {
                 public:
                     typedef typename CurveType::scalar_field_type field_type;

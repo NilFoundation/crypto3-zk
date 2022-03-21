@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     using curve_group_type = curve_type::template g1_type<>;
     using field_type = typename curve_type::scalar_field_type;
 
-    constexpr static const int n = 10;
-    constexpr static const int k = 6;
+    constexpr static const int n = 50;
+    constexpr static const int k = 26;
     static curve_group_type::value_type g = algebra::random_element<curve_group_type>();
     static curve_group_type::value_type h = algebra::random_element<curve_group_type>();
     while (g == h) {
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK(k > 0);
 
     // commit
-    constexpr static const field_type::value_type w = field_type::value_type(54321);
+    constexpr static const field_type::value_type w = field_type::value_type(37684);
 
     // eval
     proof_type proof = pedersen_type::proof_eval(params, w);
@@ -98,9 +98,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     std::shuffle(idx_base.begin(), idx_base.end(), gen);
     for (int i = 0; i < k; ++i) {
         idx.push_back(idx_base[i]);
-        std::cout << idx[i] << ' ';
     }
-    std::cout << '\n';
     
     BOOST_CHECK(idx.size() >= k);
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);

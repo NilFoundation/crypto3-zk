@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     BOOST_CHECK((secret == 0) || (w == secret));
 }
 
-BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
+BOOST_AUTO_TEST_CASE(pedersen_short_test) {
 
     // setup
     using curve_type = algebra::curves::bls12<381>;

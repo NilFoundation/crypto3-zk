@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <iostream>
+#include <random>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -87,10 +88,20 @@ BOOST_AUTO_TEST_CASE(pedersen_basic_test) {
     // verify
     BOOST_CHECK(pedersen_type::verify_eval(params, proof));
 
-    std::vector<int> idx = {9, 1, 7, 6, 3, 10};
-    //for (int i = 1; i <= k + 10; ++i) {
-    //    idx.push_back(k + 11 - i);
-    //}
+    std::vector<int> idx;
+    std::vector<int> idx_base;
+    for (int i = 1; i <= n; ++i) {
+        idx_base.push_back(i);
+    }
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(idx_base.begin(), idx_base.end(), g);
+    for (int i = 0; i < pubk.k; ++i) {
+        idx.push_back(idx_base[i]);
+        std::cout << idx[i] << ' ';
+    }
+    std::cout << '\n';
+    
     BOOST_CHECK(idx.size() >= k);
     field_type::value_type secret = pedersen_type::message_eval(params, proof, idx);
     std::cout << "secret: " << secret.data << '\n';

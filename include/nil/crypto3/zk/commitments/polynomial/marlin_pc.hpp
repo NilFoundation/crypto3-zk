@@ -36,7 +36,6 @@
 #include <boost/assert.hpp>
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/accumulators/accumulators.hpp>
-#include <nil/crypto3/math/polynomial/shift.hpp>
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/algebra/type_traits.hpp>
 #include <nil/crypto3/algebra/algorithms/pair.hpp>
@@ -57,6 +56,8 @@ namespace nil {
                     typedef typename curve_type::gt_type::value_type gt_value_type;
 
                     using base_field_value_type = typename curve_type::base_field_type::value_type;
+                    using scalar_field_value_type = typename curve_type::scalar_field_type::value_type;
+                   
                     using commitment_key_type =
                         std::pair<std::vector<typename curve_type::template g1_type<>::value_type>,
                                   std::vector<typename curve_type::template g1_type<>::value_type>>;
@@ -72,29 +73,26 @@ namespace nil {
                     };
 
                     static std::pair<commitment_key_type, verification_key_type> setup(const std::size_t n,
-                                                                                       params_type params) {
-
-                        base_field_value_type beta_scaled = params.beta;
+                                                                                       params_type params,
+                                                                                       typename curve_type::template g1_type<>::value_type g =
+                                                                                           curve_type::template g1_type<>::value_type::one(),
+                                                                                       typename curve_type::template g1_type<>::value_type gamma_g =
+                                                                                           curve_type::template g1_type<>::value_type::one()) {
 
                         commitment_key_type commitment_key = std::make_pair(
-                            std::vector<typename curve_type::template g1_type<>::value_type> {
-                                curve_type::template g1_type<>::value_type::one()},
-                            std::vector<typename curve_type::template g1_type<>::value_type> {
-                                params.gamma * curve_type::template g1_type<>::value_type::one()});
+                            std::vector<typename curve_type::template g1_type<>::value_type> {g},
+                            std::vector<typename curve_type::template g1_type<>::value_type> {gamma_g});
                         verification_key_type verification_key =
-                            std::make_pair(curve_type::template g1_type<>::value_type::one() * params.gamma,
+                            std::make_pair(gamma_g,
                                            curve_type::template g2_type<>::value_type::one() * params.beta);
-
+ 
                         for (std::size_t i = 0; i < n; i++) {
                             std::get<0>(commitment_key)
-                                .emplace_back(beta_scaled * (curve_type::template g1_type<>::value_type::one()));
+                                .push_back(params.beta * std::get<0>(commitment_key)[i]);
 
                             std::get<1>(commitment_key)
-                                .emplace_back(params.gamma * beta_scaled *
-                                              (curve_type::template g1_type<>::value_type::one()));
-                            beta_scaled = beta_scaled * params.beta;
+                                .push_back(params.beta  * std::get<1>(commitment_key)[i]);
                         }
-
                         return std::make_pair(commitment_key, verification_key);
                     }
 
@@ -139,6 +137,7 @@ namespace nil {
                         polynomial<base_field_value_type> p = {0};
                         polynomial<base_field_value_type> p_shifted = {0};
                         polynomial<base_field_value_type> wp;
+                        
                         std::vector<base_field_value_type> shift(n + 1, base_field_value_type(0));
 
                         polynomial<base_field_value_type> x_shift;;

@@ -57,7 +57,7 @@ namespace nil {
 
                     using base_field_value_type = typename curve_type::base_field_type::value_type;
                     using scalar_field_value_type = typename curve_type::scalar_field_type::value_type;
-                   
+
                     using commitment_key_type =
                         std::pair<std::vector<typename curve_type::template g1_type<>::value_type>,
                                   std::vector<typename curve_type::template g1_type<>::value_type>>;
@@ -72,99 +72,117 @@ namespace nil {
                         base_field_value_type gamma;
                     };
 
-                    static std::pair<commitment_key_type, verification_key_type> setup(const std::size_t n,
-                                                                                       params_type params,
-                                                                                       typename curve_type::template g1_type<>::value_type g =
-                                                                                           curve_type::template g1_type<>::value_type::one(),
-                                                                                       typename curve_type::template g1_type<>::value_type gamma_g =
-                                                                                           curve_type::template g1_type<>::value_type::one()) {
+                    static std::pair<commitment_key_type, verification_key_type>
+                        setup(const std::size_t n,
+                              params_type params,
+                              typename curve_type::template g1_type<>::value_type g =
+                                  curve_type::template g1_type<>::value_type::one(),
+                              typename curve_type::template g1_type<>::value_type gamma_g =
+                                  curve_type::template g1_type<>::value_type::one()) {
 
-                        commitment_key_type commitment_key = std::make_pair(
-                            std::vector<typename curve_type::template g1_type<>::value_type> {g},
-                            std::vector<typename curve_type::template g1_type<>::value_type> {gamma_g});
+                        commitment_key_type commitment_key =
+                            std::make_pair(std::vector<typename curve_type::template g1_type<>::value_type> {g},
+                                           std::vector<typename curve_type::template g1_type<>::value_type> {gamma_g});
                         verification_key_type verification_key =
-                            std::make_pair(gamma_g,
-                                           curve_type::template g2_type<>::value_type::one() * params.beta);
- 
-                        for (std::size_t i = 0; i < n; i++) {
-                            std::get<0>(commitment_key)
-                                .push_back(params.beta * std::get<0>(commitment_key)[i]);
+                            std::make_pair(gamma_g, curve_type::template g2_type<>::value_type::one() * params.beta);
 
-                            std::get<1>(commitment_key)
-                                .push_back(params.beta  * std::get<1>(commitment_key)[i]);
+                        for (std::size_t i = 0; i < n; i++) {
+                            std::get<0>(commitment_key).push_back(params.beta * std::get<0>(commitment_key)[i]);
+
+                            std::get<1>(commitment_key).push_back(params.beta * std::get<1>(commitment_key)[i]);
                         }
                         return std::make_pair(commitment_key, verification_key);
                     }
 
-                    static std::vector<std::pair<commitment_type, commitment_type>>
-                        commit(const commitment_key_type &commitment_key, size_t n, const std::vector<size_t> &d,
+                    static std::pair<std::vector<std::pair<commitment_type, commitment_type>>,
+                                     std::vector<std::pair<commitment_type, commitment_type>>>
+                        commit(const commitment_key_type &commitment_key, const size_t &n, const std::vector<size_t> &d,
                                const std::vector<polynomial<base_field_value_type>> &f,
-                               const std::vector<polynomial<base_field_value_type>> &w) {
+                               const std::vector<polynomial<base_field_value_type>> &w,
+                               const std::vector<polynomial<base_field_value_type>> &ws) {
 
                         std::vector<std::pair<commitment_type, commitment_type>> c;
-
+                        std::vector<std::pair<commitment_type, commitment_type>> r;
+                        std::pair<commitment_type, commitment_type> commitment;
+                        std::pair<commitment_type, commitment_type> commitment_shifted;
+                        std::size_t shift_power;
                         for (size_t i = 0; i < f.size(); i++) {
-                            c.push_back(std::make_pair(commit_s(commitment_key, f[i], w[i], 0),
-                                                       commit_s(commitment_key, f[i], w[i], n - d[i])));
+                            commitment = commit_s(commitment_key, f[i], w[i], 0);
+                            shift_power = n - d[i];
+                            commitment_shifted = commit_s(commitment_key, f[i], ws[i], shift_power);
+                            c.push_back(std::make_pair(commitment.first, commitment_shifted.first));
+                            r.push_back(std::make_pair(commitment.second, commitment_shifted.second));
                         }
-                        return c;
+                        return std::make_pair(c, r);
                     }
 
-                    static commitment_type commit_s(const commitment_key_type &commitment_key,
-                                                    const polynomial<base_field_value_type> &f,
-                                                    const polynomial<base_field_value_type> &w,
-                                                    size_t shift_powers = 0) {
+                    static polynomial<base_field_value_type>
+                        shift_polynomial_coeffs(const polynomial<base_field_value_type> &p, std::size_t shift) {
+                        std::vector<base_field_value_type> v(shift, base_field_value_type(0));
+                        v.insert(v.end(), p.data.begin(), p.data.end());
+                        polynomial<base_field_value_type> p_shifted = v;
+                        return p_shifted;
+                    }
 
-                        commitment_type commitment = f[0] * std::get<0>(commitment_key)[shift_powers] +
-                                                     w[0] * std::get<1>(commitment_key)[shift_powers];
+                    static std::pair<commitment_type, commitment_type>
+                        commit_s(const commitment_key_type &commitment_key,
+                                 const polynomial<base_field_value_type> &f,
+                                 const polynomial<base_field_value_type> &w,
+                                 std::size_t shift_powers) {
+
+                        commitment_type commitment = f[0] * commitment_key.first[shift_powers];
+                        commitment_type randomness = w[0] * commitment_key.second[shift_powers];
 
                         for (std::size_t i = 1; i < f.size(); i++) {
-                            commitment = commitment + f[i] * std::get<0>(commitment_key)[i + shift_powers] +
-                                         w[i] * std::get<1>(commitment_key)[i + shift_powers];
+                            commitment = commitment + f[i] * commitment_key.first[i + shift_powers];
                         }
-                        return commitment;
+                        for (std::size_t i = 1; i < w.size(); i++) {
+                            randomness = randomness + w[i] * commitment_key.second[i + shift_powers];
+                        }
+                        return std::make_pair(commitment, randomness);
                     }
 
                     static std::pair<proof_type, base_field_value_type>
                         proof_eval(const commitment_key_type &commitment_key, size_t n, std::vector<size_t> &d,
                                    typename curve_type::base_field_type::value_type x,
                                    std::vector<typename curve_type::base_field_type::value_type> y,
-                                   base_field_value_type eps,
-                                   const std::vector<polynomial<base_field_value_type>> &f,
+                                   base_field_value_type eps, const std::vector<polynomial<base_field_value_type>> &f,
                                    const std::vector<polynomial<base_field_value_type>> &w) {
                         polynomial<base_field_value_type> q = {0};
                         polynomial<base_field_value_type> q_shifted = {0};
                         polynomial<base_field_value_type> p = {0};
                         polynomial<base_field_value_type> p_shifted = {0};
                         polynomial<base_field_value_type> wp;
-                        
+
                         std::vector<base_field_value_type> shift(n + 1, base_field_value_type(0));
 
-                        polynomial<base_field_value_type> x_shift;;
+                        polynomial<base_field_value_type> x_shift;
+
                         base_field_value_type eps_scaled = eps;
                         for (size_t i = 0; i < f.size(); i++) {
 
                             wp = create_witness(x, y[i], f[i]);
 
                             x_shift = wp;
-                            for (size_t j =0; j < x_shift.size(); j++){
-                                x_shift[j] = x_shift[j]*eps_scaled;
+                            for (size_t j = 0; j < x_shift.size(); j++) {
+                                x_shift[j] = x_shift[j] * eps_scaled;
                             }
                             q = q + x_shift;
 
                             x_shift = w[i];
-                            for (size_t j =0; j < x_shift.size(); j++){
-                                x_shift[j] = x_shift[j]*eps_scaled;
+                            for (size_t j = 0; j < x_shift.size(); j++) {
+                                x_shift[j] = x_shift[j] * eps_scaled;
                             }
-                            p = p + x_shift;//eps_scaled * w[i];
-                            eps_scaled = eps_scaled*eps;
+                            p = p + x_shift;
+                            eps_scaled = eps_scaled * eps;
                         }
-                        for (size_t i = 0; i < w.size(); i++){
+                        for (size_t i = 0; i < w.size(); i++) {
                             shift = {};
                             shift.insert(shift.begin(), n - d[i], base_field_value_type(0));
                             shift.insert(shift.end(), f[i].begin(), f[i].end());
-                            shift[n-d[i]] = shift[n-d[i]] + y[i];
-                            x_shift = create_witness(x,polynomial<base_field_value_type >(shift).evaluate(x),polynomial<base_field_value_type >(shift) );
+                            shift[n - d[i]] = shift[n - d[i]] + y[i];
+                            x_shift = create_witness(x, polynomial<base_field_value_type>(shift).evaluate(x),
+                                                     polynomial<base_field_value_type>(shift));
                             for (size_t j = 0; j < x_shift.size(); j++) {
                                 x_shift[j] = x_shift[j] * eps_scaled;
                             }
@@ -172,12 +190,12 @@ namespace nil {
                             shift = {};
                             shift.insert(shift.begin(), n - d[i], base_field_value_type(0));
                             shift.insert(shift.end(), w[i].begin(), w[i].end());
-                            x_shift = shift; //polynomial<base_field_value_type>(shift);
-                            for (size_t j =0; j < x_shift.size(); j++){
-                                x_shift[j] = x_shift[j]*eps_scaled;
+                            x_shift = shift;
+                            for (size_t j = 0; j < x_shift.size(); j++) {
+                                x_shift[j] = x_shift[j] * eps_scaled;
                             }
                             p_shifted = p_shifted + x_shift;
-                            eps_scaled = eps_scaled*eps;
+                            eps_scaled = eps_scaled * eps;
                         }
 
                         polynomial<base_field_value_type> p_res =
@@ -187,10 +205,10 @@ namespace nil {
                                               p.evaluate(x) + p_shifted.evaluate(x));
                     }
 
-                    static polynomial<base_field_value_type> create_witness(typename curve_type::base_field_type::value_type x,
-                                                                     typename curve_type::base_field_type::value_type y,
-                                                                     const polynomial<base_field_value_type> &f
-                                                                    ) {
+                    static polynomial<base_field_value_type>
+                        create_witness(typename curve_type::base_field_type::value_type x,
+                                       typename curve_type::base_field_type::value_type y,
+                                       const polynomial<base_field_value_type> &f) {
 
                         const polynomial<base_field_value_type> denominator_polynom = {-x, 1};
 
@@ -210,20 +228,22 @@ namespace nil {
                         base_field_value_type eps_scaled = eps;
                         commitment_type cl = eps_scaled * std::get<0>(C_f[0]);
                         for (size_t i = 1; i < C_f.size(); i++) {
-                            eps_scaled = eps_scaled*eps;
+                            eps_scaled = eps_scaled * eps;
                             cl = cl + eps_scaled * std::get<0>(C_f[i]);
                         }
-                        eps_scaled = eps_scaled*eps;
-                        commitment_type cr = eps_scaled*(std::get<1>(C_f[0]) - y[0] * std::get<0>(std::get<0>(keys))[n - d[0]]);
+                        eps_scaled = eps_scaled * eps;
+                        commitment_type cr =
+                            eps_scaled * (std::get<1>(C_f[0]) - y[0] * std::get<0>(std::get<0>(keys))[n - d[0]]);
                         for (size_t i = 1; i < C_f.size(); i++) {
-                            eps_scaled = eps_scaled*eps;
-                            cr = cr + eps_scaled*(std::get<1>(C_f[i]) - y[i] * std::get<0>(std::get<0>(keys))[n - d[i]]);
+                            eps_scaled = eps_scaled * eps;
+                            cr = cr +
+                                 eps_scaled * (std::get<1>(C_f[i]) - y[i] * std::get<0>(std::get<0>(keys))[n - d[i]]);
                         }
                         base_field_value_type Y = base_field_value_type(0);
                         eps_scaled = eps;
                         for (size_t i = 0; i < y.size(); i++) {
-                            Y = Y + eps_scaled*y[i];
-                            eps_scaled = eps_scaled*eps;
+                            Y = Y + eps_scaled * y[i];
+                            eps_scaled = eps_scaled * eps;
                         }
 
                         commitment_type C = cl + cr;
@@ -238,7 +258,6 @@ namespace nil {
 
                         return gt1 == gt2;
                     }
-
                 };
             };    // namespace snark
         }         // namespace zk

@@ -47,18 +47,26 @@ macro(define_zk_test test)
 endmacro()
 
 set(TESTS_NAMES
+    "arithmetization/air/air_test_utils"
+    "arithmetization/air/rescue/rescue_constants"
+    "arithmetization/air/boundary/boundary_air"
+
     "commitment/lpc"
     "commitment/fri"
     "commitment/lpc_performance"
     "commitment/pedersen"
     "commitment/type_traits"
 
-
     "routing_algorithms/test_routing_algorithms"
 
     "relations/numeric/qap"
     "relations/numeric/sap"
     "relations/numeric/ssp"
+
+    "systems/stark/stark"
+    "systems/stark/oods"
+    "systems/stark/composition_oracle"
+    "systems/stark/committed_trace"
 
     "systems/plonk/pickles/pickles"
     "systems/plonk/pickles/kimchi"

@@ -142,7 +142,7 @@ namespace nil {
                                 }
                             }
 
-                            return precommitment_type(y_data.begin(), y_data.end());
+                            return containers::make_merkle_tree<MerkleTreeHashType, 2>(y_data.begin(), y_data.end());
                         }
 
                         static commitment_type commit(precommitment_type P) {

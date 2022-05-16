@@ -175,7 +175,7 @@ namespace nil {
                                 y_val.write(write_iter, field_element_type::length());
                             }
 
-                            return precommitment_type(y_data.begin(), y_data.end());
+                            return containers::make_merkle_tree<MerkleTreeHashType, 2>(y_data.begin(), y_data.end());
                         }
 
                         template<std::size_t list_size>

@@ -114,7 +114,6 @@ namespace nil {
                 using type = typename std::
                     conditional<Condition, std::array<Type, Size>, std::vector<Type>>::type;
             };
-
         }    // namespace zk
     }        // namespace crypto3
 }    // namespace nil

@@ -28,6 +28,10 @@
 #ifndef CRYPTO3_ZK_PLONK_PLACEHOLDER_GATES_ARGUMENT_HPP
 #define CRYPTO3_ZK_PLONK_PLACEHOLDER_GATES_ARGUMENT_HPP
 
+#include <unordered_map>
+#include <unordered_set>
+#include <set>
+
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/math/polynomial/shift.hpp>
 #include <nil/crypto3/math/domains/evaluation_domain.hpp>
@@ -43,6 +47,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
+#include <nil/crypto3/zk/math/non_linear_combination.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -51,13 +56,40 @@ namespace nil {
                 template<typename FieldType, typename ParamsType, std::size_t ArgumentSize = 1>
                 struct placeholder_gates_argument;
 
+                template<typename FieldType>
+                struct hash_for_coeff
+                {
+                    std::size_t operator()(const typename plonk_variable<FieldType>::assignment_type &value) const {
+                        std::size_t seed = 0;
+                        boost::hash_combine(seed, static_cast<std::size_t>(value.data));
+                        return seed;
+                    }
+                };
+
+                struct hash_for_pair
+                {
+                    std::size_t operator()(const std::pair<std::uint8_t, std::size_t> &pair) const {
+                        std::size_t seed = 0;
+                        boost::hash_combine(seed, pair.first);
+                        boost::hash_combine(seed, pair.second);
+                        return seed;
+                    }
+                };
+
                 template<typename FieldType, typename ParamsType>
                 struct placeholder_gates_argument<FieldType, ParamsType, 1> {
 
                     typedef typename ParamsType::transcript_hash_type transcript_hash_type;
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
 
+                    using arithmetization_params = typename ParamsType::arithmetization_params;
+
                     typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
+
+                    using var = plonk_variable<FieldType>;
+
+                    using nlt_type = typename math::non_linear_term<var>;
+                    using nlc_type = typename math::non_linear_combination<var>;
 
                     constexpr static const std::size_t argument_size = 1;
 
@@ -70,12 +102,18 @@ namespace nil {
 
                         typename FieldType::value_type theta = transcript.template challenge<FieldType>();
 
-                        std::array<math::polynomial<typename FieldType::value_type>, argument_size> F;
+                        std::array<math::polynomial<typename FieldType::value_type>, argument_size> ans;
+
+                        // nonlinear combination of constraints
+                        nlc_type F(FieldType::value_type::zero());
 
                         typename FieldType::value_type theta_acc = FieldType::value_type::one();
 
                         const std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates = constraint_system.gates();
 
+                        //////////////////////////////OLD ALGORITHM///////////////////////////
+                        auto start = std::chrono::high_resolution_clock::now();
+                        std::array<math::polynomial<typename FieldType::value_type>, argument_size> check;
                         for (std::size_t i = 0; i < gates.size(); i++) {
                             math::polynomial_dfs<typename FieldType::value_type> gate_result(
                                 0, domain->m, FieldType::value_type::zero());
@@ -88,10 +126,89 @@ namespace nil {
 
                             gate_result = gate_result * column_polynomials.selector(gates[i].selector_index);
 
-                            F[0] = F[0] + math::polynomial<typename FieldType::value_type>(gate_result.coefficients());
+                            check[0] = check[0] + math::polynomial<typename FieldType::value_type>(gate_result.coefficients());
+                        }
+                        std::cout << "need: " << check[0][0].data << '\n';
+                        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+                        // std::cout << "check: " << duration.count() << "ms" << std::endl;
+                        //////////////////////////////OLD ALGORITHM///////////////////////////
+                        
+                        start = std::chrono::high_resolution_clock::now();
+                        for (std::size_t i = 0; i < gates.size(); i++) {
+
+                            for (std::size_t j = 0; j < gates[i].constraints.size(); j++) {
+                                F = F + nlc_type(gates[i].constraints[j] * var(gates[i].selector_index, 0, true, var::column_type::selector)) * theta_acc;
+                                theta_acc *= theta;
+                            }
+                        }
+                        // std::cout << "size before combining by terms: " << F.terms.size() << '\n';
+                        F.sort();
+                        // std::cout << "size after combining by terms: " << F.terms.size() << '\n';
+
+                        // columns for linearization
+                        std::unordered_set<std::pair<std::uint8_t, std::size_t>, hash_for_pair> columns;
+                        for (std::size_t i = 0; i < arithmetization_params::WitnessColumns; ++i) {
+                            columns.insert(std::pair<std::uint8_t, std::size_t>(0, i));
+                        }
+                        for (std::size_t i = 0; i < arithmetization_params::ConstantColumns; ++i) {
+                            columns.insert(std::pair<std::uint8_t, std::size_t>(2, i));
                         }
 
-                        return F;
+                        // monomials - combining by coeffs - TODO - use in linearization
+                        std::unordered_map<typename var::assignment_type, nlc_type, hash_for_coeff<FieldType>> monomials_by_coeff;
+                        for (auto term : F) {
+                            auto search = monomials_by_coeff.find(term.coeff);
+                            if (search != monomials_by_coeff.end()) {
+                                monomials_by_coeff[term.coeff] = search->second + nlt_type(term.vars);
+                            } else {
+                                monomials_by_coeff[term.coeff] = nlt_type(term.vars);
+                            }
+                        }
+                        // std::cout << "size after combining by coeffs: " << monomials_by_coeff.size() << '\n';
+
+                        // linearization
+                        std::unordered_map<std::pair<std::uint8_t, std::size_t>, nlc_type, hash_for_pair> linearized;
+                        nlc_type const_term;
+                        std::vector<var> evaluated;
+                        std::vector<var> unevaluated;
+                        for (const auto &term : F) {
+                            for (auto var : term.vars) {
+                                auto search = columns.find(std::pair<std::uint8_t, std::size_t>(var.type, var.index));
+                                if (search != columns.end()) {
+                                    evaluated.push_back(var);
+                                } else {
+                                    unevaluated.push_back(var);
+                                }
+                            }
+                            assert(unevaluated.size() <= 1);
+
+                            nlc_type c = nlc_type(term);
+                            for (auto var : term.vars) {
+                                c = c * var;
+                            }
+                            if (unevaluated.empty()) {
+                                const_term = const_term + c;
+                            } else {
+                                auto var = unevaluated[0];
+                                // if (var.relative) {
+                                //     assert(var.rotation == 0);
+                                // }
+                                assert(var.rotation == 0);
+                                linearized[std::pair<std::uint8_t, std::size_t>(var.type, var.index)] =
+                                            linearized[std::pair<std::uint8_t, std::size_t>(var.type, var.index)] + c;
+                            }
+                        }
+
+                        // evaluation
+                        for (auto lin : linearized) {
+                            auto eval_result = plonk_constraint<FieldType>(lin.second).evaluate(column_polynomials, domain);
+                            ans[0] = ans[0] + math::polynomial<typename FieldType::value_type>(eval_result.coefficients());
+                        }
+                        std::cout << "get: " << ans[0][0].data << '\n';
+                        duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+                        // std::cout << "eval: " << duration.count() << "ms" << std::endl;
+
+                        return ans;
                     }
 
                     static inline std::array<typename FieldType::value_type, argument_size>
@@ -110,14 +227,15 @@ namespace nil {
 
                             for (std::size_t j = 0; j < gates[i].constraints.size(); j++) {
                                 gate_result = gate_result + gates[i].constraints[j].evaluate(evaluations) * theta_acc;
+                                // std::cout << gates[i].constraints[j].evaluate(evaluations).data << '\n';
                                 theta_acc *= theta;
                             }
 
                             std::tuple<std::size_t,
                                            int,
-                                           typename plonk_variable<FieldType>::column_type>
+                                           typename var::column_type>
                                 selector_key = std::make_tuple(gates[i].selector_index, 0,
-                                    plonk_variable<FieldType>::column_type::selector);
+                                    var::column_type::selector);
 
                             gate_result =
                                 gate_result * evaluations[selector_key];

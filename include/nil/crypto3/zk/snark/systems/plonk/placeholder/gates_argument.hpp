@@ -126,13 +126,15 @@ namespace nil {
                             }
 
                             gate_result = gate_result * column_polynomials.selector(gates[i].selector_index);
-                            
+
                             check[0] = check[0] + math::polynomial<typename FieldType::value_type>(gate_result.coefficients());
                         }
 
                         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
                         std::cout << "check: " << duration.count() << "ms" << std::endl;
                         //////////////////////////////OLD ALGORITHM///////////////////////////
+
+                        start = std::chrono::high_resolution_clock::now();
                         
                         theta_acc = FieldType::value_type::one();
                         for (std::size_t i = 0; i < gates.size(); i++) {
@@ -142,14 +144,12 @@ namespace nil {
                                 theta_acc *= theta;
                             }
 
-                            auto tmp_gate = plonk_constraint<FieldType>(gate_res).evaluate(column_polynomials, domain);
-
                             F = F + gate_res;
                         }
 
                         F.sort();
 
-                        start = std::chrono::high_resolution_clock::now();
+                        //start = std::chrono::high_resolution_clock::now();
 
                         // std::cout << "size after combining by terms: " << F.terms.size() << '\n';
 

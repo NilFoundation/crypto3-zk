@@ -70,10 +70,7 @@ namespace nil {
                 non_linear_term(const assignment_type &field_val) : coeff(field_val) {
                 }
 
-                non_linear_term(std::vector<VariableType> vars) : coeff(assignment_type::one()) {
-                    for (auto var : vars) {
-                        this->vars.insert(std::upper_bound(this->vars.begin(), this->vars.end(), var), var);
-                    }
+                non_linear_term(std::vector<VariableType> vars) : vars(vars), coeff(assignment_type::one()) {
                 }
 
                 non_linear_term operator*(const assignment_type &field_coeff) const {
@@ -82,37 +79,23 @@ namespace nil {
                     return result;
                 }
 
-                non_linear_term operator*(const VariableType &var) const {
-                    non_linear_term result(this->vars);
-                    result.vars.insert(std::upper_bound(result.vars.begin(), result.vars.end(), var), var);
-                    return result;
-                }
-
                 non_linear_term operator*(const non_linear_term &other) const {
                     non_linear_term result(this->vars);
 
-                    auto begin = result.vars.begin();
-                    for (auto var : other.vars) {
-                        auto bound = std::upper_bound(begin, result.vars.end(), var);
-                        result.vars.insert(bound, var);
-                        begin = bound;
-                    }
-
+                    std::copy(other.vars.begin(), other.vars.end(), std::back_inserter(result.vars));
                     result.coeff = other.coeff * this->coeff;
                     return result;
                 }
 
                 non_linear_term pow(const std::size_t power) const {
                     
-                    non_linear_term result(this->coeff.pow(power));
+                    non_linear_term result(this->vars);
 
-                    for (std::size_t j = 0; j < this->vars.size(); ++j) {
-                        auto cur = this->vars[j];
-                        for (std::size_t i = 0; i < power - 1; i++){
-                            result.vars.push_back(cur);
-                        }
+                    for (std::size_t i = 0; i < power - 1; i++){
+                        std::copy(this->vars.begin(), this->vars.end(), std::back_inserter(result.vars));
                     }
 
+                    result.coeff = this->coeff.pow(power);
                     return result;
                 }
 

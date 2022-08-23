@@ -146,12 +146,7 @@ namespace nil {
 
                             F = F + gate_res;
                         }
-
                         F.sort();
-
-                        //start = std::chrono::high_resolution_clock::now();
-
-                        // std::cout << "size after combining by terms: " << F.terms.size() << '\n';
 
                         // columns for linearization
                         std::unordered_set<std::pair<std::uint8_t, std::size_t>, hash_for_pair> columns;
@@ -172,7 +167,6 @@ namespace nil {
                         //         monomials_by_coeff[term.coeff] = nlt_type(term.vars);
                         //     }
                         // }
-                        // std::cout << "size after combining by coeffs: " << monomials_by_coeff.size() << '\n';
 
                         // linearization
                         using key_type = std::pair<typename var::column_type, std::size_t>;

@@ -70,7 +70,10 @@ namespace nil {
                 non_linear_term(const assignment_type &field_val) : coeff(field_val) {
                 }
 
-                non_linear_term(std::vector<VariableType> vars) : vars(vars), coeff(assignment_type::one()) {
+                non_linear_term(std::vector<VariableType> vars) : coeff(assignment_type::one()) {
+                    for (auto var : vars) {
+                        this->vars.insert(std::upper_bound(this->vars.begin(), this->vars.end(), var), var);
+                    }
                 }
 
                 non_linear_term operator*(const assignment_type &field_coeff) const {
@@ -79,23 +82,34 @@ namespace nil {
                     return result;
                 }
 
+                non_linear_term operator*(const VariableType &var) const {
+                    non_linear_term term(var);
+                    return term * *this;
+                }
+
                 non_linear_term operator*(const non_linear_term &other) const {
                     non_linear_term result(this->vars);
 
-                    std::copy(other.vars.begin(), other.vars.end(), std::back_inserter(result.vars));
+                    for (auto var : other.vars) {
+                        auto bound = std::upper_bound(result.vars.begin(), result.vars.end(), var);
+                        result.vars.insert(bound, var);
+                    }
+
                     result.coeff = other.coeff * this->coeff;
                     return result;
                 }
 
                 non_linear_term pow(const std::size_t power) const {
                     
-                    non_linear_term result(this->vars);
+                    non_linear_term result(this->coeff.pow(power));
 
-                    for (std::size_t i = 0; i < power - 1; i++){
-                        std::copy(this->vars.begin(), this->vars.end(), std::back_inserter(result.vars));
+                    for (std::size_t j = 0; j < this->vars.size(); ++j) {
+                        auto cur = this->vars[j];
+                        for (std::size_t i = 0; i < power - 1; i++){
+                            result.vars.push_back(cur);
+                        }
                     }
 
-                    result.coeff = this->coeff.pow(power);
                     return result;
                 }
 
@@ -249,6 +263,20 @@ namespace nil {
                     this->terms.emplace_back(nlt);
                 }
 
+                void delete_zeros() {
+                    std::size_t ind = 0;
+                    std::size_t size = this->terms.size();
+                    auto begin = this->terms.begin();
+                    while (ind < size) {
+                        if (this->terms[ind].coeff == 0) {
+                            this->terms.erase(begin + ind);
+                            size -= 1;
+                        } else {
+                            ++ind;
+                        }
+                    }
+                }
+
                 non_linear_combination operator*(const typename VariableType::assignment_type &field_coeff) const {
                     non_linear_combination result;
                     result.terms.reserve(this->terms.size());
@@ -284,10 +312,17 @@ namespace nil {
                             if (terms[i].vars == terms[i - 1].vars) {
                                 (new_terms.end() - 1)->coeff += terms[i].coeff;
                             } else {
+                                if ((new_terms.end() - 1)->coeff == 0) {
+                                    new_terms.pop_back();
+                                }
                                 new_terms.push_back(terms[i]);
                             }
                         }
+                        if ((new_terms.end() - 1)->coeff == 0) {
+                            new_terms.pop_back();
+                        }
                     }
+                    terms = new_terms;
                 }
 
                 bool operator==(const non_linear_combination &other) {

@@ -105,7 +105,7 @@ namespace nil {
 
                     for (std::size_t j = 0; j < this->vars.size(); ++j) {
                         auto cur = this->vars[j];
-                        for (std::size_t i = 0; i < power - 1; i++){
+                        for (std::size_t i = 0; i < power; i++){
                             result.vars.push_back(cur);
                         }
                     }
@@ -261,20 +261,6 @@ namespace nil {
                 }
                 void add_term(const term_type &nlt) {
                     this->terms.emplace_back(nlt);
-                }
-
-                void delete_zeros() {
-                    std::size_t ind = 0;
-                    std::size_t size = this->terms.size();
-                    auto begin = this->terms.begin();
-                    while (ind < size) {
-                        if (this->terms[ind].coeff == 0) {
-                            this->terms.erase(begin + ind);
-                            size -= 1;
-                        } else {
-                            ++ind;
-                        }
-                    }
                 }
 
                 non_linear_combination operator*(const typename VariableType::assignment_type &field_coeff) const {

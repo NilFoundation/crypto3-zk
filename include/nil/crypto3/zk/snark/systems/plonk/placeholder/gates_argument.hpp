@@ -111,30 +111,7 @@ namespace nil {
 
                         const std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates = constraint_system.gates();
 
-                        //////////////////////////////OLD ALGORITHM///////////////////////////
-                        auto start = std::chrono::high_resolution_clock::now();
-                        std::array<math::polynomial<typename FieldType::value_type>, argument_size> check;
-                        check[0] = math::polynomial<typename FieldType::value_type>(FieldType::value_type::zero());
-                        for (std::size_t i = 0; i < gates.size(); i++) {
-                            math::polynomial_dfs<typename FieldType::value_type> gate_result(
-                                0, domain->m, FieldType::value_type::zero());
-
-                            for (std::size_t j = 0; j < gates[i].constraints.size(); j++) {
-                                gate_result =
-                                    gate_result + gates[i].constraints[j].evaluate(column_polynomials, domain) * theta_acc;
-                                theta_acc *= theta;
-                            }
-
-                            gate_result = gate_result * column_polynomials.selector(gates[i].selector_index);
-
-                            check[0] = check[0] + math::polynomial<typename FieldType::value_type>(gate_result.coefficients());
-                        }
-
-                        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-                        std::cout << "check: " << duration.count() << "ms" << std::endl;
-                        //////////////////////////////OLD ALGORITHM///////////////////////////
-
-                        start = std::chrono::high_resolution_clock::now();
+                        // auto start = std::chrono::high_resolution_clock::now();
                         
                         theta_acc = FieldType::value_type::one();
                         for (std::size_t i = 0; i < gates.size(); i++) {
@@ -221,8 +198,8 @@ namespace nil {
                             ans[0] = ans[0] + math::polynomial<typename FieldType::value_type>((eval_result * eval_lin_multiplier).coefficients());
                         }
 
-                        duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-                        std::cout << "eval: " << duration.count() << "ms" << std::endl;
+                        // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+                        // std::cout << "eval: " << duration.count() << "ms" << std::endl;
 
                         return ans;
                     }

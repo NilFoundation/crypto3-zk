@@ -140,13 +140,14 @@ namespace nil {
                 }
 
                 bool operator<(const non_linear_term &nlt) const {
-                    if (this->vars.size() != nlt.vars.size()) {
-                        return (this->vars.size() < nlt.vars.size());
-                    }
-                    for (std::size_t ind = 0; ind < nlt.vars.size(); ++ind) {
+                    auto sz = std::min(this->vars.size(), nlt.vars.size());
+                    for (std::size_t ind = 0; ind < sz; ++ind) {
                         if (!(this->vars[ind] == nlt.vars[ind])) {
                             return (this->vars[ind] < nlt.vars[ind]);
                         }
+                    }
+                    if (this->vars.size() != nlt.vars.size()) {
+                        return (this->vars.size() < nlt.vars.size());
                     }
                     return false;
                 }

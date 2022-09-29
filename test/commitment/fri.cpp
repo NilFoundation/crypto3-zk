@@ -139,6 +139,76 @@ BOOST_AUTO_TEST_CASE(fri_basic_test) {
     BOOST_CHECK(verifier_next_challenge == prover_next_challenge);
 }
 
+BOOST_AUTO_TEST_CASE(fri_skipping_layers_wrong_proof_test) {
+    // setup
+    using curve_type = algebra::curves::pallas;
+    using FieldType = typename curve_type::base_field_type;
+
+    typedef hashes::sha2<256> merkle_hash_type;
+    typedef hashes::sha2<256> transcript_hash_type;
+
+    typedef typename containers::merkle_tree<merkle_hash_type, 2> merkle_tree_type;
+
+    constexpr static const std::size_t d = 1024;
+
+    constexpr static const std::size_t r = boost::static_log2<d>::value;
+    constexpr static const std::size_t m = 2;
+
+    typedef zk::commitments::fri<FieldType, merkle_hash_type, transcript_hash_type, m, 1, true> fri_type;
+
+    static_assert(zk::is_commitment<fri_type>::value);
+    static_assert(!zk::is_commitment<merkle_hash_type>::value);
+
+    typedef typename fri_type::proof_type proof_type;
+    typedef typename fri_type::params_type params_type;
+
+    params_type params;
+
+    constexpr static const std::size_t d_extended = d;
+    std::size_t extended_log = boost::static_log2<d_extended>::value;
+    std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D =
+        math::calculate_domain_set<FieldType>(extended_log, r);
+
+    params.r = r;
+    params.D = D;
+    params.max_degree = d - 1;
+    params.step_list = generate_random_step_list(r, 4);
+
+    BOOST_CHECK(D[1]->m == D[0]->m / 2);
+    BOOST_CHECK(D[1]->get_domain_element(1) == D[0]->get_domain_element(1).squared());
+
+    // commit
+    nil::crypto3::random::algebraic_random_device<FieldType> rnd;
+    math::polynomial<typename FieldType::value_type> f(d);
+    std::generate(std::begin(f), std::end(f), [&rnd]() { return rnd(); });
+    f.back() = FieldType::value_type::one();
+
+    // eval
+    std::vector<std::uint8_t> init_blob {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    zk::transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(init_blob);
+
+    proof_type proof = zk::algorithms::proof_eval<fri_type>(f, params, transcript);
+
+    params.max_degree = d/2;
+    size_t len = std::pow(2, std::log2(params.max_degree + 1) - r + 1);
+    for( size_t i = 0; i < proof.final_polynomials.size(); i++){
+        proof.final_polynomials[i] = math::polynomial<typename FieldType::value_type>();
+        proof.final_polynomials[i].resize(len);
+        for( size_t j = 0; j < len; j++){
+            proof.final_polynomials[i][j] = 1;
+        }
+    }
+
+    // verify
+    zk::transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript_verifier(init_blob);
+
+    BOOST_CHECK(!zk::algorithms::verify_eval<fri_type>(proof, params, proof.round_proofs[0].T_root, transcript_verifier));
+
+    typename FieldType::value_type verifier_next_challenge = transcript_verifier.template challenge<FieldType>();
+    typename FieldType::value_type prover_next_challenge = transcript.template challenge<FieldType>();
+    BOOST_CHECK(verifier_next_challenge == prover_next_challenge);
+}
+
 BOOST_AUTO_TEST_CASE(fri_basic_skipping_layers_test) {
 
     // setup

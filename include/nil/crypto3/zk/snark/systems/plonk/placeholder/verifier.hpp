@@ -143,7 +143,7 @@ namespace nil {
                                 columns_at_y[key] = proof.eval_proof.witness.z[i][j];
                             }
                         }
-                        for (std::size_t i = 0; i < 0 + public_input_columns; i++) {
+                        for (std::size_t i = 0; i < public_input_columns; i++) {
                             std::size_t i_global_index = witness_columns + i;
 
                             for (std::size_t j = 0;
@@ -157,7 +157,7 @@ namespace nil {
                                 columns_at_y[key] = proof.eval_proof.public_input.z[i][j];
                             }
                         }
-                        for (std::size_t i = 0; i < 0 + constant_columns; i++) {
+                        for (std::size_t i = 0; i < constant_columns; i++) {
                             std::size_t i_global_index = witness_columns + public_input_columns + i;
                             for (std::size_t j = 0;
                                  j < preprocessed_public_data.common_data.columns_rotations[i_global_index].size();

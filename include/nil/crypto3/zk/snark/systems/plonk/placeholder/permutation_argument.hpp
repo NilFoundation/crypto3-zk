@@ -69,7 +69,7 @@ namespace nil {
                         plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>
                             &constraint_system,
                         const typename placeholder_public_preprocessor<FieldType, ParamsType>::preprocessed_data_type
-                            preprocessed_data,
+                            &preprocessed_data,
                         const plonk_table_description<FieldType, typename ParamsType::arithmetization_params>
                             &table_description,
                         const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params>

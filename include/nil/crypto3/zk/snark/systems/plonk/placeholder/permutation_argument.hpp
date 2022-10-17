@@ -74,7 +74,7 @@ namespace nil {
                             &table_description,
                         const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params>
                             &column_polynomials,
-                        typename ParamsType::commitment_params_type fri_params,
+                        const typename ParamsType::commitment_params_type &fri_params,
                         transcript_type &transcript = transcript_type()) {
 
                         const std::vector<math::polynomial_dfs<typename FieldType::value_type>> &S_sigma =

@@ -237,8 +237,13 @@ namespace nil {
                                 preprocessed_public_data.common_data.columns_rotations[witness_index];
 
                             for (int &rotation_index : witness_rotation) {
-                                witness_evaluation_points[witness_index].push_back(challenge *
-                                                                                   omega.pow(rotation_index));
+                                if (rotation_index < 0) {
+                                    witness_evaluation_points[witness_index].push_back(challenge *
+                                                                                       omega.pow(rotation_index));
+                                } else {
+                                    witness_evaluation_points[witness_index].push_back(challenge *
+                                                                                       omega.inversed().pow(-rotation_index));
+                                }
                             }
                         }
                         if (!algorithms::verify_eval<witness_commitment_scheme_type>(
@@ -385,9 +390,9 @@ namespace nil {
                                                                   challenge.pow((fri_params.max_degree + 1) * i);
                         }
 
-                        typename FieldType::value_type Z_at_challenge =
-                            preprocessed_public_data.common_data.Z.evaluate(challenge);
-
+                        // Z is polynomial -1, 0 ...., 0, 1
+                        typename FieldType::value_type Z_at_challenge = preprocessed_public_data.common_data.Z.evaluate(challenge);
+                        
                         if (F_consolidated != Z_at_challenge * T_consolidated) {
                             return false;
                         }

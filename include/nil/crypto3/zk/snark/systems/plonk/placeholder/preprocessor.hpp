@@ -49,43 +49,21 @@ namespace nil {
                 class placeholder_public_preprocessor {
                     typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
 
-                    using runtime_size_commitment_scheme_type =
-                        typename ParamsType::runtime_size_commitment_scheme_type;
-                    using public_input_commitment_scheme_type =
-                        typename ParamsType::public_input_commitment_scheme_type;
-                    using constant_commitment_scheme_type = typename ParamsType::constant_commitment_scheme_type;
-                    using selector_commitment_scheme_type = typename ParamsType::selector_commitment_scheme_type;
-                    using special_commitment_scheme_type = typename ParamsType::special_commitment_scheme_type;
-
+                    using fixed_values_commitment_scheme_type =
+                        typename ParamsType::fixed_values_commitment_scheme_type;
                 public:
                     struct preprocessed_data_type {
 
                         struct public_precommitments_type {
-                            typename runtime_size_commitment_scheme_type::precommitment_type id_permutation;
-                            typename runtime_size_commitment_scheme_type::precommitment_type sigma_permutation;
-                            typename public_input_commitment_scheme_type::precommitment_type public_input;
-                            typename constant_commitment_scheme_type::precommitment_type constant;
-                            typename selector_commitment_scheme_type::precommitment_type selector;
-                            typename special_commitment_scheme_type::precommitment_type special_selectors;
+                            typename fixed_values_commitment_scheme_type::precommitment_type fixed_values;
                         };
 
                         struct public_commitments_type {    // TODO: verifier needs this data
                             using params_type = ParamsType;
-
-                            typename runtime_size_commitment_scheme_type::commitment_type id_permutation;
-                            typename runtime_size_commitment_scheme_type::commitment_type sigma_permutation;
-                            typename public_input_commitment_scheme_type::commitment_type public_input;
-                            typename constant_commitment_scheme_type::commitment_type constant;
-                            typename selector_commitment_scheme_type::commitment_type selector;
-                            typename special_commitment_scheme_type::commitment_type special_selectors;
+                            typename fixed_values_commitment_scheme_type::commitment_type fixed_values;
 
                             bool operator==(const public_commitments_type &rhs) const {
-                                return  id_permutation == rhs.id_permutation &&
-                                    sigma_permutation == rhs.sigma_permutation &&
-                                    public_input == rhs.public_input &&
-                                    constant == rhs.constant &&
-                                    selector == rhs.selector &&
-                                    special_selectors == rhs.special_selectors;
+                                return  fixed_values == rhs.fixed_values;
                             }
                             bool operator!=(const public_commitments_type &rhs) const {
                                 return !(rhs == *this);
@@ -97,7 +75,7 @@ namespace nil {
                         struct common_data_type {
                             using field_type = FieldType;
                             using commitments_type = public_commitments_type;
-                            using columns_rotations_type = std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns>;
+                            using columns_rotations_type = std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns>;
                             // marshalled
                             public_commitments_type commitments;
 
@@ -116,7 +94,7 @@ namespace nil {
                             common_data_type(
                                 std::shared_ptr<math::evaluation_domain<FieldType>> D, 
                                 public_commitments_type commts, 
-                                std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns> col_rotations,
+                                std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
                                 std::size_t rows,
                                 std::size_t usable_rows
                             ):  basic_domain(D),
@@ -136,7 +114,7 @@ namespace nil {
                             // Constructor for marshalling. Domain is regenerated.
                             common_data_type(
                                 public_commitments_type commts, 
-                                std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns> col_rotations,
+                                std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
                                 std::size_t rows,
                                 std::size_t usable_rows
                             ):  lagrange_0(rows - 1, rows, FieldType::value_type::zero()), 
@@ -285,14 +263,14 @@ namespace nil {
                     };
 
                 public:
-                    static inline std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns>
+                    static inline std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns>
                         columns_rotations(
                             plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>
                                 &constraint_system,
                             const plonk_table_description<FieldType, typename ParamsType::arithmetization_params>
                                 &table_description) {
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns> result;
+                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> result;
 
                         std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates =
                             constraint_system.gates();
@@ -363,7 +341,7 @@ namespace nil {
                             }
                         }
 
-                        for (std::size_t i = 0; i < ParamsType::arithmetization_params::TotalColumns; i++) {
+                        for (std::size_t i = 0; i < ParamsType::arithmetization_params::total_columns; i++) {
                             if (std::find(result[i].begin(), result[i].end(), 0) == result[i].end()) {
                                 result[i].push_back(0);
                             }
@@ -376,7 +354,8 @@ namespace nil {
                         identity_polynomials(std::size_t permutation_size,
                                              const typename FieldType::value_type &omega,
                                              const typename FieldType::value_type &delta,
-                                             const std::shared_ptr<math::evaluation_domain<FieldType>> &domain,
+                                             std::shared_ptr<math::evaluation_domain<FieldType>>
+                                                 domain,
                                              const typename ParamsType::commitment_params_type &commitment_params) {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> S_id(permutation_size);
@@ -400,7 +379,8 @@ namespace nil {
                                                 const typename FieldType::value_type &omega,
                                                 const typename FieldType::value_type &delta,
                                                 cycle_representation &permutation,
-                                                const std::shared_ptr<math::evaluation_domain<FieldType>> &domain,
+                                                std::shared_ptr<math::evaluation_domain<FieldType>>
+                                                    domain,
                                                 const typename ParamsType::commitment_params_type &commitment_params) {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> S_perm(permutation_size);
@@ -419,7 +399,8 @@ namespace nil {
 
                     static inline math::polynomial_dfs<typename FieldType::value_type>
                         selector_blind(std::size_t usable_rows,
-                                       const std::shared_ptr<math::evaluation_domain<FieldType>> &domain,
+                                       std::shared_ptr<math::evaluation_domain<FieldType>>
+                                           domain,
                                        const typename ParamsType::commitment_params_type &commitment_params) {
                         math::polynomial_dfs<typename FieldType::value_type> q_blind(domain->size() - 1, domain->size(),
                                                                                      FieldType::value_type::zero());
@@ -439,60 +420,34 @@ namespace nil {
                         std::array<math::polynomial_dfs<typename FieldType::value_type>, 2> &q_last_q_blind,
                         const typename ParamsType::commitment_params_type &commitment_params) {
 
-                        typename runtime_size_commitment_scheme_type::precommitment_type id_permutation =
-                            algorithms::precommit<runtime_size_commitment_scheme_type>(
-                                id_perm_polys, commitment_params.D[0], commitment_params.step_list.front());
-
-                        typename runtime_size_commitment_scheme_type::precommitment_type sigma_permutation =
-                            algorithms::precommit<runtime_size_commitment_scheme_type>(
-                                sigma_perm_polys, commitment_params.D[0], commitment_params.step_list.front());
-
-                        typename public_input_commitment_scheme_type::precommitment_type public_input_precommitment =
-                            algorithms::precommit<public_input_commitment_scheme_type>(
-                                public_table.public_inputs(), commitment_params.D[0],
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> fixed_polys;
+                        fixed_polys.insert( fixed_polys.end(), id_perm_polys.begin(), id_perm_polys.end() );
+                        fixed_polys.insert( fixed_polys.end(), sigma_perm_polys.begin(), sigma_perm_polys.end() );
+                        for (std::size_t i = 0; i < public_table.constants().size(); i ++){
+                            fixed_polys.push_back(public_table.constants()[i]);
+                        }
+                        for (std::size_t i = 0; i < public_table.selectors().size(); i ++){
+                            fixed_polys.push_back(public_table.selectors()[i]);
+                        }
+                        fixed_polys.push_back(q_last_q_blind[0]);
+                        fixed_polys.push_back(q_last_q_blind[1]);
+                        
+                        typename fixed_values_commitment_scheme_type::precommitment_type fixed_values_precommitment =
+                            algorithms::precommit<fixed_values_commitment_scheme_type>(
+                                fixed_polys, commitment_params.D[0],
                                 commitment_params.step_list.front());
 
-                        typename constant_commitment_scheme_type::precommitment_type constant_precommitment =
-                            algorithms::precommit<constant_commitment_scheme_type>(
-                                public_table.constants(), commitment_params.D[0], commitment_params.step_list.front());
-
-                        typename selector_commitment_scheme_type::precommitment_type selector_precommitment =
-                            algorithms::precommit<selector_commitment_scheme_type>(
-                                public_table.selectors(), commitment_params.D[0], commitment_params.step_list.front());
-
-                        typename special_commitment_scheme_type::precommitment_type special_selector_precommitment =
-                            algorithms::precommit<special_commitment_scheme_type>(
-                                q_last_q_blind, commitment_params.D[0], commitment_params.step_list.front());
-
                         return typename preprocessed_data_type::public_precommitments_type {
-                            id_permutation,         sigma_permutation,      public_input_precommitment,
-                            constant_precommitment, selector_precommitment, special_selector_precommitment};
+                            fixed_values_precommitment};
                     }
 
                     static inline typename preprocessed_data_type::public_commitments_type
                         commitments(const typename preprocessed_data_type::public_precommitments_type &precommitments) {
 
-                        typename runtime_size_commitment_scheme_type::commitment_type id_permutation =
-                            algorithms::commit<runtime_size_commitment_scheme_type>(precommitments.id_permutation);
-
-                        typename runtime_size_commitment_scheme_type::commitment_type sigma_permutation =
-                            algorithms::commit<runtime_size_commitment_scheme_type>(precommitments.sigma_permutation);
-
-                        typename public_input_commitment_scheme_type::commitment_type public_input_commitment =
-                            algorithms::commit<public_input_commitment_scheme_type>(precommitments.public_input);
-
-                        typename constant_commitment_scheme_type::commitment_type constant_commitment =
-                            algorithms::commit<constant_commitment_scheme_type>(precommitments.constant);
-
-                        typename selector_commitment_scheme_type::commitment_type selector_commitment =
-                            algorithms::commit<selector_commitment_scheme_type>(precommitments.selector);
-
-                        typename special_commitment_scheme_type::commitment_type special_selector_commitment =
-                            algorithms::commit<special_commitment_scheme_type>(precommitments.special_selectors);
-
+                        typename fixed_values_commitment_scheme_type::commitment_type fixed_values_commitment =
+                            algorithms::commit<fixed_values_commitment_scheme_type>(precommitments.fixed_values);
                         return typename preprocessed_data_type::public_commitments_type {
-                            id_permutation,      sigma_permutation,   public_input_commitment,
-                            constant_commitment, selector_commitment, special_selector_commitment};
+                            fixed_values_commitment};
                     }
 
                     static inline preprocessed_data_type process(
@@ -555,7 +510,7 @@ namespace nil {
                         typename preprocessed_data_type::public_commitments_type public_commitments =
                             commitments(public_precommitments);
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::TotalColumns> c_rotations =
+                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> c_rotations =
                             columns_rotations(constraint_system, table_description);
 
                         typename preprocessed_data_type::common_data_type common_data (
@@ -610,7 +565,6 @@ namespace nil {
                         return preprocessed_data_type({basic_domain, private_polynomial_table});
                     }
                 };
-
             }    // namespace snark
         }        // namespace zk
     }            // namespace crypto3

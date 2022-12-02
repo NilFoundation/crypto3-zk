@@ -47,7 +47,6 @@ namespace nil {
                     constexpr static const std::size_t witness_columns = ParamsType::witness_columns;
                     constexpr static const std::size_t public_input_columns = ParamsType::public_input_columns;
                     constexpr static const std::size_t constant_columns = ParamsType::constant_columns;
-                    constexpr static const std::size_t selector_columns = ParamsType::selector_columns;
 
                     using merkle_hash_type = typename ParamsType::merkle_hash_type;
                     using transcript_hash_type = typename ParamsType::transcript_hash_type;
@@ -60,9 +59,11 @@ namespace nil {
 
                     using fixed_values_commitment_scheme_type =
                         typename ParamsType::fixed_values_commitment_scheme_type;
-                    using variable_values_commitment_scheme_type = typename ParamsType::variable_values_commitment_scheme_type;
-                    using runtime_size_commitment_scheme_type = typename ParamsType::runtime_size_commitment_scheme_type;
-                    
+                    using variable_values_commitment_scheme_type =
+                        typename ParamsType::variable_values_commitment_scheme_type;
+                    using runtime_size_commitment_scheme_type =
+                        typename ParamsType::runtime_size_commitment_scheme_type;
+
                     using permutation_commitment_scheme_type = typename ParamsType::permutation_commitment_scheme_type;
                     using quotient_commitment_scheme_type = typename ParamsType::quotient_commitment_scheme_type;
 
@@ -77,9 +78,13 @@ namespace nil {
                     static inline bool process(
                         const typename public_preprocessor_type::preprocessed_data_type &preprocessed_public_data,
                         placeholder_proof<FieldType, ParamsType> &proof,
+                        const plonk_table_description<FieldType, typename ParamsType::arithmetization_params>
+                            &table_description,
                         plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>
                             &constraint_system,
                         const typename ParamsType::commitment_params_type &fri_params) {
+
+                        std::uint32_t selector_columns = table_description.selector_columns;
 
                         // 1. Add circuit definition to transcript
                         // transcript(short_description);
@@ -90,7 +95,8 @@ namespace nil {
                         transcript(proof.variable_values_commitment);
 
                         // 4. prepare evaluaitons of the polynomials that are copy-constrained
-                        std::size_t permutation_size = (proof.eval_proof.fixed_values.z.size() - 2 - constant_columns - selector_columns) / 2;
+                        std::size_t permutation_size =
+                            (proof.eval_proof.fixed_values.z.size() - 2 - constant_columns - selector_columns) / 2;
                         std::vector<typename FieldType::value_type> f(permutation_size);
 
                         for (std::size_t i = 0; i < permutation_size; i++) {
@@ -106,7 +112,7 @@ namespace nil {
                             if (i < witness_columns + public_input_columns) {
                                 f[i] = proof.eval_proof.variable_values.z[i][zero_index];
                             } else if (i < witness_columns + public_input_columns + constant_columns) {
-                                std::size_t idx = i - witness_columns - public_input_columns + permutation_size*2;
+                                std::size_t idx = i - witness_columns - public_input_columns + permutation_size * 2;
                                 f[i] = proof.eval_proof.fixed_values.z[idx][zero_index];
                             }
                         }
@@ -162,40 +168,29 @@ namespace nil {
                                     i,
                                     preprocessed_public_data.common_data.columns_rotations[i_global_index][j],
                                     plonk_variable<FieldType>::column_type::constant);
-                                columns_at_y[key] = proof.eval_proof.fixed_values.z[i + permutation_size*2][j];
+                                columns_at_y[key] = proof.eval_proof.fixed_values.z[i + permutation_size * 2][j];
                             }
                         }
 
                         for (std::size_t i = 0; i < selector_columns; i++) {
-                            std::size_t i_global_index = witness_columns + constant_columns + public_input_columns + i;
-
-                            for (std::size_t j = 0;
-                                 j < preprocessed_public_data.common_data.columns_rotations[i_global_index].size();
-                                 j++) {
-
-                                auto key = std::make_tuple(
-                                    i,
-                                    preprocessed_public_data.common_data.columns_rotations[i_global_index][j],
-                                    plonk_variable<FieldType>::column_type::selector);
-                                columns_at_y[key] = proof.eval_proof.fixed_values.z[i + permutation_size*2 + constant_columns][j];
-                            }
+                            auto key = std::make_tuple(i, 0, plonk_variable<FieldType>::column_type::selector);
+                            columns_at_y[key] =
+                                proof.eval_proof.fixed_values.z[i + permutation_size * 2 + constant_columns][0];
                         }
 
                         // 6. lookup argument
                         bool use_lookup = constraint_system.lookup_gates().size() > 0;
                         std::array<typename FieldType::value_type, lookup_parts> lookup_argument;
                         if (use_lookup) {
-                            lookup_argument = placeholder_lookup_argument<
-                                FieldType, permutation_commitment_scheme_type,
-                                ParamsType>::verify_eval(preprocessed_public_data, constraint_system.lookup_gates(),
-                                                         proof.eval_proof.challenge, columns_at_y,
-                                                         proof.eval_proof.lookups[1].z[0][0],
-                                                         proof.eval_proof.lookups[1].z[0][1],
-                                                         proof.eval_proof.lookups[2].z[0][0],
-                                                         proof.eval_proof.lookups[0].z[0][0],
-                                                         proof.eval_proof.lookups[0].z[0][1],
-                                                         proof.input_perm_commitment, proof.value_perm_commitment,
-                                                         proof.v_l_perm_commitment, transcript);
+                            lookup_argument =
+                                placeholder_lookup_argument<FieldType, permutation_commitment_scheme_type, ParamsType>::
+                                    verify_eval(
+                                        preprocessed_public_data, constraint_system.lookup_gates(),
+                                        proof.eval_proof.challenge, columns_at_y, proof.eval_proof.lookups[1].z[0][0],
+                                        proof.eval_proof.lookups[1].z[0][1], proof.eval_proof.lookups[2].z[0][0],
+                                        proof.eval_proof.lookups[0].z[0][0], proof.eval_proof.lookups[0].z[0][1],
+                                        proof.input_perm_commitment, proof.value_perm_commitment,
+                                        proof.v_l_perm_commitment, transcript);
                         } else {
                             for (std::size_t i = 0; i < lookup_parts; i++) {
                                 lookup_argument[i] = 0;
@@ -227,7 +222,8 @@ namespace nil {
                             variable_values_evaluation_points;
 
                         // variable_values polynomials (table columns)
-                        for (std::size_t variable_values_index = 0; variable_values_index < witness_columns; variable_values_index++) {
+                        for (std::size_t variable_values_index = 0; variable_values_index < witness_columns;
+                             variable_values_index++) {
 
                             std::vector<int> variable_values_rotation =
                                 preprocessed_public_data.common_data.columns_rotations[variable_values_index];
@@ -238,12 +234,12 @@ namespace nil {
                                     challenge * omega.pow(variable_values_rotation[rotation_index]));
                             }
                         }
-                        for (std::size_t i = witness_columns; i < witness_columns + public_input_columns; i ++) {
+                        for (std::size_t i = witness_columns; i < witness_columns + public_input_columns; i++) {
                             variable_values_evaluation_points[i].push_back(challenge);
                         }
                         if (!algorithms::verify_eval<variable_values_commitment_scheme_type>(
-                                variable_values_evaluation_points, proof.eval_proof.variable_values, proof.variable_values_commitment,
-                                fri_params, transcript)) {
+                                variable_values_evaluation_points, proof.eval_proof.variable_values,
+                                proof.variable_values_commitment, fri_params, transcript)) {
                             return false;
                         }
 
@@ -342,8 +338,9 @@ namespace nil {
                         }
 
                         // Z is polynomial -1, 0 ...., 0, 1
-                        typename FieldType::value_type Z_at_challenge = preprocessed_public_data.common_data.Z.evaluate(challenge);
-                        
+                        typename FieldType::value_type Z_at_challenge =
+                            preprocessed_public_data.common_data.Z.evaluate(challenge);
+
                         if (F_consolidated != Z_at_challenge * T_consolidated) {
                             return false;
                         }

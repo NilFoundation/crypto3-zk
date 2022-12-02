@@ -51,6 +51,7 @@ namespace nil {
 
                     using fixed_values_commitment_scheme_type =
                         typename ParamsType::fixed_values_commitment_scheme_type;
+
                 public:
                     struct preprocessed_data_type {
 
@@ -63,7 +64,7 @@ namespace nil {
                             typename fixed_values_commitment_scheme_type::commitment_type fixed_values;
 
                             bool operator==(const public_commitments_type &rhs) const {
-                                return  fixed_values == rhs.fixed_values;
+                                return fixed_values == rhs.fixed_values;
                             }
                             bool operator!=(const public_commitments_type &rhs) const {
                                 return !(rhs == *this);
@@ -75,7 +76,9 @@ namespace nil {
                         struct common_data_type {
                             using field_type = FieldType;
                             using commitments_type = public_commitments_type;
-                            using columns_rotations_type = std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns>;
+                            using columns_rotations_type =
+                                std::array<std::vector<int>,
+                                           ParamsType::arithmetization_params::total_variables_columns>;
                             // marshalled
                             public_commitments_type commitments;
 
@@ -89,42 +92,41 @@ namespace nil {
                             math::polynomial<typename FieldType::value_type> Z;
                             std::shared_ptr<math::evaluation_domain<FieldType>> basic_domain;
 
-
                             // Constructor with pregenerated domain
-                            common_data_type(
-                                std::shared_ptr<math::evaluation_domain<FieldType>> D, 
-                                public_commitments_type commts, 
-                                std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
-                                std::size_t rows,
-                                std::size_t usable_rows
-                            ):  basic_domain(D),
-                                lagrange_0(D->size() - 1, D->size(), FieldType::value_type::zero()), 
-                                commitments(commts), 
-                                columns_rotations(col_rotations), rows_amount(rows), usable_rows_amount(usable_rows),
-                                Z(std::vector<typename FieldType::value_type>(rows + 1, FieldType::value_type::zero())
-                            ) {
+                            common_data_type(std::shared_ptr<math::evaluation_domain<FieldType>> D,
+                                             public_commitments_type commts,
+                                             std::array<std::vector<int>,
+                                                        ParamsType::arithmetization_params::total_variables_columns>
+                                                 col_rotations,
+                                             std::size_t rows,
+                                             std::size_t usable_rows) :
+                                basic_domain(D),
+                                lagrange_0(D->size() - 1, D->size(), FieldType::value_type::zero()),
+                                commitments(commts), columns_rotations(col_rotations), rows_amount(rows),
+                                usable_rows_amount(usable_rows), Z(std::vector<typename FieldType::value_type>(
+                                                                     rows + 1, FieldType::value_type::zero())) {
                                 // Z is polynomial -1, 0,..., 0, 1
                                 Z[0] = -FieldType::value_type::one();
-                                Z[Z.size()-1] = FieldType::value_type::one();
+                                Z[Z.size() - 1] = FieldType::value_type::one();
 
                                 // lagrange_0:  0,0,...,1,0,0,...,0
                                 lagrange_0[usable_rows] = FieldType::value_type::one();
                             }
 
                             // Constructor for marshalling. Domain is regenerated.
-                            common_data_type(
-                                public_commitments_type commts, 
-                                std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
-                                std::size_t rows,
-                                std::size_t usable_rows
-                            ):  lagrange_0(rows - 1, rows, FieldType::value_type::zero()), 
-                                commitments(commts), 
-                                columns_rotations(col_rotations), rows_amount(rows), usable_rows_amount(usable_rows),
-                                Z(std::vector<typename FieldType::value_type>(rows + 1, FieldType::value_type::zero())
-                            ) {
+                            common_data_type(public_commitments_type commts,
+                                             std::array<std::vector<int>,
+                                                        ParamsType::arithmetization_params::total_variables_columns>
+                                                 col_rotations,
+                                             std::size_t rows,
+                                             std::size_t usable_rows) :
+                                lagrange_0(rows - 1, rows, FieldType::value_type::zero()),
+                                commitments(commts), columns_rotations(col_rotations), rows_amount(rows),
+                                usable_rows_amount(usable_rows), Z(std::vector<typename FieldType::value_type>(
+                                                                     rows + 1, FieldType::value_type::zero())) {
                                 // Z is polynomial -1, 0,..., 0, 1
                                 Z[0] = -FieldType::value_type::one();
-                                Z[Z.size()-1] = FieldType::value_type::one();
+                                Z[Z.size() - 1] = FieldType::value_type::one();
 
                                 // lagrange_0:  0,0,...,1,0,0,...,0
                                 lagrange_0[usable_rows] = FieldType::value_type::one();
@@ -135,13 +137,10 @@ namespace nil {
                             // These operators are useful for marshalling
                             // They will be implemented with marshalling procedures implementation
                             bool operator==(const common_data_type &rhs) const {
-                                return rows_amount == rhs.rows_amount && 
-                                usable_rows_amount == rhs.usable_rows_amount && 
-                                columns_rotations == rhs.columns_rotations &&
-                                commitments == rhs.commitments &&
-                                basic_domain->size() == rhs.basic_domain->size() &&
-                                lagrange_0 == rhs.lagrange_0 &&
-                                Z == rhs.Z;
+                                return rows_amount == rhs.rows_amount && usable_rows_amount == rhs.usable_rows_amount &&
+                                       columns_rotations == rhs.columns_rotations && commitments == rhs.commitments &&
+                                       basic_domain->size() == rhs.basic_domain->size() &&
+                                       lagrange_0 == rhs.lagrange_0 && Z == rhs.Z;
                             }
                             bool operator!=(const common_data_type &rhs) const {
                                 return !(rhs == *this);
@@ -263,14 +262,16 @@ namespace nil {
                     };
 
                 public:
-                    static inline std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns>
+                    static inline std::array<std::vector<int>,
+                                             ParamsType::arithmetization_params::total_variables_columns>
                         columns_rotations(
                             plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>
                                 &constraint_system,
                             const plonk_table_description<FieldType, typename ParamsType::arithmetization_params>
                                 &table_description) {
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> result;
+                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_variables_columns>
+                            result;
 
                         std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates =
                             constraint_system.gates();
@@ -341,7 +342,7 @@ namespace nil {
                             }
                         }
 
-                        for (std::size_t i = 0; i < ParamsType::arithmetization_params::total_columns; i++) {
+                        for (std::size_t i = 0; i < ParamsType::arithmetization_params::total_variables_columns; i++) {
                             if (std::find(result[i].begin(), result[i].end(), 0) == result[i].end()) {
                                 result[i].push_back(0);
                             }
@@ -421,24 +422,22 @@ namespace nil {
                         const typename ParamsType::commitment_params_type &commitment_params) {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> fixed_polys;
-                        fixed_polys.insert( fixed_polys.end(), id_perm_polys.begin(), id_perm_polys.end() );
-                        fixed_polys.insert( fixed_polys.end(), sigma_perm_polys.begin(), sigma_perm_polys.end() );
-                        for (std::size_t i = 0; i < public_table.constants().size(); i ++){
+                        fixed_polys.insert(fixed_polys.end(), id_perm_polys.begin(), id_perm_polys.end());
+                        fixed_polys.insert(fixed_polys.end(), sigma_perm_polys.begin(), sigma_perm_polys.end());
+                        for (std::size_t i = 0; i < public_table.constants().size(); i++) {
                             fixed_polys.push_back(public_table.constants()[i]);
                         }
-                        for (std::size_t i = 0; i < public_table.selectors().size(); i ++){
+                        for (std::size_t i = 0; i < public_table.selectors().size(); i++) {
                             fixed_polys.push_back(public_table.selectors()[i]);
                         }
                         fixed_polys.push_back(q_last_q_blind[0]);
                         fixed_polys.push_back(q_last_q_blind[1]);
-                        
+
                         typename fixed_values_commitment_scheme_type::precommitment_type fixed_values_precommitment =
                             algorithms::precommit<fixed_values_commitment_scheme_type>(
-                                fixed_polys, commitment_params.D[0],
-                                commitment_params.step_list.front());
+                                fixed_polys, commitment_params.D[0], commitment_params.step_list.front());
 
-                        return typename preprocessed_data_type::public_precommitments_type {
-                            fixed_values_precommitment};
+                        return typename preprocessed_data_type::public_precommitments_type {fixed_values_precommitment};
                     }
 
                     static inline typename preprocessed_data_type::public_commitments_type
@@ -446,8 +445,7 @@ namespace nil {
 
                         typename fixed_values_commitment_scheme_type::commitment_type fixed_values_commitment =
                             algorithms::commit<fixed_values_commitment_scheme_type>(precommitments.fixed_values);
-                        return typename preprocessed_data_type::public_commitments_type {
-                            fixed_values_commitment};
+                        return typename preprocessed_data_type::public_commitments_type {fixed_values_commitment};
                     }
 
                     static inline preprocessed_data_type process(
@@ -510,12 +508,11 @@ namespace nil {
                         typename preprocessed_data_type::public_commitments_type public_commitments =
                             commitments(public_precommitments);
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_columns> c_rotations =
-                            columns_rotations(constraint_system, table_description);
+                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_variables_columns>
+                            c_rotations = columns_rotations(constraint_system, table_description);
 
-                        typename preprocessed_data_type::common_data_type common_data (
-                            public_commitments, c_rotations,  N_rows, table_description.usable_rows_amount
-                        );
+                        typename preprocessed_data_type::common_data_type common_data(
+                            public_commitments, c_rotations, N_rows, table_description.usable_rows_amount);
 
                         preprocessed_data_type preprocessed_data({public_polynomial_table, sigma_perm_polys,
                                                                   id_perm_polys, q_last_q_blind[0], q_last_q_blind[1],

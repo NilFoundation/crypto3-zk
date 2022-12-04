@@ -45,9 +45,9 @@ namespace nil {
                     typedef TranscriptHashType transcript_hash_type;
 
                     constexpr static const std::size_t witness_columns = ArithmetizationParams::witness_columns;
-                    constexpr static const std::size_t public_input_columns = ArithmetizationParams::public_input_columns;
+                    constexpr static const std::size_t public_input_columns =
+                        ArithmetizationParams::public_input_columns;
                     constexpr static const std::size_t constant_columns = ArithmetizationParams::constant_columns;
-                    constexpr static const std::size_t selector_columns = ArithmetizationParams::selector_columns;
 
                     using arithmetization_params = ArithmetizationParams;
 
@@ -63,20 +63,19 @@ namespace nil {
                         batched_commitment_params_type;
 
                     using fixed_values_commitment_scheme_type =
-                        commitments::batched_lpc<FieldType, batched_commitment_params_type, constant_columns + selector_columns + 2, false>;
-                
+                        commitments::batched_lpc<FieldType, batched_commitment_params_type, 0, false>;
+
                     using runtime_size_commitment_scheme_type =
                         commitments::batched_lpc<FieldType, batched_commitment_params_type, 0, false>;
                     using variable_values_commitment_scheme_type =
-                        commitments::batched_lpc<FieldType, batched_commitment_params_type, witness_columns + public_input_columns, false>;
+                        commitments::batched_lpc<FieldType, batched_commitment_params_type,
+                                                 witness_columns + public_input_columns, false>;
                     using witness_commitment_scheme_type =
                         commitments::batched_lpc<FieldType, batched_commitment_params_type, witness_columns, true>;
                     using public_input_commitment_scheme_type =
                         commitments::batched_lpc<FieldType, batched_commitment_params_type, public_input_columns, true>;
                     using constant_commitment_scheme_type =
                         commitments::batched_lpc<FieldType, batched_commitment_params_type, constant_columns, true>;
-                    using selector_commitment_scheme_type =
-                        commitments::batched_lpc<FieldType, batched_commitment_params_type, selector_columns, true>;
                     using special_commitment_scheme_type =
                         commitments::batched_lpc<FieldType, batched_commitment_params_type, 2, true>;
                     using permutation_commitment_scheme_type =

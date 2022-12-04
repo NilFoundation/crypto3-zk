@@ -35,7 +35,7 @@ namespace nil {
     namespace blueprint {
         template<typename ArithmetizationType, std::size_t... BlueprintParams>
         class assignment;
-    } // namespace blueprint
+    }    // namespace blueprint
     namespace crypto3 {
         namespace zk {
             namespace snark {
@@ -55,13 +55,10 @@ namespace nil {
                     using witnesses_container_type = std::array<ColumnType, ArithmetizationParams::witness_columns>;
 
                 protected:
-
                     witnesses_container_type _witnesses;
 
                 public:
-                    plonk_private_table(
-                        witnesses_container_type witness_columns = {}) :
-                        _witnesses(witness_columns) {
+                    plonk_private_table(witnesses_container_type witness_columns = {}) : _witnesses(witness_columns) {
                     }
 
                     std::uint32_t witnesses_amount() const {
@@ -86,7 +83,6 @@ namespace nil {
                             return _witnesses[index];
                         index -= ArithmetizationParams::witness_columns;
                         return {};
-
                     }
 
                     constexpr std::uint32_t size() const {
@@ -96,31 +92,28 @@ namespace nil {
                     friend std::uint32_t basic_padding<FieldType, ArithmetizationParams, ColumnType>(
                         plonk_table<FieldType, ArithmetizationParams, ColumnType> &table);
 
-                    friend struct nil::blueprint::assignment<plonk_constraint_system<FieldType,
-                        ArithmetizationParams>>;
+                    friend struct nil::blueprint::assignment<plonk_constraint_system<FieldType, ArithmetizationParams>>;
                 };
 
                 template<typename FieldType, typename ArithmetizationParams, typename ColumnType>
                 struct plonk_public_table {
 
-                    using public_input_container_type = std::array<ColumnType, ArithmetizationParams::public_input_columns>;
+                    using public_input_container_type =
+                        std::array<ColumnType, ArithmetizationParams::public_input_columns>;
                     using constant_container_type = std::array<ColumnType, ArithmetizationParams::constant_columns>;
-                    using selector_container_type = std::array<ColumnType, ArithmetizationParams::selector_columns>;
+                    using selector_container_type = std::vector<ColumnType>;
 
                 protected:
-
                     public_input_container_type _public_inputs;
                     constant_container_type _constants;
                     selector_container_type _selectors;
 
                 public:
-                    plonk_public_table(
-                        public_input_container_type public_input_columns = {},
-                        constant_container_type constant_columns = {},
-                        selector_container_type selector_columns = {}) :
+                    plonk_public_table(public_input_container_type public_input_columns = {},
+                                       constant_container_type constant_columns = {},
+                                       selector_container_type selector_columns = {}) :
                         _public_inputs(public_input_columns),
-                        _constants(constant_columns),
-                        _selectors(selector_columns) {
+                        _constants(constant_columns), _selectors(selector_columns) {
                     }
 
                     std::uint32_t public_inputs_amount() const {
@@ -189,16 +182,13 @@ namespace nil {
                     }
 
                     constexpr std::uint32_t size() const {
-                        return public_inputs_amount() +
-                               constants_amount() +
-                               selectors_amount();
+                        return public_inputs_amount() + constants_amount() + selectors_amount();
                     }
 
                     friend std::uint32_t basic_padding<FieldType, ArithmetizationParams, ColumnType>(
                         plonk_table<FieldType, ArithmetizationParams, ColumnType> &table);
 
-                    friend struct nil::blueprint::assignment<plonk_constraint_system<FieldType,
-                        ArithmetizationParams>>;
+                    friend struct nil::blueprint::assignment<plonk_constraint_system<FieldType, ArithmetizationParams>>;
                 };
 
                 template<typename FieldType, typename ArithmetizationParams, typename ColumnType>
@@ -290,31 +280,27 @@ namespace nil {
                     std::uint32_t rows_amount() const {
                         std::uint32_t rows_amount = 0;
 
-                        for (std::uint32_t w_index = 0; w_index <
-                                                       witnesses_amount(); w_index++) {
+                        for (std::uint32_t w_index = 0; w_index < witnesses_amount(); w_index++) {
                             rows_amount = std::max(rows_amount, witness_column_size(w_index));
                         }
 
-                        for (std::uint32_t pi_index = 0; pi_index <
-                                                       public_inputs_amount(); pi_index++) {
+                        for (std::uint32_t pi_index = 0; pi_index < public_inputs_amount(); pi_index++) {
                             rows_amount = std::max(rows_amount, public_input_column_size(pi_index));
                         }
 
-                        for (std::uint32_t c_index = 0; c_index <
-                                                      constants_amount(); c_index++) {
+                        for (std::uint32_t c_index = 0; c_index < constants_amount(); c_index++) {
                             rows_amount = std::max(rows_amount, constant_column_size(c_index));
                         }
 
-                        for (std::uint32_t s_index = 0; s_index <
-                                                      selectors_amount(); s_index++) {
+                        for (std::uint32_t s_index = 0; s_index < selectors_amount(); s_index++) {
                             rows_amount = std::max(rows_amount, selector_column_size(s_index));
                         }
 
                         return rows_amount;
                     }
 
-                    friend std::uint32_t basic_padding<FieldType, ArithmetizationParams, ColumnType>(
-                        plonk_table &table);
+                    friend std::uint32_t
+                        basic_padding<FieldType, ArithmetizationParams, ColumnType>(plonk_table &table);
                 };
 
                 template<typename FieldType, typename ArithmetizationParams>

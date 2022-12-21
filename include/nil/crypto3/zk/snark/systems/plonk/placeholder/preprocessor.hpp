@@ -77,8 +77,7 @@ namespace nil {
                             using field_type = FieldType;
                             using commitments_type = public_commitments_type;
                             using columns_rotations_type =
-                                std::array<std::vector<int>,
-                                           ParamsType::arithmetization_params::total_variables_columns>;
+                                std::vector<std::vector<int>>;
                             // marshalled
                             public_commitments_type commitments;
 
@@ -95,8 +94,7 @@ namespace nil {
                             // Constructor with pregenerated domain
                             common_data_type(std::shared_ptr<math::evaluation_domain<FieldType>> D,
                                              public_commitments_type commts,
-                                             std::array<std::vector<int>,
-                                                        ParamsType::arithmetization_params::total_variables_columns>
+                                             std::vector<std::vector<int>>
                                                  col_rotations,
                                              std::size_t rows,
                                              std::size_t usable_rows) :
@@ -115,9 +113,8 @@ namespace nil {
 
                             // Constructor for marshalling. Domain is regenerated.
                             common_data_type(public_commitments_type commts,
-                                             std::array<std::vector<int>,
-                                                        ParamsType::arithmetization_params::total_variables_columns>
-                                                 col_rotations,
+                                             std::vector<std::vector<int>>
+                                             col_rotations,
                                              std::size_t rows,
                                              std::size_t usable_rows) :
                                 lagrange_0(rows - 1, rows, FieldType::value_type::zero()),
@@ -262,22 +259,21 @@ namespace nil {
                     };
 
                 public:
-                    static inline std::array<std::vector<int>,
-                                             ParamsType::arithmetization_params::total_variables_columns>
+                    static inline std::vector<std::vector<int>>
                         columns_rotations(
                             plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>
                                 &constraint_system,
                             const plonk_table_description<FieldType, typename ParamsType::arithmetization_params>
                                 &table_description) {
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_variables_columns>
-                            result;
+                        typename ParamsType::arithmetization_params ar_params(table_description.selector_columns);
+                        std::vector<std::vector<int>> result(ar_params.total_variables_columns);
 
                         std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates =
                             constraint_system.gates();
 
                         for (std::size_t g_index = 0; g_index < gates.size(); g_index++) {
-
+                            
                             for (std::size_t c_index = 0; c_index < gates[g_index].constraints.size(); c_index++) {
 
                                 for (std::size_t t_index = 0;
@@ -342,7 +338,7 @@ namespace nil {
                             }
                         }
 
-                        for (std::size_t i = 0; i < ParamsType::arithmetization_params::total_variables_columns; i++) {
+                        for (std::size_t i = 0; i < ar_params.total_variables_columns; i++) {
                             if (std::find(result[i].begin(), result[i].end(), 0) == result[i].end()) {
                                 result[i].push_back(0);
                             }
@@ -508,7 +504,7 @@ namespace nil {
                         typename preprocessed_data_type::public_commitments_type public_commitments =
                             commitments(public_precommitments);
 
-                        std::array<std::vector<int>, ParamsType::arithmetization_params::total_variables_columns>
+                        std::vector<std::vector<int>>
                             c_rotations = columns_rotations(constraint_system, table_description);
 
                         typename preprocessed_data_type::common_data_type common_data(

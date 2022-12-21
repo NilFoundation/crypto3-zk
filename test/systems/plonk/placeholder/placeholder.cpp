@@ -133,7 +133,7 @@ struct placeholder_test_params {
     constexpr static const std::size_t selector_columns = 2;
 
     using arithmetization_params =
-        plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns, selector_columns>;
+        plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns>;
 
     constexpr static const std::size_t lambda = 40;
     constexpr static const std::size_t r = table_rows_log - 1;
@@ -150,7 +150,7 @@ struct placeholder_test_params_lookups {
     constexpr static const std::size_t selector_columns = 1;
 
     using arithmetization_params =
-        plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns, selector_columns>;
+        plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns>;
 
     constexpr static const std::size_t lambda = 40;
     constexpr static const std::size_t r = table_rows_log - 1;
@@ -206,6 +206,7 @@ BOOST_AUTO_TEST_CASE(placeholder_permutation_polynomials_test) {
 
     plonk_table_description<FieldType, typename circuit_2_params::arithmetization_params> desc;
 
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -282,6 +283,7 @@ BOOST_AUTO_TEST_CASE(placeholder_permutation_argument_test) {
 
     plonk_table_description<FieldType, typename circuit_2_params::arithmetization_params> desc;
 
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -342,21 +344,18 @@ BOOST_AUTO_TEST_CASE(placeholder_permutation_argument_test) {
 }
 
 BOOST_AUTO_TEST_CASE(placeholder_lookup_argument_test) {
-
     circuit_description<FieldType, circuit_3_params, table_rows_log, 3> circuit = circuit_test_3<FieldType>();
-
     constexpr std::size_t argument_size = 5;
 
     using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_3_params>;
+    plonk_table_description<FieldType, typename circuit_3_params::arithmetization_params> desc;
+    desc.selector_columns = placeholder_test_params_lookups::selector_columns;
 
-    //    typedef commitments::list_polynomial_commitment<FieldType,
-    //        circuit_3_params::batched_commitment_params_type> lpc_type;
     typedef commitments::lpc<FieldType, circuit_3_params::batched_commitment_params_type, 1, true> lpc_type;
 
     typename fri_type::params_type fri_params = create_fri_params<fri_type, FieldType>(table_rows_log);
 
-    plonk_table_description<FieldType, typename circuit_3_params::arithmetization_params> desc;
-
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -421,6 +420,7 @@ BOOST_AUTO_TEST_CASE(placeholder_lookup_argument_test) {
             columns_at_y[key] = polynomial_table.selector(i).evaluate(y * circuit.omega.pow(rotation));
         }
     }
+    BOOST_CHECK(true);
 
     typename FieldType::value_type input_at_y = prover_res.input_polynomial.evaluate(y);
     typename FieldType::value_type input_at_y_shifted =
@@ -430,7 +430,6 @@ BOOST_AUTO_TEST_CASE(placeholder_lookup_argument_test) {
 
     typename FieldType::value_type v_l_at_y = prover_res.V_L_polynomial.evaluate(y);
     typename FieldType::value_type v_l_at_y_shifted = prover_res.V_L_polynomial.evaluate(circuit.omega * y);
-
     std::array<typename FieldType::value_type, 5> verifier_res =
         placeholder_lookup_argument<FieldType, lpc_type, circuit_3_params>::verify_eval(
             preprocessed_public_data, constraint_system.lookup_gates(), y, columns_at_y, input_at_y, input_at_y_shifted,
@@ -458,11 +457,11 @@ BOOST_AUTO_TEST_CASE(placeholder_gate_argument_test) {
     using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_2_params>;
 
     typedef commitments::list_polynomial_commitment<FieldType, circuit_2_params::commitment_params_type> lpc_type;
-
     typename fri_type::params_type fri_params = create_fri_params<fri_type, FieldType>(table_rows_log);
 
     plonk_table_description<FieldType, typename circuit_2_params::arithmetization_params> desc;
 
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -542,6 +541,7 @@ BOOST_AUTO_TEST_CASE(placeholder_gate_argument_test) {
             columns_at_y[key] = polynomial_table.selector(i).evaluate(y * omega.pow(rotation));
         }
     }
+    BOOST_CHECK(true);
 
     std::array<typename FieldType::value_type, 1> verifier_res =
         placeholder_gates_argument<FieldType, circuit_2_params>::verify_eval(constraint_system.gates(), columns_at_y, y,
@@ -561,14 +561,12 @@ BOOST_AUTO_TEST_CASE(placeholder_prover_basic_test) {
 
     using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_2_params>;
 
-    //    typedef commitments::list_polynomial_commitment<FieldType,
-    //        circuit_2_params::batched_commitment_params_type> lpc_type;
     typedef commitments::lpc<FieldType, circuit_2_params::batched_commitment_params_type, 0, false> lpc_type;
-
     typename fri_type::params_type fri_params = create_fri_params<fri_type, FieldType>(table_rows_log);
 
     plonk_table_description<FieldType, typename circuit_2_params::arithmetization_params> desc;
 
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -589,24 +587,24 @@ BOOST_AUTO_TEST_CASE(placeholder_prover_basic_test) {
     auto proof = placeholder_prover<FieldType, circuit_2_params>::process(
         preprocessed_public_data, preprocessed_private_data, desc, constraint_system, assignments, fri_params);
 
-    bool verifier_res = placeholder_verifier<FieldType, circuit_2_params>::process(preprocessed_public_data, proof,
-                                                                                   constraint_system, fri_params);
+    bool verifier_res = placeholder_verifier<FieldType, circuit_2_params>::process(
+        preprocessed_public_data, proof, desc, constraint_system, fri_params
+    );
     BOOST_CHECK(verifier_res);
 }
 
-BOOST_AUTO_TEST_CASE(placeholder_prover_lookup_test) {
+BOOST_AUTO_TEST_CASE(placeholder_prover_test_with_lookups) {
     circuit_description<FieldType, circuit_3_params, table_rows_log, 3> circuit = circuit_test_3<FieldType>();
 
     using policy_type = zk::snark::detail::placeholder_policy<FieldType, circuit_3_params>;
 
-    //    typedef commitments::list_polynomial_commitment<FieldType,
-    //        circuit_2_params::batched_commitment_params_type> lpc_type;
     typedef commitments::lpc<FieldType, circuit_3_params::batched_commitment_params_type, 0, false> lpc_type;
 
     typename fri_type::params_type fri_params = create_fri_params<fri_type, FieldType>(table_rows_log);
 
     plonk_table_description<FieldType, typename circuit_3_params::arithmetization_params> desc;
 
+    desc.selector_columns = circuit.selector_columns;
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
@@ -627,7 +625,7 @@ BOOST_AUTO_TEST_CASE(placeholder_prover_lookup_test) {
     auto proof = placeholder_prover<FieldType, circuit_3_params>::process(
         preprocessed_public_data, preprocessed_private_data, desc, constraint_system, assignments, fri_params);
 
-    bool verifier_res = placeholder_verifier<FieldType, circuit_3_params>::process(preprocessed_public_data, proof,
+    bool verifier_res = placeholder_verifier<FieldType, circuit_3_params>::process(preprocessed_public_data, proof, desc,
                                                                                    constraint_system, fri_params);
     BOOST_CHECK(verifier_res);
 }

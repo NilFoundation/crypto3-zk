@@ -38,11 +38,16 @@ namespace nil {
                     constexpr static const std::uint32_t constant_columns = ConstantColumns;
 
                     constexpr static const std::uint32_t private_variables_columns = witness_columns;
-                    constexpr static const std::uint32_t public_variables_columns =
-                        public_input_columns + constant_columns;
 
-                    constexpr static const std::uint32_t total_variables_columns =
-                        private_variables_columns + public_variables_columns;
+                    std::uint32_t selector_columns;
+                    std::uint32_t public_variables_columns;
+                    std::uint32_t total_variables_columns;
+
+                    plonk_arithmetization_params(std::uint32_t _selector_columns){
+                        selector_columns = _selector_columns;
+                        public_variables_columns = public_input_columns + constant_columns + selector_columns;
+                        total_variables_columns = public_variables_columns + private_variables_columns;
+                    }
                 };
 
 #ifdef ZK_RUNTIME_CIRCUIT_DEFINITION

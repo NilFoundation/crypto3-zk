@@ -62,6 +62,7 @@ namespace nil {
 
                 public:
                     const std::size_t table_rows = 1 << rows_log;
+                    std::size_t selector_columns;
 
                     std::shared_ptr<math::evaluation_domain<FieldType>> domain;
 
@@ -103,7 +104,7 @@ namespace nil {
                 constexpr static const std::size_t selector_columns_1 = 2;
 
                 using arithmetization_params_1 = plonk_arithmetization_params<witness_columns_1,
-                    public_columns_1, constant_columns_1, selector_columns_1>;
+                    public_columns_1, constant_columns_1>;
 
                 template<typename FieldType>
                 circuit_description<FieldType, placeholder_params<FieldType, arithmetization_params_1>, 4, 3> circuit_test_1() {
@@ -120,6 +121,7 @@ namespace nil {
                     typedef placeholder_params<FieldType, arithmetization_params_1> circuit_params;
 
                     circuit_description<FieldType, circuit_params, rows_log, permutation> test_circuit;
+                    test_circuit.selector_columns = selector_columns_1;
 
                     std::array<std::vector<typename FieldType::value_type>, table_columns> table;
 
@@ -227,7 +229,7 @@ namespace nil {
                 constexpr static const std::size_t selector_columns_2 = 2;
 
                 using arithmetization_params_2 = plonk_arithmetization_params<witness_columns_2,
-                    public_columns_2, constant_columns_2, selector_columns_2>;
+                    public_columns_2, constant_columns_2>;
 
                 template<typename FieldType>
                 circuit_description<FieldType, placeholder_params<FieldType,
@@ -245,6 +247,7 @@ namespace nil {
                     typedef placeholder_params<FieldType, arithmetization_params_2> circuit_params;
 
                     circuit_description<FieldType, circuit_params, rows_log, permutation> test_circuit;
+                    test_circuit.selector_columns = selector_columns_2;
 
                     std::array<std::vector<typename FieldType::value_type>, table_columns> table;
 
@@ -300,7 +303,7 @@ namespace nil {
                         private_assignment[i] = table[i];
                     }
 
-                    std::array<plonk_column<FieldType>, selector_columns> selectors_assignment;
+                    std::vector<plonk_column<FieldType>> selectors_assignment(selector_columns);
                     std::array<plonk_column<FieldType>, public_columns> public_input_assignment;
                     std::array<plonk_column<FieldType>, constant_columns> constant_assignment = {};
 
@@ -310,10 +313,15 @@ namespace nil {
                     for (std::size_t i = 0; i < public_columns; i++) {
                         public_input_assignment[i] = table[witness_columns + i];
                     }
+
                     test_circuit.table = plonk_assignment_table<FieldType, arithmetization_params_2>(
                         plonk_private_assignment_table<FieldType, arithmetization_params_2>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_2>(
-                            public_input_assignment, constant_assignment, selectors_assignment));
+                            public_input_assignment, 
+                            constant_assignment, 
+                            selectors_assignment
+                        )
+                    );
 
                     test_circuit.init();
 
@@ -355,7 +363,7 @@ namespace nil {
                 constexpr static const std::size_t selector_columns_3 = 1;
 
                 using arithmetization_params_3 = plonk_arithmetization_params<witness_columns_3,
-                    public_columns_3, constant_columns_3, selector_columns_3>;
+                    public_columns_3, constant_columns_3>;
 
                 template<typename FieldType>
                 circuit_description<FieldType, placeholder_params<FieldType,
@@ -373,6 +381,7 @@ namespace nil {
                     typedef placeholder_params<FieldType, arithmetization_params_3> circuit_params;
 
                     circuit_description<FieldType, circuit_params, rows_log, permutation> test_circuit;
+                    test_circuit.selector_columns = selector_columns;
 
                     std::array<std::vector<typename FieldType::value_type>, table_columns> table;
                     for (std::size_t j = 0; j < table_columns; j++) {
@@ -405,7 +414,7 @@ namespace nil {
                         private_assignment[i] = table[i];
                     }
 
-                    std::array<plonk_column<FieldType>, selector_columns> selectors_assignment;
+                    std::vector<plonk_column<FieldType>> selectors_assignment(selector_columns);
                     std::array<plonk_column<FieldType>, public_columns> public_input_assignment = {};
                     std::array<plonk_column<FieldType>, constant_columns> constant_assignment;
 

@@ -40,6 +40,10 @@ namespace nil {
 
                     std::uint32_t padded_rows_amount = std::pow(2, std::ceil(std::log2(usable_rows_amount)));
 
+                    if (usable_rows_amount == padded_rows_amount){
+                        padded_rows_amount*=2;
+                    }
+
                     if (padded_rows_amount < 8)
                         padded_rows_amount = 8;
 

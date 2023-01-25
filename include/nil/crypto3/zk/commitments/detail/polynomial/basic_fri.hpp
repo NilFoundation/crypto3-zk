@@ -132,21 +132,21 @@ namespace nil {
                         };
 
                         struct round_proof_type {
-                            bool operator==(const round_proof_type &rhs) const {
-                                return p == rhs.p && T_root == rhs.T_root && colinear_path == rhs.colinear_path;
-                            }
+                            // bool operator==(const round_proof_type &rhs) const {
+                            //     return p == rhs.p && T_root == rhs.T_root && colinear_path == rhs.colinear_path;
+                            // }
 
-                            bool operator!=(const round_proof_type &rhs) const {
-                                return !(rhs == *this);
-                            }
+                            // bool operator!=(const round_proof_type &rhs) const {
+                            //     return !(rhs == *this);
+                            // }
 
                             //                          y and colinear value are stored in proof_type::values;
                             //                          for i-th round y = proof_type::values[i]; colinear_value =
                             //                          proof_type::values[i+1];
 
-                            merkle_proof_type p;    // for y
-                            typename merkle_tree_type::value_type T_root;
-                            merkle_proof_type colinear_path;    // for colinear_value
+                            std::vector<merkle_proof_type> p;    // for y
+                            std::vector<typename merkle_tree_type::value_type> T_root;
+                            std::vector<merkle_proof_type> colinear_path;    // for colinear_value
                         };
 
                         struct proof_type {
@@ -173,7 +173,7 @@ namespace nil {
                                                               math::polynomial<typename FieldType::value_type>,
                                                               leaf_size>::type final_polynomials_type;
 
-                            std::vector<round_proof_type> round_proofs;    // 0..r-2
+                            round_proof_type round_proofs;    // 0..r-2
                             final_polynomials_type final_polynomials;
 
                             rounds_polynomials_values_type values;    // y-s and colinear_values for round_proof_type
@@ -407,6 +407,25 @@ namespace nil {
                 }
 
                 template<typename FRI>
+                static inline std::vector<typename FRI::merkle_proof_type>
+                    make_compressed_proof_specialized(const std::vector<std::size_t> x_indeces, const std::vector<std::size_t> domain_sizes,
+                                           const typename FRI::merkle_tree_type &tree) {
+                    std::vector<typename FRI::merkle_proof_type> compressed_proofs;
+                    std::vector<std::size_t> min_x_indeces(x_indeces.size());
+                    for (std::size_t i = 0; i < x_indeces.size(); i++) {
+                        min_x_indeces[i] = std::min(x_indeces[i], get_paired_index<FRI>(x_indeces[i], domain_sizes[i]));
+                    }
+                    return containers::generate_compressed_proofs<typename FRI::merkle_tree_hash_type, FRI::m>(tree, min_x_indeces);
+                }
+
+                template<typename FRI>
+                static inline bool
+                    validate_compressed_proofs(const std::vector<typename FRI::merkle_proof_type> &compressed_proofs,
+                                                const std::vector<std::vector<std::uint8_t>> &leafs_data) {
+                    return containers::validate_compressed_proofs<std::vector<std::uint8_t>, typename FRI::merkle_tree_hash_type, FRI::m>(compressed_proofs, leafs_data);
+                }
+
+                template<typename FRI>
                 static inline std::size_t get_folded_index(std::size_t x_index, std::size_t domain_size,
                                                            const std::size_t fri_step) {
                     for (std::size_t i = 0; i < fri_step; i++) {
@@ -575,7 +594,7 @@ namespace nil {
                     std::uint64_t x_index = (transcript.template int_challenge<std::uint64_t>()) % domain_size;
                     typename FRI::field_type::value_type x = fri_params.D[0]->get_domain_element(x_index);
 
-                    std::vector<typename FRI::round_proof_type> round_proofs;
+                    typename FRI::round_proof_type round_proofs;
                     std::unique_ptr<typename FRI::merkle_tree_type> p_tree =
                         std::make_unique<typename FRI::merkle_tree_type>(T);
                     typename FRI::merkle_tree_type T_next;
@@ -585,6 +604,7 @@ namespace nil {
                     std::vector<std::array<std::size_t, FRI::m>> s_indices;
 
                     typename FRI::rounds_polynomials_values_type values;
+                    auto colinear_domain = fri_params.D[basis_index]->size();
 
                     for (std::size_t i = 0; i < fri_params.step_list.size() - 1; i++) {
                         domain_size = fri_params.D[basis_index]->size();
@@ -625,8 +645,17 @@ namespace nil {
                         }
 
                         // TODO: check if leaf index calculation is correct
-                        auto p = make_proof_specialized<FRI>(
-                            get_folded_index<FRI>(x_index, domain_size, fri_params.step_list[i]), domain_size, *p_tree);
+                        if (i == 0) {
+                            auto p = make_proof_specialized<FRI>(
+                                get_folded_index<FRI>(x_index, domain_size, fri_params.step_list[i]), domain_size, *p_tree);
+                            round_proofs.p.push_back(p);
+                        } else {
+                            auto compressed = make_compressed_proof_specialized<FRI>({get_folded_index<FRI>(x_index, domain_size, fri_params.step_list[i]),
+                                                                get_folded_index<FRI>(x_index, fri_params.D[basis_index]->size(), fri_params.step_list[i])},
+                                                                {domain_size, colinear_domain}, *p_tree);
+                            round_proofs.p.push_back(compressed[0]);
+                            round_proofs.colinear_path.push_back(compressed[1]);
+                        }
 
                         typename FRI::polynomials_values_type colinear_value;
                         if constexpr (!FRI::is_const_size) {
@@ -679,13 +708,16 @@ namespace nil {
                                                 fri_params.step_list[i + 1]);    // new merkle tree
                         transcript(commit<FRI>(T_next));
 
-                        typename FRI::merkle_proof_type colinear_path = make_proof_specialized<FRI>(
-                            get_folded_index<FRI>(x_index, fri_params.D[basis_index]->size(),
-                                                  fri_params.step_list[i + 1]),
-                            fri_params.D[basis_index]->size(), T_next);
+                        if (i == fri_params.step_list.size() - 2) {
+                            auto colinear_path = make_proof_specialized<FRI>(
+                                get_folded_index<FRI>(x_index, fri_params.D[basis_index]->size(),
+                                                      fri_params.step_list[i + 1]),
+                                fri_params.D[basis_index]->size(), T_next);
+                            round_proofs.colinear_path.push_back(colinear_path);
+                        }
 
-                        round_proofs.push_back(typename FRI::round_proof_type({p, p_tree->root(), colinear_path}));
-
+                        round_proofs.T_root.push_back(p_tree->root());
+                        
                         p_tree = std::make_unique<typename FRI::merkle_tree_type>(T_next);
                     }
 
@@ -850,6 +882,7 @@ namespace nil {
                         }
                     }
 
+                    std::vector<std::uint8_t> leaf_data_colinear;
                     std::size_t basis_index = 0;
                     for (std::size_t i = 0; i < fri_params.step_list.size() - 1; i++) {
                         domain_size = fri_params.D[basis_index]->size();
@@ -867,9 +900,9 @@ namespace nil {
                             const std::size_t coset_size = 1 << fri_params.step_list[i];
                             auto correct_order_idx =
                                 get_correct_order<FRI>(x_index, domain_size, fri_params.step_list[i], s_indices);
-                            std::vector<std::uint8_t> leaf_data(coset_size * FRI::field_element_type::length() *
+                            std::vector<std::uint8_t> leaf_data_p(coset_size * FRI::field_element_type::length() *
                                                                 leaf_size);
-                            auto write_iter = leaf_data.begin();
+                            auto write_iter = leaf_data_p.begin();
                             for (std::size_t polynom_index = 0; polynom_index < leaf_size; polynom_index++) {
                                 for (auto [idx, pair_idx] : correct_order_idx) {
                                     typename FRI::field_element_type leaf_val0(
@@ -880,16 +913,21 @@ namespace nil {
                                     leaf_val1.write(write_iter, FRI::field_element_type::length());
                                 }
                             }
-                            if (!proof.round_proofs[i].p.validate(leaf_data)) {
-                                return false;
-                            }
-
-                            // Check merkle roots.
+                            
+                            // Check merkle proofs and roots.
                             if (i == 0) {
-                                if (t_polynomials != proof.round_proofs[i].p.root())
+                                if (!proof.round_proofs.p[i].validate(leaf_data_p)) {
+                                    return false;
+                                }
+                                if (t_polynomials != proof.round_proofs.p[i].root())
                                     return false;
                             } else {
-                                if (proof.round_proofs[i - 1].colinear_path.root() != proof.round_proofs[i].T_root)
+                                if (!validate_compressed_proofs<FRI>({proof.round_proofs.p[i],
+                                                                    proof.round_proofs.colinear_path[i - 1]},
+                                                                    {leaf_data_p, leaf_data_colinear})) {
+                                    return false;
+                                }
+                                if (proof.round_proofs.colinear_path[i - 1].root() != proof.round_proofs.T_root[i])
                                     return false;
                             }
                         }
@@ -956,8 +994,8 @@ namespace nil {
                         const std::size_t coset_size = 1 << fri_params.step_list[i + 1];
                         auto correct_order_idx = get_correct_order<FRI>(x_index_next, fri_params.D[basis_index]->size(),
                                                                         fri_params.step_list[i + 1], s_indices);
-                        std::vector<std::uint8_t> leaf_data(coset_size * FRI::field_element_type::length() * leaf_size);
-                        auto write_iter = leaf_data.begin();
+                        leaf_data_colinear = std::vector<std::uint8_t>(coset_size * FRI::field_element_type::length() * leaf_size);
+                        auto write_iter = leaf_data_colinear.begin();
 
                         typename FRI::field_type::value_type alpha =
                             transcript.template challenge<typename FRI::field_type>();
@@ -988,9 +1026,11 @@ namespace nil {
                             }
                         }
 
-                        transcript(proof.round_proofs[i].colinear_path.root());
-                        if (!proof.round_proofs[i].colinear_path.validate(leaf_data)) {
-                            return false;
+                        transcript(proof.round_proofs.colinear_path[i].root());
+                        if (i == fri_params.step_list.size() - 2) {
+                            if (!proof.round_proofs.colinear_path[i].validate(leaf_data_colinear)) {
+                                return false;
+                            }
                         }
 
                         x_index = x_index_next;
@@ -1001,7 +1041,7 @@ namespace nil {
                         commit<FRI>(precommit<FRI>(proof.final_polynomials,
                                                    fri_params.D[basis_index],
                                                    fri_params.step_list[fri_params.step_list.size() - 1]));
-                    if (final_root != proof.round_proofs[fri_params.step_list.size() - 2].colinear_path.root()) {
+                    if (final_root != proof.round_proofs.colinear_path[fri_params.step_list.size() - 2].root()) {
                         return false;
                     }
 

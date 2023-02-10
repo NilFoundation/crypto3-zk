@@ -169,8 +169,7 @@ namespace nil {
 
                     static math::polynomial_dfs<typename FieldType::value_type>
                         lagrange_polynomial(std::shared_ptr<math::evaluation_domain<FieldType>> domain,
-                                            std::size_t number,
-                                            const typename ParamsType::commitment_params_type &commitment_params) {
+                                            std::size_t number) {
 
                         math::polynomial_dfs<typename FieldType::value_type> f(domain->size() - 1, domain->size(),
                                                                                FieldType::value_type::zero());
@@ -178,8 +177,6 @@ namespace nil {
                         if (number < domain->size()) {
                             f[number] = FieldType::value_type::one();
                         }
-
-                        // f.resize(commitment_params.D[0]->size());
 
                         return f;
                     }
@@ -355,8 +352,7 @@ namespace nil {
                                              const typename FieldType::value_type &omega,
                                              const typename FieldType::value_type &delta,
                                              std::shared_ptr<math::evaluation_domain<FieldType>>
-                                                 domain,
-                                             const typename ParamsType::commitment_params_type &commitment_params) {
+                                                 domain) {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> S_id(permutation_size);
 
@@ -367,8 +363,6 @@ namespace nil {
                             for (std::size_t j = 0; j < domain->size(); j++) {
                                 S_id[i][j] = delta.pow(i) * omega.pow(j);
                             }
-
-                            // S_id[i].resize(commitment_params.D[0]->size());
                         }
 
                         return S_id;
@@ -380,8 +374,7 @@ namespace nil {
                                                 const typename FieldType::value_type &delta,
                                                 cycle_representation &permutation,
                                                 std::shared_ptr<math::evaluation_domain<FieldType>>
-                                                    domain,
-                                                const typename ParamsType::commitment_params_type &commitment_params) {
+                                                    domain) {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> S_perm(permutation_size);
                         for (std::size_t i = 0; i < permutation_size; i++) {
@@ -400,8 +393,7 @@ namespace nil {
                     static inline math::polynomial_dfs<typename FieldType::value_type>
                         selector_blind(std::size_t usable_rows,
                                        std::shared_ptr<math::evaluation_domain<FieldType>>
-                                           domain,
-                                       const typename ParamsType::commitment_params_type &commitment_params) {
+                                           domain) {
                         math::polynomial_dfs<typename FieldType::value_type> q_blind(domain->size() - 1, domain->size(),
                                                                                      FieldType::value_type::zero());
 
@@ -478,18 +470,18 @@ namespace nil {
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> id_perm_polys =
                             identity_polynomials(columns_with_copy_constraints, basic_domain->get_domain_element(1),
-                                                 ParamsType::delta, basic_domain, commitment_params);
+                                                 ParamsType::delta, basic_domain);
 
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>> sigma_perm_polys =
                             permutation_polynomials(columns_with_copy_constraints, basic_domain->get_domain_element(1),
-                                                    ParamsType::delta, permutation, basic_domain, commitment_params);
+                                                    ParamsType::delta, permutation, basic_domain);
 
                         math::polynomial_dfs<typename FieldType::value_type> lagrange_0 =
-                            lagrange_polynomial(basic_domain, 0, commitment_params);
+                            lagrange_polynomial(basic_domain, 0);
 
                         std::array<math::polynomial_dfs<typename FieldType::value_type>, 2> q_last_q_blind;
-                        q_last_q_blind[0] = lagrange_polynomial(basic_domain, usable_rows, commitment_params);
-                        q_last_q_blind[1] = selector_blind(usable_rows, basic_domain, commitment_params);
+                        q_last_q_blind[0] = lagrange_polynomial(basic_domain, usable_rows);
+                        q_last_q_blind[1] = selector_blind(usable_rows, basic_domain);
 
                         plonk_public_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params>
                             public_polynomial_table =

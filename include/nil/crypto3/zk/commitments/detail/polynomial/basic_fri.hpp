@@ -415,14 +415,14 @@ namespace nil {
                     for (std::size_t i = 0; i < x_indeces.size(); i++) {
                         min_x_indeces[i] = std::min(x_indeces[i], get_paired_index<FRI>(x_indeces[i], domain_sizes[i]));
                     }
-                    return containers::generate_compressed_proofs<typename FRI::merkle_tree_hash_type, FRI::m>(tree, min_x_indeces);
+                    return containers::merkle_proof<typename FRI::merkle_tree_hash_type, FRI::m>::generate_compressed_proofs(tree, min_x_indeces);
                 }
 
                 template<typename FRI>
                 static inline bool
                     validate_compressed_proofs(const std::vector<typename FRI::merkle_proof_type> &compressed_proofs,
                                                 const std::vector<std::vector<std::uint8_t>> &leafs_data) {
-                    return containers::validate_compressed_proofs<std::vector<std::uint8_t>, typename FRI::merkle_tree_hash_type, FRI::m>(compressed_proofs, leafs_data);
+                    return containers::merkle_proof<typename FRI::merkle_tree_hash_type, FRI::m>::validate_compressed_proofs(compressed_proofs, leafs_data);
                 }
 
                 template<typename FRI>

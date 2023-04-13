@@ -33,6 +33,8 @@
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
 #include <nil/crypto3/math/domains/evaluation_domain.hpp>
 
+#include <nil/crypto3/zk/math/expression.hpp>
+#include <nil/crypto3/zk/math/expression_evaluator.hpp>
 #include <nil/crypto3/zk/math/permutation.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
@@ -480,15 +482,18 @@ namespace nil {
                         std::size_t usable_rows = table_description.usable_rows_amount;
 
                         std::uint32_t max_gates_degree = 0;
+                        math::expression_max_degree_visitor<typename plonk_constraint<FieldType>::variable_type> gates_visitor;
                         for (auto gate : constraint_system.gates()) {
                             for (auto constr : gate.constraints) {
-                                max_gates_degree = std::max(max_gates_degree, (std::uint32_t)constr.max_degree());
+                                max_gates_degree = std::max(max_gates_degree, gates_visitor.compute_max_degree(constr));
                             }
                         }
+                        math::expression_max_degree_visitor<typename plonk_lookup_constraint<FieldType>::variable_type> lookup_visitor;
                         for (auto gate : constraint_system.lookup_gates()) {
                             for (auto constr : gate.constraints) {
                                 for (auto li : constr.lookup_input) {
-                                    max_gates_degree = std::max(max_gates_degree, (std::uint32_t)li.vars.size());
+                                    max_gates_degree = std::max(max_gates_degree, 
+                                        lookup_visitor.compute_max_degree(li));
                                 }
                             }
                         }

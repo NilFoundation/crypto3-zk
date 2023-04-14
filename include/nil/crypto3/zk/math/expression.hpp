@@ -96,6 +96,7 @@ namespace nil {
                   : expr(term<VariableType>(coeff)) {
                 }
 
+
                 expression(const expression<VariableType>& other) = default;
                 expression(expression<VariableType>&& other) = default;
                 expression<VariableType>& operator=(const expression<VariableType>& other) = default;

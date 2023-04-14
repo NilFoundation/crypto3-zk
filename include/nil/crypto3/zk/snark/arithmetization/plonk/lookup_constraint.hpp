@@ -42,7 +42,7 @@ namespace nil {
                     using variable_type = VariableType;
                     using expression = math::expression<VariableType>;
 
-                    std::vector<math::expression<VariableType>> lookup_input;
+                    std::vector<math::term<VariableType>> lookup_input;
                     std::vector<VariableType> lookup_value;
                 };
             }    // namespace snark

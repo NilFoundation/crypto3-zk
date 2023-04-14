@@ -34,7 +34,7 @@
 #include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/assignment.hpp>
 #include <nil/crypto3/zk/math/expression.hpp>
-#include <nil/crypto3/zk/math/expression_evaluator.hpp>
+#include <nil/crypto3/zk/math/expression_visitors.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -169,7 +169,12 @@ namespace nil {
                                     assignment = math::polynomial_shift(assignment, var.rotation, domain->m);
                                 }
                                 return assignment;
-                        });
+                            },
+                            [&assignments](const typename VariableType::assignment_type& coeff) {
+                                return  math::polynomial_dfs<typename VariableType::assignment_type> (
+                                    0, assignments.rows_amount(), coeff);
+                            }
+                        );
 
                         return evaluator.evaluate();
                     }

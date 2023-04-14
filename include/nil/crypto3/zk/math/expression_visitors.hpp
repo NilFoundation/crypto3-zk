@@ -45,9 +45,11 @@ namespace nil {
                  */
                 expression_evaluator(
                     const math::expression<VariableType>& expr,
-                    std::function<ValueType(const VariableType&)> get_var_value)
+                    std::function<ValueType(const VariableType&)> get_var_value,
+                    std::function<ValueType(const typename VariableType::assignment_type&)> convert_to_value_type = [](const typename VariableType::assignment_type& coeff) {return coeff;})
                         : expr(expr)
-                        , get_var_value(get_var_value) {        
+                        , get_var_value(get_var_value)
+                        , convert_to_value_type(convert_to_value_type) {
                 }
 
                 ValueType evaluate() {
@@ -55,7 +57,7 @@ namespace nil {
                 }
 
                 ValueType operator()(const math::term<VariableType>& term) {
-                    ValueType result = term.coeff;
+                    ValueType result = convert_to_value_type(term.coeff);
                     for (const VariableType& var : term.vars) {
                         result *= get_var_value(var);
                     }
@@ -84,7 +86,13 @@ namespace nil {
 
             private:
                 const math::expression<VariableType>& expr;
+
+                // A function used to retrieve the value of a variable.
                 std::function<ValueType(const VariableType &var)> get_var_value;
+
+                // Used to convert the coefficients from VariableType::assignment_type to 
+                // math::polynomial_dfs<typename VariableType::assignment_type> if needed.
+                std::function<ValueType(const typename VariableType::assignment_type&)> convert_to_value_type;
             };
 
             // Used for counting max degree of an expression.
@@ -120,6 +128,41 @@ namespace nil {
                     }
                 }
             };
+
+            // Runs over the variables of an expression, calling the given callback function
+            // for each variable. If a given variable is used multiple times,
+            // the callback is called multiple times.
+            template<typename VariableType>
+            class expression_for_each_variable_visitor : public boost::static_visitor<void> {
+            public:
+                expression_for_each_variable_visitor(
+                        std::function<void(const VariableType&)> callback)
+                    : callback(callback) {}
+
+                void visit(const math::expression<VariableType>& expr) {
+                    boost::apply_visitor(*this, expr.expr);
+                }
+
+                void operator()(const math::term<VariableType>& term) {
+                    for (const auto& var: term.vars) {
+                        callback(var);
+                    }                    
+                }
+
+                void operator()(
+                        const math::pow_operation<VariableType>& pow) {
+                    boost::apply_visitor(*this, pow.expr.expr);
+                }
+
+                void operator()(const math::binary_arithmetic_operation<VariableType>& op) {
+                    boost::apply_visitor(*this, op.expr_left.expr);
+                    boost::apply_visitor(*this, op.expr_right.expr);
+                }
+
+                private:
+                    std::function<void(const VariableType&)> callback;
+            };
+
         }    // namespace math
     }            // namespace crypto3
 }    // namespace nil

@@ -441,12 +441,9 @@ namespace nil {
 
 
                     plonk_lookup_constraint<FieldType> lookup_constraint;
-                    math::expression<plonk_variable<FieldType>> w0_term(w0);
-                    math::expression<plonk_variable<FieldType>> w1_term(w1);
-                    math::expression<plonk_variable<FieldType>> w2_term(w2);
-                    lookup_constraint.lookup_input.push_back(w0_term);
-                    lookup_constraint.lookup_input.push_back(w1_term);
-                    lookup_constraint.lookup_input.push_back(w2_term);
+                    lookup_constraint.lookup_input.push_back(w0);
+                    lookup_constraint.lookup_input.push_back(w1);
+                    lookup_constraint.lookup_input.push_back(w2);
                     lookup_constraint.lookup_value.push_back(c0);
                     lookup_constraint.lookup_value.push_back(c1);
                     lookup_constraint.lookup_value.push_back(c2);

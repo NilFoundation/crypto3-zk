@@ -1,6 +1,5 @@
 //---------------------------------------------------------------------------//
-// Copyright (c) 2020-2021 Mikhail Komarov <nemo@nil.foundation>
-// Copyright (c) 2020-2021 Nikita Kaskov <nbering@nil.foundation>
+// Copyright (c) 2022-2023 Martun Karapetyan <martun@nil.foundation>
 //
 // MIT License
 //
@@ -22,10 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //---------------------------------------------------------------------------//
-// @file Declaration of interfaces for:
-// - a variable (i.e., x_i),
-// - a linear term (i.e., a_i * x_i), and
-// - a linear combination (i.e., sum_i a_i * x_i).
+// @file Classes for mathematical expressions:
+// - a term (i.e.,  a * x_i1 * x_i2 * ... * x_in)
+// - an expression - stores any mathematical expression with -+* operatos and 'pow' in a form of a tree.
 //---------------------------------------------------------------------------//
 
 #ifndef CRYPTO3_ZK_MATH_EXPRESSION_HPP

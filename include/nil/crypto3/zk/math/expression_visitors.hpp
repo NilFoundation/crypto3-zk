@@ -99,7 +99,7 @@ namespace nil {
             template<typename VariableType>
             class expression_max_degree_visitor : public boost::static_visitor<std::uint32_t> {
             public:
-                expression_max_degree_visitor();
+                expression_max_degree_visitor() {}
 
                 std::uint32_t compute_max_degree(const math::expression<VariableType>& expr) {
                     return boost::apply_visitor(*this, expr.expr);

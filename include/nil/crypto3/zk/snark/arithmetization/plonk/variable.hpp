@@ -108,11 +108,6 @@ namespace nil {
                         return result;
                     }
 
-                    math::expression<plonk_variable<FieldType>>
-                        operator-(const assignment_type &field_val) const {
-                        return (*this) - math::expression<plonk_variable<FieldType>>(field_val);
-                    }
-
                     math::term<plonk_variable<FieldType>> operator-() const {
                         return math::term<plonk_variable<FieldType>>(*this) * (-assignment_type::one());
                     }

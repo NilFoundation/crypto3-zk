@@ -220,6 +220,58 @@ namespace nil {
                     }
                 }
             };
+
+
+            // Changes the underlying variable type of an expression. This is useful, when
+            // we have a constraint with variable type plonk_variable<FieldType>
+            // but we need a constraint of variable type 
+            // plonk_variable<math::polynomial_dfs<typename FieldType::value_type>>.
+            // You can convert between types if the coefficient types are convertable.
+            template<typename SourceVariableType, typename DestinationVariableType>
+            class expression_variable_type_converter
+                : public boost::static_visitor<math::expression<DestinationVariableType>> {
+            public:
+                expression_variable_type_converter() {}
+
+                math::expression<DestinationVariableType> convert(
+                        const math::expression<SourceVariableType>& expr) {
+                    return boost::apply_visitor(*this, expr.expr);
+                }
+
+                math::expression<DestinationVariableType> operator()(
+                        const math::term<SourceVariableType>& term) {
+                    math::term<DestinationVariableType> result;
+                    result.coeff = term.coeff;
+                    for (const auto& var: term.vars) {
+                        result.vars.emplace_back(
+                            var.rotation, var.type, var.index, var.relative);
+                    }
+                    return result;
+                }
+
+                math::expression<DestinationVariableType> operator()(
+                        const math::pow_operation<SourceVariableType>& pow) {
+                    math::expression<DestinationVariableType> base = boost::apply_visitor(
+                        *this, pow.expr.expr);
+                    return math::pow_operation<SourceVariableType>(base, pow.power);
+                }
+
+                math::expression<DestinationVariableType> operator()(
+                        const math::binary_arithmetic_operation<SourceVariableType>& op) {
+                    math::expression<DestinationVariableType> left =
+                        boost::apply_visitor(*this, op.expr_left.expr);
+                    math::expression<DestinationVariableType> right =
+                        boost::apply_visitor(*this, op.expr_right.expr);
+                    switch (op.op) {
+                        case ArithmeticOperator::ADD:
+                            return left + right;
+                        case ArithmeticOperator::SUB:
+                            return left - right;
+                        case ArithmeticOperator::MULT:
+                            return left * right;
+                    }
+                }
+            };
         }    // namespace math
     }            // namespace crypto3
 }    // namespace nil

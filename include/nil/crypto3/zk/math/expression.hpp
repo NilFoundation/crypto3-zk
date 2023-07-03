@@ -182,6 +182,10 @@ namespace nil {
 
                 // Used for debugging, to be able to see what's inside the term.
                 std::string to_string() const;
+                
+                // If variables repeat, in some cases we 
+                // want to be able to represent it as Product(var_i^power_i).
+                std::unordered_map<variable_type, int> to_unordered_map() const;
 
                 std::vector<variable_type> vars;
                 assignment_type coeff;
@@ -386,6 +390,20 @@ namespace nil {
             }
 
             template<typename VariableType>
+            std::unordered_map<VariableType, int> term<VariableType>::to_unordered_map() const {
+                std::unordered_map<VariableType, int> vars_map;
+                for (const auto& var: vars) {
+                    auto iter = vars_map.find(var);
+                    if (iter != vars_map.end()) {
+                        iter->second++;
+                    } else {
+                        vars_map[var] = 1;
+                    }
+                }
+                return vars_map;
+            }
+
+            template<typename VariableType>
             bool term<VariableType>::operator==(const term<VariableType>& other) const {
                 if (this->coeff != other.coeff) {
                     return false;
@@ -395,15 +413,7 @@ namespace nil {
                 }
                 // Put both vars and other->vars into a hashmap, and check if
                 // everything is equal.
-                std::unordered_map<variable_type, int> vars_map;
-                for (const auto& var: vars) {
-                    auto iter = vars_map.find(var);
-                    if (iter != vars_map.end()) {
-                        iter->second++;
-                    } else {
-                        vars_map[var] = 1;
-                    }
-                }
+                auto vars_map = this->to_unordered_map();
                 for (const auto& var: other.vars) {
                     auto iter = vars_map.find(var);
                     if (iter != vars_map.end()) {

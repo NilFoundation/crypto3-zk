@@ -61,12 +61,11 @@ namespace nil {
                 /**
                  * A variable represents a formal expression of the form "w^{index}_{rotation}" and type type.
                  */
-                template<typename FieldType>
+                template<typename AssignmentType>
                 class plonk_variable {
 
                 public:
-                    using field_type = FieldType;
-                    using assignment_type = typename FieldType::value_type;
+                    using assignment_type = AssignmentType;
 
                     /**
                      * Mnemonic typedefs.
@@ -85,35 +84,35 @@ namespace nil {
                         index(index),
                         rotation(rotation), relative(relative), type(type) {};
 
-                    math::expression<plonk_variable<FieldType>> pow(const std::size_t power) const {
-                        return math::term<plonk_variable<FieldType>>(*this).pow(power);
+                    math::expression<plonk_variable<AssignmentType>> pow(const std::size_t power) const {
+                        return math::term<plonk_variable<AssignmentType>>(*this).pow(power);
                     }
 
-                    math::term<plonk_variable<FieldType>>
+                    math::term<plonk_variable<AssignmentType>>
                         operator*(const assignment_type &field_coeff) const {
-                        return math::term<plonk_variable<FieldType>>(*this) * field_coeff;
+                        return math::term<plonk_variable<AssignmentType>>(*this) * field_coeff;
                     }
 
-                    math::term<plonk_variable<FieldType>> operator*(const plonk_variable &other) const {
-                        return math::term<plonk_variable<FieldType>>(*this) * other;
+                    math::term<plonk_variable<AssignmentType>> operator*(const plonk_variable &other) const {
+                        return math::term<plonk_variable<AssignmentType>>(*this) * other;
                     }
 
-                    math::expression<plonk_variable<FieldType>>
-                        operator+(const math::expression<plonk_variable<FieldType>> &other) const {
-                        math::expression<plonk_variable<FieldType>> result(*this);
+                    math::expression<plonk_variable<AssignmentType>>
+                        operator+(const math::expression<plonk_variable<AssignmentType>> &other) const {
+                        math::expression<plonk_variable<AssignmentType>> result(*this);
                         result += other;
                         return result;
                     }
 
-                    math::expression<plonk_variable<FieldType>>
-                        operator-(const math::expression<plonk_variable<FieldType>> &other) const {
-                        math::expression<plonk_variable<FieldType>> result(*this);
+                    math::expression<plonk_variable<AssignmentType>>
+                        operator-(const math::expression<plonk_variable<AssignmentType>> &other) const {
+                        math::expression<plonk_variable<AssignmentType>> result(*this);
                         result -= other;
                         return result;
                     }
 
-                    math::term<plonk_variable<FieldType>> operator-() const {
-                        return math::term<plonk_variable<FieldType>>(*this) * (-assignment_type::one());
+                    math::term<plonk_variable<AssignmentType>> operator-() const {
+                        return math::term<plonk_variable<AssignmentType>>(*this) * (-assignment_type::one());
                     }
 
                     bool operator==(const plonk_variable &other) const {
@@ -136,34 +135,34 @@ namespace nil {
                     }
                 };
 
-                template<typename FieldType>
-                math::term<plonk_variable<FieldType>>
-                    operator*(const typename FieldType::value_type &field_coeff, const plonk_variable<FieldType> &var) {
+                template<typename AssignmentType>
+                math::term<plonk_variable<AssignmentType>>
+                    operator*(const AssignmentType &field_coeff, const plonk_variable<AssignmentType> &var) {
                     return var * field_coeff;
                 }
 
-                template<typename FieldType>
-                math::expression<plonk_variable<FieldType>>
-                    operator+(const typename FieldType::value_type &field_val, const plonk_variable<FieldType> &var) {
+                template<typename AssignmentType>
+                math::expression<plonk_variable<AssignmentType>>
+                    operator+(const AssignmentType &field_val, const plonk_variable<AssignmentType> &var) {
                     return var + field_val;
                 }
 
-                template<typename FieldType>
-                math::expression<plonk_variable<FieldType>>
-                    operator-(const typename FieldType::value_type &field_val, const plonk_variable<FieldType> &var) {
+                template<typename AssignmentType>
+                math::expression<plonk_variable<AssignmentType>>
+                    operator-(const AssignmentType &field_val, const plonk_variable<AssignmentType> &var) {
                     return -(var - field_val);
                 }
 
                 // Used in the unit test, so we can use BOOST_CHECK_EQUALS, and see
                 // the values of terms, when the check fails.
-                template<typename FieldType>
-                std::ostream& operator<<(std::ostream& os, const plonk_variable<FieldType>& var)
+                template<typename AssignmentType>
+                std::ostream& operator<<(std::ostream& os, const plonk_variable<AssignmentType>& var)
                 {
-                    std::map<typename plonk_variable<FieldType>::column_type, std::string> type_map = {
-                        {plonk_variable<FieldType>::column_type::witness, "witness"}, 
-                        {plonk_variable<FieldType>::column_type::public_input, "public_input"},
-                        {plonk_variable<FieldType>::column_type::constant, "constant"},
-                        {plonk_variable<FieldType>::column_type::selector, "selector"}
+                    std::map<typename plonk_variable<AssignmentType>::column_type, std::string> type_map = {
+                        {plonk_variable<AssignmentType>::column_type::witness, "witness"}, 
+                        {plonk_variable<AssignmentType>::column_type::public_input, "public_input"},
+                        {plonk_variable<AssignmentType>::column_type::constant, "constant"},
+                        {plonk_variable<AssignmentType>::column_type::selector, "selector"}
                     };
                     os << "var_" << var.index << '_' << var.rotation << '_'
                         << type_map[var.type]

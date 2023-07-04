@@ -223,7 +223,7 @@ namespace nil {
 
 
             // Changes the underlying variable type of an expression. This is useful, when
-            // we have a constraint with variable type plonk_variable<FieldType>
+            // we have a constraint with variable type plonk_variable<AssignmentType>
             // but we need a constraint of variable type 
             // plonk_variable<math::polynomial_dfs<typename FieldType::value_type>>.
             // You can convert between types if the coefficient types are convertable.

@@ -89,7 +89,7 @@ namespace nil {
                     typedef typename ParamsType::transcript_hash_type transcript_hash_type;
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
                     using polynomial_dfs_type = math::polynomial_dfs<typename FieldType::value_type>;
-                    using variable_type = plonk_variable<FieldType>;
+                    using variable_type = plonk_variable<AssignmentType>;
                     using polynomial_dfs_variable_type = plonk_variable<polynomial_dfs_type>;
 
                     typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
@@ -202,9 +202,9 @@ pass the assigment type to expression explicitly.
                                 theta_acc *= theta;
                             }
 
-                            std::tuple<std::size_t, int, typename plonk_variable<FieldType>::column_type> selector_key =
+                            std::tuple<std::size_t, int, typename plonk_variable<AssignmentType>::column_type> selector_key =
                                 std::make_tuple(gate.selector_index, 0,
-                                                plonk_variable<FieldType>::column_type::selector);
+                                                plonk_variable<AssignmentType>::column_type::selector);
 
                             gate_result = gate_result * evaluations[selector_key];
 

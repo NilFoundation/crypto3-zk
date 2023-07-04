@@ -51,7 +51,7 @@ namespace nil {
 
                 /************************* PLONK constraint ***********************************/
 
-                template<typename FieldType, typename VariableType = plonk_variable<FieldType>>
+                template<typename FieldType, typename VariableType = plonk_variable<AssignmentType>>
                 class plonk_constraint : public math::expression<VariableType> {
                 public:
                     typedef FieldType field_type;

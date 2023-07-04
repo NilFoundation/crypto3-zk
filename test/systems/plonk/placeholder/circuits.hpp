@@ -173,12 +173,12 @@ namespace nil {
                         plonk_public_assignment_table<FieldType, arithmetization_params_1>(
                             public_input_assignment, constant_assignment, selectors_assignment));
 
-                    plonk_variable<FieldType> w0(0, 0,
-                                                 plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w1(0, 0,
-                                                 plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w2(0, 0,
-                                                 plonk_variable<FieldType>::column_type::witness);
+                    plonk_variable<AssignmentType> w0(0, 0,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w1(0, 0,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w2(0, 0,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
 
                     plonk_constraint<FieldType> add_constraint;
                     add_constraint += w0;
@@ -263,10 +263,10 @@ namespace nil {
                         q_add[i] = one;
                         q_mul[i] = FieldType::value_type::zero();
 
-                        plonk_variable<FieldType> x(1, i, false, 
-                            plonk_variable<FieldType>::column_type::witness);
-                        plonk_variable<FieldType> y(2, i - 1, false, 
-                            plonk_variable<FieldType>::column_type::witness);
+                        plonk_variable<AssignmentType> x(1, i, false, 
+                            plonk_variable<AssignmentType>::column_type::witness);
+                        plonk_variable<AssignmentType> y(2, i - 1, false, 
+                            plonk_variable<AssignmentType>::column_type::witness);
                         test_circuit.copy_constraints.push_back(plonk_copy_constraint<FieldType>(x, y));
                     }
 
@@ -279,10 +279,10 @@ namespace nil {
                         q_add[i] = FieldType::value_type::zero();
                         q_mul[i] = one;
 
-                        plonk_variable<FieldType> x(1, i, false, 
-                            plonk_variable<FieldType>::column_type::witness);
-                        plonk_variable<FieldType> y(0, 0, false, 
-                            plonk_variable<FieldType>::column_type::public_input);
+                        plonk_variable<AssignmentType> x(1, i, false, 
+                            plonk_variable<AssignmentType>::column_type::witness);
+                        plonk_variable<AssignmentType> y(0, 0, false, 
+                            plonk_variable<AssignmentType>::column_type::public_input);
                         test_circuit.copy_constraints.push_back(plonk_copy_constraint<FieldType>(x, y));
                     }
 
@@ -306,14 +306,14 @@ namespace nil {
                         plonk_public_assignment_table<FieldType, arithmetization_params_2>(
                             public_input_assignment, constant_assignment, selectors_assignment));
 
-                    plonk_variable<FieldType> w0(0, 0, true,
-                                                 plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w1(1, 0, true,
-                                                 plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w2(2, 0, true,
-                                                 plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w0_prev(0, -1, true,
-                                                 plonk_variable<FieldType>::column_type::witness);
+                    plonk_variable<AssignmentType> w0(0, 0, true,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w1(1, 0, true,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w2(2, 0, true,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w0_prev(0, -1, true,
+                                                 plonk_variable<AssignmentType>::column_type::witness);
 
                     plonk_constraint<FieldType> add_constraint;
                     add_constraint += w0;
@@ -413,19 +413,19 @@ namespace nil {
                         plonk_public_assignment_table<FieldType, arithmetization_params_3>(
                             public_input_assignment, constant_assignment, selectors_assignment));
 
-                    plonk_variable<FieldType> w0(0, 0, true,
-                                                plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w1(1, 0, true,
-                                                plonk_variable<FieldType>::column_type::witness);
-                    plonk_variable<FieldType> w2(2, 0, true,
-                                                plonk_variable<FieldType>::column_type::witness);
+                    plonk_variable<AssignmentType> w0(0, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w1(1, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::witness);
+                    plonk_variable<AssignmentType> w2(2, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::witness);
 
-                    plonk_variable<FieldType> c0(0, 0, true,
-                                                plonk_variable<FieldType>::column_type::constant);
-                    plonk_variable<FieldType> c1(1, 0, true,
-                                                plonk_variable<FieldType>::column_type::constant);
-                    plonk_variable<FieldType> c2(2, 0, true,
-                                                plonk_variable<FieldType>::column_type::constant);
+                    plonk_variable<AssignmentType> c0(0, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::constant);
+                    plonk_variable<AssignmentType> c1(1, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::constant);
+                    plonk_variable<AssignmentType> c2(2, 0, true,
+                                                plonk_variable<AssignmentType>::column_type::constant);
 
 
                     plonk_lookup_constraint<FieldType> lookup_constraint;

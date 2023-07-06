@@ -67,11 +67,16 @@ namespace nil {
                 public:
                     using assignment_type = AssignmentType;
 
+                    enum column_type : std::uint8_t 
+                    { 
+                        witness, public_input, constant, selector 
+                    };
+
                     /**
                      * Mnemonic typedefs.
                      */
                     std::int32_t rotation;
-                    enum column_type : std::uint8_t { witness, public_input, constant, selector } type;
+                    column_type type;
                     std::size_t index;
                     bool relative;
 
@@ -174,10 +179,10 @@ namespace nil {
     }            // namespace crypto3
 }    // namespace nil
 
-template<typename FieldType>
-struct std::hash<nil::crypto3::zk::snark::plonk_variable<FieldType>>
+template<typename AssignmentType>
+struct std::hash<nil::crypto3::zk::snark::plonk_variable<AssignmentType>>
 {
-    std::size_t operator()(const nil::crypto3::zk::snark::plonk_variable<FieldType>& var) const
+    std::size_t operator()(const nil::crypto3::zk::snark::plonk_variable<AssignmentType>& var) const
     {
         std::size_t result = std::hash<std::int32_t>()(var.rotation);
         boost::hash_combine(result, std::hash<std::int8_t>()(var.type));

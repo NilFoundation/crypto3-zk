@@ -89,7 +89,7 @@ namespace nil {
                     typedef typename ParamsType::transcript_hash_type transcript_hash_type;
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
                     using polynomial_dfs_type = math::polynomial_dfs<typename FieldType::value_type>;
-                    using variable_type = plonk_variable<AssignmentType>;
+                    using variable_type = plonk_variable<typename FieldType::value_type>;
                     using polynomial_dfs_variable_type = plonk_variable<polynomial_dfs_type>;
 
                     typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
@@ -116,7 +116,7 @@ namespace nil {
                         typename FieldType::value_type theta = transcript.template challenge<FieldType>();
 
                         auto value_type_to_polynomial_dfs = [&assignments=extended_column_polynomials](
-                            const typename polynomial_dfs_variable_type::assignment_type& coeff) {
+                            const typename variable_type::assignment_type& coeff) {
                                 return polynomial_dfs_type(0, assignments.rows_amount(), coeff);
                             };
                         math::expression<polynomial_dfs_variable_type> expr = 
@@ -127,18 +127,15 @@ namespace nil {
                         // Every constraint has variable type 'variable_type', but we want it to use
                         // 'polynomial_dfs_variable_type' instead. The only difference is the coefficient type
                         // inside a term. We want the coefficients to be dfs polynomials here.
-                        math::expression_variable_type_converter<variable_type, polynomial_dfs_variable_type> converter;
+                        math::expression_variable_type_converter<variable_type, polynomial_dfs_variable_type> converter(
+                            value_type_to_polynomial_dfs);
 
                         const auto& gates = constraint_system.gates();
                         for (const auto& gate: gates) {
                             math::expression<polynomial_dfs_variable_type> gate_result = 
-                                FieldType::value_type::zero();
+                                polynomial_dfs_type(0, extended_column_polynomials.rows_amount(), FieldType::value_type::zero());
 
                             for (const auto& constraint : gate.constraints) {
- The problem is variable must accept the assignment type, not the FieldType. Now it's like this:
-using assignment_type = typename FieldType::value_type, which stops us from creating variables (and expressions with coeffs of type dfs polynomial). We may also remove the parameter totally, and 
-pass the assigment type to expression explicitly.
-
                                 gate_result += converter.convert(constraint) * value_type_to_polynomial_dfs(theta_acc);
                                 theta_acc *= theta;
                             }
@@ -174,8 +171,8 @@ pass the assigment type to expression explicitly.
                                 return assignment;
                             };
 
-                        math::expression_evaluator<polynomial_dfs_variable_type, polynomial_dfs_type> evaluator(
-                            expr, get_var_value, value_type_to_polynomial_dfs);
+                        math::expression_evaluator<polynomial_dfs_variable_type> evaluator(
+                            expr, get_var_value);
 
                         std::array<polynomial_dfs_type, argument_size> F;
                         F[0] = evaluator.evaluate();
@@ -202,9 +199,9 @@ pass the assigment type to expression explicitly.
                                 theta_acc *= theta;
                             }
 
-                            std::tuple<std::size_t, int, typename plonk_variable<AssignmentType>::column_type> selector_key =
+                            std::tuple<std::size_t, int, typename plonk_variable<typename FieldType::value_type>::column_type> selector_key =
                                 std::make_tuple(gate.selector_index, 0,
-                                                plonk_variable<AssignmentType>::column_type::selector);
+                                                plonk_variable<typename FieldType::value_type>::column_type::selector);
 
                             gate_result = gate_result * evaluations[selector_key];
 

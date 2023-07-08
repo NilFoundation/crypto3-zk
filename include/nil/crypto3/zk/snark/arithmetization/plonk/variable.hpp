@@ -140,9 +140,10 @@ namespace nil {
                     }
                 };
 
-                template<typename AssignmentType>
+                template<typename AssignmentType, typename LeftType, 
+                         typename = std::enable_if_t<std::is_same<LeftType, AssignmentType>::value || std::is_integral<LeftType>::value>>
                 math::term<plonk_variable<AssignmentType>>
-                    operator*(const AssignmentType &field_coeff, const plonk_variable<AssignmentType> &var) {
+                    operator*(const LeftType &field_coeff, const plonk_variable<AssignmentType> &var) {
                     return var * field_coeff;
                 }
 

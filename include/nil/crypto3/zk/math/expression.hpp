@@ -441,12 +441,12 @@ namespace nil {
             std::ostream& operator<<(std::ostream& os, const term<VariableType>& term) {
                 if (term.coeff != VariableType::assignment_type::one()) {
                     if (term.vars.size() != 0) {
-                        os << term.coeff.data << " * ";
+                        os << term.coeff << " * ";
                     } else {
-                        os << term.coeff.data;
+                        os << term.coeff;
                     }
                 } else if (term.vars.size() == 0) {
-                    os << term.coeff.data;
+                    os << term.coeff;
                 }
                 bool first = true;
                 for (const auto& var : term.vars) {
@@ -524,7 +524,6 @@ namespace nil {
             bool expression<VariableType>::operator!=(const expression<VariableType>& other) const {
                 return this->expr != other.expr;
             }
-
             
         }    // namespace math
     }            // namespace crypto3

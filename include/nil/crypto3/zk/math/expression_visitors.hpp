@@ -232,7 +232,8 @@ namespace nil {
                 expression_variable_type_converter(
                     std::function<typename DestinationVariableType::assignment_type(
                         const typename SourceVariableType::assignment_type&)> convert_coefficient = 
-                            [](const typename SourceVariableType::assignment_type& coeff) {return coeff;}) {
+                            [](const typename SourceVariableType::assignment_type& coeff) {return coeff;})
+                    : _convert_coefficient(convert_coefficient) {
                 }
 
                 math::expression<DestinationVariableType> convert(

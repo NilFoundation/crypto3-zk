@@ -147,15 +147,17 @@ namespace nil {
                     return var * field_coeff;
                 }
 
-                template<typename AssignmentType>
+                template<typename AssignmentType, typename LeftType, 
+                         typename = std::enable_if_t<std::is_same<LeftType, AssignmentType>::value || std::is_integral<LeftType>::value>>
                 math::expression<plonk_variable<AssignmentType>>
-                    operator+(const AssignmentType &field_val, const plonk_variable<AssignmentType> &var) {
+                    operator+(const LeftType &field_val, const plonk_variable<AssignmentType> &var) {
                     return var + field_val;
                 }
 
-                template<typename AssignmentType>
+                template<typename AssignmentType, typename LeftType, 
+                         typename = std::enable_if_t<std::is_same<LeftType, AssignmentType>::value || std::is_integral<LeftType>::value>>
                 math::expression<plonk_variable<AssignmentType>>
-                    operator-(const AssignmentType &field_val, const plonk_variable<AssignmentType> &var) {
+                    operator-(const LeftType &field_val, const plonk_variable<AssignmentType> &var) {
                     return -(var - field_val);
                 }
 

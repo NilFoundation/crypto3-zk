@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CRYPTO3_ZK_MATH_EXPRESSION_EVALUATOR_HPP
-#define CRYPTO3_ZK_MATH_EXPRESSION_EVALUATOR_HPP
+#ifndef CRYPTO3_ZK_MATH_EXPRESSION_VISITORS_HPP
+#define CRYPTO3_ZK_MATH_EXPRESSION_VISITORS_HPP
 
 #include <vector>
 #include <boost/variant/static_visitor.hpp>
@@ -33,178 +33,6 @@
 namespace nil {
     namespace crypto3 {
         namespace math {
-
-            // Evaluates a given expression, running over the expression tree.
-            template<typename VariableType>
-            class expression_evaluator : public boost::static_visitor<typename VariableType::assignment_type> {
-            public:
-                using ValueType = typename VariableType::assignment_type;
-    
-                /*
-                 * @param expr - the expression that will be evaluated.
-                 *  @param get_var_value - A function which can return the value for a given variable.
-                 */
-                expression_evaluator(
-                    const math::expression<VariableType>& expr,
-                    std::function<ValueType(const VariableType&)> get_var_value)
-                        : expr(expr)
-                        , get_var_value(get_var_value) {
-                }
-
-                ValueType evaluate() {
-                    return boost::apply_visitor(*this, expr.expr);
-                }
-
-                ValueType operator()(const math::term<VariableType>& term) {
-                    ValueType result = term.coeff;
-                    for (const VariableType& var : term.vars) {
-                        result *= get_var_value(var);
-                    }
-                    return result;
-                }
-
-                ValueType operator()(
-                        const math::pow_operation<VariableType>& pow) {
-                    ValueType result = boost::apply_visitor(*this, pow.expr.expr);
-                    return result.pow(pow.power);
-                }
-
-                ValueType operator()(
-                        const math::binary_arithmetic_operation<VariableType>& op) {
-                    
-                    ValueType result = boost::apply_visitor(*this, op.expr_left.expr);
-                    switch (op.op) {
-                        case ArithmeticOperator::ADD:
-                            result += boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                        case ArithmeticOperator::SUB:
-                            result -= boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                        case ArithmeticOperator::MULT:
-                            result *= boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                    }
-                    return result;
-                }
-
-            private:
-                const math::expression<VariableType>& expr;
-
-                // A function used to retrieve the value of a variable.
-                std::function<ValueType(const VariableType &var)> get_var_value;
-
-           };
-
-            // Counts how many times each subexpression appears in a given expression.
-            template<typename VariableType>
-            class subexpression_counter : public boost::static_visitor<void> {
-            public:
-                using ValueType = typename VariableType::assignment_type;
-    
-                expression_evaluator(
-                    const math::expression<VariableType>& expr)
-                        : expr(expr) {
-                }
-
-                unordered_map<math::expression<VariableType>, size_t> count() {
-                    boost::apply_visitor(*this, expr.expr);
-                    return std::move(_counts);
-                }
-
-                void operator()(const math::term<VariableType>& term) {
-                    _counts[term]++;
-                }
-
-                void operator()(
-                        const math::pow_operation<VariableType>& pow) {
-                    _counts[pow]++;
-                    boost::apply_visitor(*this, pow.expr.expr);
-                }
-
-                void operator()(
-                        const math::binary_arithmetic_operation<VariableType>& op) {
-                    _counts[op]++;
-                    boost::apply_visitor(*this, op.expr_left.expr);
-                    boost::apply_visitor(*this, op.expr_right.expr);
-                }
-
-            private:
-                const math::expression<VariableType>& expr;
-
-                // Maps each subexpression to the number of occurences.
-                unordered_map<math::expression<VariableType>, size_t> _counts;
-            };
-
-            // Evaluates a given expression, running over the expression tree twice.
-            // On the first run, for each node we store how many times it appeared,
-            // then on second run we cache evaluation values for nodes that appeared more than once, 
-            // so they can be reused.
-            template<typename VariableType>
-            class cached_expression_evaluator : public boost::static_visitor<typename VariableType::assignment_type> {
-            public:
-                using ValueType = typename VariableType::assignment_type;
-
-                /** \Brief Later this class can optimize the given expression 
-                           before starting the evaluation.
-                 * @param expr - the expression that will be evaluated.
-                 *  @param get_var_value - A function which can return the value for a given variable.
-                 */
-                cached_expression_evaluator(
-                    const math::expression<VariableType>& expr,
-                    std::function<ValueType(const VariableType&)> get_var_value)
-                        : _expr(expr)
-                        , _get_var_value(get_var_value) {
-                }
-
-                ValueType evaluate() {
-                    // First compute how many times each subexpression will appear.
-                    subexpression_counter<VariableType> counter; 
-                    _counts = counter.count(); 
-       
-                    return boost::apply_visitor(*this, _expr.expr);
-                }
-
-                ValueType operator()(const math::term<VariableType>& term) {
-                    ValueType result = term.coeff;
-                    for (const VariableType& var : term.vars) {
-                        result *= _get_var_value(var);
-                    }
-                    return result;
-                }
-
-                ValueType operator()(
-                        const math::pow_operation<VariableType>& pow) {
-                    ValueType result = boost::apply_visitor(*this, pow.expr.expr);
-                    return result.pow(pow.power);
-                }
-
-                ValueType operator()(
-                        const math::binary_arithmetic_operation<VariableType>& op) {
-                    
-                    ValueType result = boost::apply_visitor(*this, op.expr_left.expr);
-                    switch (op.op) {
-                        case ArithmeticOperator::ADD:
-                            result += boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                        case ArithmeticOperator::SUB:
-                            result -= boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                        case ArithmeticOperator::MULT:
-                            result *= boost::apply_visitor(*this, op.expr_right.expr);
-                            break;
-                    }
-                    return result;
-                }
-
-            private:
-                const math::expression<VariableType>& _expr;
-
-                // A function used to retrieve the value of a variable.
-                std::function<ValueType(const VariableType &var)> _get_var_value;
-
-                unordered_map<math::expression<VariableType>, size_t> _counts;
-            };
-
             // Used for counting max degree of an expression.
             template<typename VariableType>
             class expression_max_degree_visitor : public boost::static_visitor<std::uint32_t> {
@@ -391,8 +219,9 @@ namespace nil {
                     const typename SourceVariableType::assignment_type&)> _convert_coefficient;
 
             };
+
         }    // namespace math
-    }            // namespace crypto3
+    }    // namespace crypto3
 }    // namespace nil
 
-#endif    // CRYPTO3_ZK_MATH_EXPRESSION_EVALUATOR_HPP
+#endif    // CRYPTO3_ZK_MATH_EXPRESSION_VISITORS_HPP

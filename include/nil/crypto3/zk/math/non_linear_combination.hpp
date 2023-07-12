@@ -34,6 +34,7 @@
 #include <vector>
 #include <unordered_map>
 #include <nil/crypto3/zk/math/expression.hpp>
+#include <nil/crypto3/zk/math/expression_hasher.hpp>
 
 namespace nil {
     namespace crypto3 {

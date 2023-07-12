@@ -151,14 +151,18 @@ namespace nil {
                          typename = std::enable_if_t<std::is_same<LeftType, AssignmentType>::value || std::is_integral<LeftType>::value>>
                 math::expression<plonk_variable<AssignmentType>>
                     operator+(const LeftType &field_val, const plonk_variable<AssignmentType> &var) {
-                    return var + field_val;
+                    math::expression<plonk_variable<AssignmentType>> result(field_val);
+                    result += var;
+                    return result;
                 }
 
                 template<typename AssignmentType, typename LeftType, 
                          typename = std::enable_if_t<std::is_same<LeftType, AssignmentType>::value || std::is_integral<LeftType>::value>>
                 math::expression<plonk_variable<AssignmentType>>
                     operator-(const LeftType &field_val, const plonk_variable<AssignmentType> &var) {
-                    return -(var - field_val);
+                    math::expression<plonk_variable<AssignmentType>> result(field_val);
+                    result -= var;
+                    return result;
                 }
 
                 // Used in the unit test, so we can use BOOST_CHECK_EQUALS, and see

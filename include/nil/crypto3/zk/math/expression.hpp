@@ -79,6 +79,10 @@ namespace nil {
                     boost::recursive_wrapper<binary_arithmetic_operation<VariableType>>
                     > expression_type;
 
+                expression() 
+                    : expr(term<VariableType>(assignment_type::zero())) {
+                }
+
                 expression(const term<VariableType> &expr)
                   : expr(expr) {
                 }
@@ -206,7 +210,7 @@ namespace nil {
                 pow_operation<VariableType>& operator=(const pow_operation<VariableType>& other) = default;
                 pow_operation<VariableType>& operator=(pow_operation<VariableType>&& other) = default;
 
-                // Used for testing purposes. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
+                // Used for testing purposes, and hashmaps. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
                 bool operator==(const pow_operation<VariableType>& other) const;
                 bool operator!=(const pow_operation<VariableType>& other) const;
 
@@ -238,7 +242,7 @@ namespace nil {
                 binary_arithmetic_operation<VariableType>& operator=(
                     binary_arithmetic_operation<VariableType>&& other) = default;
 
-                // Used for testing purposes. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
+                // Used for testing purposes and hashmaps. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
                 bool operator==(const binary_arithmetic_operation<VariableType>& other) const;
                 bool operator!=(const binary_arithmetic_operation<VariableType>& other) const;
 
@@ -297,7 +301,7 @@ namespace nil {
 
             template<typename VariableType>
             expression<VariableType> expression<VariableType>::operator-() const {
-                return (*this) * term<VariableType>(-assignment_type::one());
+                return term<VariableType>(assignment_type::zero()) - (*this);
             }
 
             template<typename VariableType>
@@ -429,7 +433,7 @@ namespace nil {
                 return true;
             }
 
-            // Used for testing purposes.
+            // Used for testing purposes and hashmaps.
             template<typename VariableType>
             bool term<VariableType>::operator!=(const term<VariableType>& other) const {
                 return !(*this == other);
@@ -483,7 +487,7 @@ namespace nil {
                 return os;
             }
 
-            // Used for testing purposes. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
+            // Used for testing purposes and hashmaps. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
             template<typename VariableType>
             bool pow_operation<VariableType>::operator==(
                     const pow_operation<VariableType>& other) const {
@@ -497,7 +501,7 @@ namespace nil {
                 return !(*this == other);
             }
 
-            // Used for testing purposes. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
+            // Used for testing purposes and hashmaps. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
             template<typename VariableType>
             bool binary_arithmetic_operation<VariableType>::operator==(
                     const binary_arithmetic_operation<VariableType>& other) const {
@@ -513,7 +517,7 @@ namespace nil {
                 return !(*this == other);
             }
  
-            // Used for testing purposes. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
+            // Used for testing purposes and hashmaps. Checks for EXACT EQUALITY ONLY, no isomorphism!!!
             template<typename VariableType>
             bool expression<VariableType>::operator==(const expression<VariableType>& other) const {
                 return this->expr == other.expr;
@@ -524,31 +528,8 @@ namespace nil {
             bool expression<VariableType>::operator!=(const expression<VariableType>& other) const {
                 return this->expr != other.expr;
             }
-            
         }    // namespace math
-    }            // namespace crypto3
+    }    // namespace crypto3
 }    // namespace nil
-
-namespace std {
-
-template <typename VariableType>
-struct std::hash<nil::crypto3::math::term<VariableType>>
-{
-    std::hash<VariableType> vars_hasher;
-    std::hash<typename VariableType::assignment_type> coeff_hasher;
-
-    std::size_t operator()(const nil::crypto3::math::term<VariableType>& term) const
-    {
-        std::size_t result = coeff_hasher(term.coeff);
-        auto vars = term.vars;
-        sort(vars.begin(), vars.end());
-        for (const auto& var: vars) {
-            boost::hash_combine(result, vars_hasher(var));
-        }
-        return result;
-    }
-};
-
-} // namespace std
 
 #endif    // CRYPTO3_ZK_MATH_EXPRESSION_HPP

@@ -140,7 +140,8 @@ namespace nil {
                                 theta_acc *= theta;
                             }
 
-                            gate_result *= extended_column_polynomials.selector(gate.selector_index);
+                            gate_result *= polynomial_dfs_variable_type(
+                                gate.selector_index, 0, false, polynomial_dfs_variable_type::column_type::selector);
 
                             expr += gate_result;
                         }

@@ -266,6 +266,7 @@ namespace nil {
                                         const std::array<math::polynomial<typename FieldType::value_type>, leaf_size>
                                             V,
                                         transcript_type &transcript = transcript_type()) {
+std::cout << "basic_batched_fri_compile_time_size.hpp 1 \n";
 
                             std::uint64_t idx = transcript.template int_challenge<std::uint64_t>();
                             typename FieldType::value_type x = fri_params.D[0]->get_domain_element(1).pow(idx);

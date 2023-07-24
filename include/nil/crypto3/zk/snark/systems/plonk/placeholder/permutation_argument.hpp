@@ -119,9 +119,16 @@ namespace nil {
                         V_P.resize(fri_params.D[0]->m);
 
                         // 4. Compute and add commitment to $V_P$ to $\text{transcript}$.
+std::cout << "V_P = " << V_P << std::endl;
+std::cout << "fri_params.step_list.front() = " << fri_params.step_list.front() << std::endl;
+
                         typename permutation_commitment_scheme_type::precommitment_type V_P_tree =
                             algorithms::precommit<permutation_commitment_scheme_type>(
                                 V_P, fri_params.D[0], fri_params.step_list.front());
+std::cout << "V_P_tree = ";
+for (auto& v: V_P_tree._hashes)
+    std::cout << v << std::endl;
+std::cout << std::endl;
                         typename permutation_commitment_scheme_type::commitment_type V_P_commitment =
                             algorithms::commit<permutation_commitment_scheme_type>(V_P_tree);
                         transcript(V_P_commitment);

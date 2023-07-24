@@ -133,11 +133,14 @@ namespace nil {
                     typename FRI::basic_fri::params_type &fri_params,
                     typename FRI::basic_fri::transcript_type &transcript = typename FRI::basic_fri::transcript_type()
                 ) {
-                    std::array<typename FRI::basic_fri::commitment_type, 1> t_roots = {t_root};
-                    std::vector<std::size_t> evals_map = {0};
+std::cout << "Inside verify_eval\n";
 
-                    const std::vector<math::polynomial<typename FRI::field_type::value_type>> combined_U = {{0}};
-                    const std::vector<math::polynomial<typename FRI::field_type::value_type>> combined_V = {{1}};
+                    std::array<typename FRI::basic_fri::commitment_type, 1> t_roots = {t_root};
+                    std::vector<std::size_t> evals_map(1, 0);
+                    std::cout << "++++++++++++++++eval maps size is " << evals_map.size() << std::endl;
+
+                    const std::vector<math::polynomial<typename FRI::field_type::value_type>> combined_U(1, std::vector<int>(1, 0));
+                    const std::vector<math::polynomial<typename FRI::field_type::value_type>> combined_V(1, std::vector<int>(1, 1));
 
                     return verify_eval<typename FRI::basic_fri>(
                         proof, fri_params, t_roots,

@@ -68,6 +68,9 @@ using namespace nil::crypto3;
 using namespace nil::crypto3::zk;
 using namespace nil::crypto3::zk::snark;
 
+std::size_t test_global_seed = 0;
+boost::random::mt11213b test_global_rnd_engine = boost::random::mt11213b(test_global_seed);
+
 inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, const int max_step) {
     using dist_type = std::uniform_int_distribution<int>;
     static std::random_device random_engine;
@@ -83,7 +86,7 @@ inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, c
             step_list.emplace_back(1);
             steps_sum += step_list.back();
         } else {
-            step_list.emplace_back(dist_type(1, max_step)(random_engine));
+            step_list.emplace_back(dist_type(1, max_step)(test_global_rnd_engine));
             steps_sum += step_list.back();
         }
     }
@@ -183,7 +186,7 @@ BOOST_AUTO_TEST_CASE(placeholder_split_polynomial_test) {
 
     BOOST_CHECK(f_splitted.size() == expected_size);
 
-    typename FieldType::value_type y = algebra::random_element<FieldType>();
+    typename FieldType::value_type y = algebra::random_element<FieldType>(test_global_rnd_engine);
 
     typename FieldType::value_type f_at_y = f.evaluate(y);
     typename FieldType::value_type f_splitted_at_y = FieldType::value_type::zero();
@@ -243,8 +246,8 @@ BOOST_AUTO_TEST_CASE(placeholder_permutation_polynomials_test) {
     }
     BOOST_CHECK_MESSAGE(id_res == sigma_res, "Simple check");
 
-    typename FieldType::value_type beta = algebra::random_element<FieldType>();
-    typename FieldType::value_type gamma = algebra::random_element<FieldType>();
+    typename FieldType::value_type beta = algebra::random_element<FieldType>(test_global_rnd_engine);
+    typename FieldType::value_type gamma = algebra::random_element<FieldType>(test_global_rnd_engine);
 
     id_res = FieldType::value_type::one();
     sigma_res = FieldType::value_type::one();
@@ -315,7 +318,7 @@ BOOST_AUTO_TEST_CASE(placeholder_permutation_argument_test) {
             constraint_system, preprocessed_public_data, desc, polynomial_table, fri_params, prover_transcript);
 
     // Challenge phase
-    typename FieldType::value_type y = algebra::random_element<FieldType>();
+    typename FieldType::value_type y = algebra::random_element<FieldType>(test_global_rnd_engine);
     std::vector<typename FieldType::value_type> f_at_y(permutation_size);
     for (int i = 0; i < permutation_size; i++) {
         f_at_y[i] = polynomial_table[i].evaluate(y);
@@ -389,7 +392,7 @@ BOOST_AUTO_TEST_CASE(placeholder_lookup_argument_test, *boost::unit_test::disabl
     );
 
     // Challenge phase
-    typename FieldType::value_type y = algebra::random_element<FieldType>();
+    typename FieldType::value_type y = algebra::random_element<FieldType>(test_global_rnd_engine);
     typename policy_type::evaluation_map columns_at_y;
     for (std::size_t i = 0; i < placeholder_test_params::witness_columns; i++) {
 
@@ -497,7 +500,7 @@ BOOST_AUTO_TEST_CASE(placeholder_gate_argument_test) {
             preprocessed_public_data.common_data.max_gates_degree, prover_transcript);
 
     // Challenge phase
-    typename FieldType::value_type y = algebra::random_element<FieldType>();
+    typename FieldType::value_type y = algebra::random_element<FieldType>(test_global_rnd_engine);
     typename FieldType::value_type omega = preprocessed_public_data.common_data.basic_domain->get_domain_element(1);
 
     typename policy_type::evaluation_map columns_at_y;

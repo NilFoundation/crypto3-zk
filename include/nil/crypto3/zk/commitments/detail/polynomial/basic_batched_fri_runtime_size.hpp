@@ -268,6 +268,7 @@ namespace nil {
                                                 const std::vector<
                                                     math::polynomial<typename FieldType::value_type>> V,
                                                 transcript_type &transcript = transcript_type()) {
+std::cout << "Inside basic_batched_fri_runtime_size.hpp\n";
 
                             assert(U.size() == V.size());
                             std::size_t leaf_size = U.size();

@@ -120,23 +120,51 @@ namespace nil {
                 struct fiat_shamir_heuristic_sequential {
                     typedef Hash hash_type;
 
-                    fiat_shamir_heuristic_sequential() : state(hash<hash_type>({0})) {
+                    fiat_shamir_heuristic_sequential() : state(hash<hash_type>(std::vector<int>(1, 0))) {
+std::cout << "fiat_shamir_heuristic_sequential() : state(hash<hash_type>(std::vector<int>(1, 0))) {\n";
                     }
 
                     template<typename InputRange>
                     fiat_shamir_heuristic_sequential(const InputRange &r) : state(hash<hash_type>(r)) {
+std::cout << "fiat_shamir_heuristic_sequential(const InputRange &r) : state(hash<hash_type>(r)) { r.size() == "
+          << r.size() << "\n";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
                     }
 
                     template<typename InputIterator>
                     fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) :
                         state(hash<hash_type>(first, last)) {
+std::cout << "fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) :\n";
                     }
 
                     template<typename InputRange>
                     void operator()(const InputRange &r) {
+std::cout << "Input void operator()(const InputRange &r) { size = " << r.size() << "\n";
+std::cout << "State is ";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
+
+std::cout << "Range is ";
+for (auto& v: r)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
+
                         auto acc_convertible = hash<hash_type>(state);
+std::cout << "Middle void operator()(const InputRange &r) {\n";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
                         state = accumulators::extract::hash<hash_type>(
                             hash<hash_type>(r, static_cast<accumulator_set<hash_type> &>(acc_convertible)));
+
+std::cout << "Output void operator()(const InputRange &r) {\n";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
+
                     }
 
                     template<typename InputIterator>
@@ -150,21 +178,32 @@ namespace nil {
                     // typename std::enable_if<(Hash::digest_bits >= Field::modulus_bits),
                     //                         typename Field::value_type>::type
                     typename Field::value_type challenge() {
-
+std::cout << "challenge()\n";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
                         state = hash<hash_type>(state);
                         nil::marshalling::status_type status;
                         nil::crypto3::multiprecision::cpp_int raw_result = nil::marshalling::pack(state, status);
-
+std::cout << "challenge exit()\n";
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
                         return raw_result;
                     }
 
                     template<typename Integral>
                     Integral int_challenge() {
-
+for (auto& v: state)
+    std::cout << (int)v << " ";
+std::cout << std::endl;
                         state = hash<hash_type>(state);
                         nil::marshalling::status_type status;
                         Integral raw_result = nil::marshalling::pack(state, status);
-
+if (status != nil::marshalling::status_type::success) {
+    std::cout << "Status is not success" << std::endl;
+}
+std::cout << "int_challenge() returns " << raw_result << std::endl;
                         return raw_result;
                     }
 

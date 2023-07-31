@@ -31,6 +31,7 @@
 
 #include <ostream>
 #include <vector>
+#include <unordered_map>
 #include <functional>
 #include <boost/functional/hash.hpp>
 #include <boost/variant.hpp>

@@ -85,7 +85,7 @@ namespace nil {
                     typename VariableType::assignment_type
                         evaluate(std::size_t row_index,
                                  const plonk_assignment_table<FieldType, ArithmetizationParams> &assignments) const {
-                        math::cached_expression_evaluator<VariableType> evaluator(
+                        math::expression_evaluator<VariableType> evaluator(
                             *this, 
                             [this, &assignments, row_index](const VariableType &var) {
                                 switch (var.type) {
@@ -113,7 +113,7 @@ namespace nil {
 
                         math::expression_variable_type_converter<VariableType, polynomial_variable_type> converter;
                         
-                        math::cached_expression_evaluator<polynomial_variable_type> evaluator(
+                        math::expression_evaluator<polynomial_variable_type> evaluator(
                             converter.convert(*this),
                             [&domain, &assignments](const VariableType &var) {
                                 polynomial_type assignment;
@@ -152,7 +152,7 @@ namespace nil {
                             [&assignments](const typename VariableType::assignment_type& coeff) {
                                 polynomial_dfs_type(0, assignments.rows_amount(), coeff);
                             });
-                        math::cached_expression_evaluator<polynomial_dfs_variable_type> evaluator(
+                        math::expression_evaluator<polynomial_dfs_variable_type> evaluator(
                             converter.convert(*this),
                             [&domain, &assignments](const polynomial_dfs_variable_type &var) {
                                 polynomial_dfs_type assignment;
@@ -184,7 +184,7 @@ namespace nil {
                     typename VariableType::assignment_type
                         evaluate(detail::plonk_evaluation_map<VariableType> &assignments) const {
                         typename VariableType::assignment_type acc = VariableType::assignment_type::zero();
-                        math::cached_expression_evaluator<VariableType> evaluator(
+                        math::expression_evaluator<VariableType> evaluator(
                             *this, 
                             [this, &assignments](const VariableType &var) {
                                 std::tuple<std::size_t, int, typename VariableType::column_type> key =

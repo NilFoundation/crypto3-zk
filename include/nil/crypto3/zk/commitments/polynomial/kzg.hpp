@@ -30,6 +30,7 @@
 
 #include <tuple>
 #include <vector>
+#include <unordered_set>
 #include <type_traits>
 
 #include <boost/assert.hpp>
@@ -37,6 +38,7 @@
 #include <boost/accumulators/accumulators.hpp>
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
+#include <nil/crypto3/math/polynomial/polynomial_dfs.hpp>
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>
 #include <nil/crypto3/algebra/type_traits.hpp>
 #include <nil/crypto3/algebra/algorithms/pair.hpp>
@@ -82,42 +84,35 @@ namespace nil {
                     struct params_type {
                         commitment_key_type commitment_key;
                         verification_key_type verification_key;
-                        params_type() {}
-                        params_type(std::size_t d) {
-                            auto alpha = algebra::random_element<field_type>();
-                            verification_key = verification_key_type::one() * alpha;
-                            commitment_key.resize(d);
-                            auto alpha_com = commitment_type::one();
+
+                        params_type() = default;
+
+                        params_type(std::size_t d, const scalar_value_type& alpha = algebra::random_element<field_type>()) {
+                            verification_key = alpha.data;
+                            commitment_key.reserve(d);
+                            auto alpha_com = commitment_type::one(); // Maybe here must not be one()?
                             for (std::size_t i = 0; i < d; i++) {
-                                commitment_key[i] = alpha_com;
-                                alpha_com = alpha * alpha_com;
+                                commitment_key.push_back(alpha_com);
+                                alpha_com *= alpha.data;
                             }
                         }
-                        params_type(std::size_t d, scalar_value_type alpha) {
-                            verification_key = verification_key_type::one() * alpha;
-                            commitment_key.resize(d);
-                            auto alpha_com = commitment_type::one();
-                            for (std::size_t i = 0; i < d; i++) {
-                                commitment_key[i] = alpha_com;
-                                alpha_com = alpha * alpha_com;
-                            }
-                        }
-                        params_type(commitment_key_type ck, verification_key_type vk) :
-                            commitment_key(ck), verification_key(vk) {}
+
+                        params_type(const commitment_key_type& ck, const verification_key_type& vk)
+                            : commitment_key(ck), verification_key(vk) {}
+
                     };
+
                     struct public_key_type {
                         commitment_type commit;
                         scalar_value_type z;
                         scalar_value_type eval;
-                        public_key_type() {}
-                        public_key_type(commitment_type c, scalar_value_type z, scalar_value_type e)
+
+                        public_key_type() = default;
+                        public_key_type(const commitment_type& c, const scalar_value_type& z, const scalar_value_type& e)
                                     : commit(c), z(z), eval(e) {}
-                        public_key_type operator=(const public_key_type &other) {
-                            eval = other.eval;
-                            commit = other.commit;
-                            z = other.z;
-                            return *this;
-                        }
+
+                        // public_key_type operator=(const public_key_type &other) = default;
+
                     };
                 };
             } // namespace commitments
@@ -140,6 +135,18 @@ namespace nil {
                              std::is_base_of<
                                  commitments::kzg<typename KZG::curve_type>, KZG>::value,
                              bool>::type = true>
+                static typename KZG::commitment_type commit(const typename KZG::params_type &params,
+                                                const typename math::polynomial_dfs<typename KZG::scalar_value_type> &f) {
+                    BOOST_ASSERT(f.size() <= params.commitment_key.size());
+                    return algebra::multiexp<typename KZG::multiexp_method>(params.commitment_key.begin(),
+                                            params.commitment_key.begin() + f.size(), f.begin(), f.end(), 1);
+                }
+
+                template<typename KZG,
+                         typename std::enable_if<
+                             std::is_base_of<
+                                 commitments::kzg<typename KZG::curve_type>, KZG>::value,
+                             bool>::type = true>
                 static typename KZG::proof_type proof_eval(typename KZG::params_type params,
                                             const typename math::polynomial<typename KZG::scalar_value_type> &f,
                                             typename KZG::scalar_value_type z) {
@@ -152,7 +159,7 @@ namespace nil {
                     if (r != typename KZG::scalar_value_type(0)) {
                         throw std::runtime_error("incorrect eval or point z");
                     }
-                    q = q / denominator_polynom;
+                    q /= denominator_polynom;
 
                     return commit<KZG>(params, q);
                 }
@@ -165,7 +172,6 @@ namespace nil {
                 static typename KZG::proof_type proof_eval(typename KZG::params_type params,
                                 const typename math::polynomial<typename KZG::scalar_value_type> &f,
                                 typename KZG::public_key_type &pk) {
-
                     return proof_eval<KZG>(params, f, pk.z);
                 }
 
@@ -177,18 +183,19 @@ namespace nil {
                 static bool verify_eval(const typename KZG::params_type &params,
                                         const typename KZG::proof_type &proof,
                                         const typename KZG::public_key_type &public_key) {
+                    auto g2_one = KZG::curve_type::template g2_type<>::value_type::one();
 
                     auto A_1 = algebra::precompute_g1<typename KZG::curve_type>(proof);
-                    auto A_2 = algebra::precompute_g2<typename KZG::curve_type>(params.verification_key -
-                                                                    public_key.z * KZG::curve_type::template g2_type<>::value_type::one());
-                    auto B_1 = algebra::precompute_g1<typename KZG::curve_type>(public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() -
-                                                                    public_key.commit);
-                    auto B_2 = algebra::precompute_g2<typename KZG::curve_type>(KZG::curve_type::template g2_type<>::value_type::one());
+                    auto A_2 = algebra::precompute_g2<typename KZG::curve_type>(
+                        params.verification_key - public_key.z * g2_one);
+                    auto B_1 = algebra::precompute_g1<typename KZG::curve_type>(
+                        public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() - public_key.commit);
+                    auto B_2 = algebra::precompute_g2<typename KZG::curve_type>(g2_one);
 
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
 
-                    return gt_4 == KZG::gt_value_type::one();
+                    return gt_4.is_one();
                 }
             } // namespace algorithms
 
@@ -229,43 +236,33 @@ namespace nil {
                     struct params_type {
                         std::vector<commitment_type> commitment_key;
                         std::vector<verification_type> verification_key;
-                        params_type() {};
-                        params_type(std::size_t d, std::size_t t) {
-                            auto alpha = algebra::random_element<typename curve_type::scalar_field_type>();
+
+                        params_type() = default;
+
+                        params_type(std::size_t d, std::size_t t,
+                                    const scalar_value_type& alpha = algebra::random_element<typename curve_type::scalar_field_type>()) {
                             commitment_key.resize(d);
                             verification_key.resize(t + 1);
                             auto alpha_comm = commitment_type::one();
                             for (std::size_t i = 0; i < d; ++i) {
                                 commitment_key[i] = alpha_comm;
-                                alpha_comm = alpha * alpha_comm;
+                                alpha_comm *= alpha;
                             }
+
                             auto alpha_ver = verification_type::one();
                             for (std::size_t i = 0; i <= t; ++i) {
                                 verification_key[i] = alpha_ver;
-                                alpha_ver = alpha * alpha_ver;
+                                alpha_ver *= alpha;
                             }
                         }
-                        params_type(std::size_t d, std::size_t t, scalar_value_type alpha) {
-                            commitment_key.resize(d);
-                            verification_key.resize(t + 1);
-                            auto alpha_comm = commitment_type::one();
-                            for (std::size_t i = 0; i < d; ++i) {
-                                commitment_key[i] = alpha_comm;
-                                alpha_comm = alpha * alpha_comm;
-                            }
-                            auto alpha_ver = verification_type::one();
-                            for (std::size_t i = 0; i <= t; ++i) {
-                                verification_key[i] = alpha_ver;
-                                alpha_ver = alpha * alpha_ver;
-                            }
-                        }
-                        params_type(std::vector<commitment_type> commitment_key, std::vector<verification_type> verification_key) :
-                                    commitment_key(commitment_key), verification_key(verification_key) {};
-                        params_type operator=(const params_type &other) {
-                            commitment_key = other.commitment_key;
-                            verification_key = other.verification_key;
-                            return *this;
-                        }
+
+                        params_type(const std::vector<commitment_type>& commitment_key,
+                                    const std::vector<verification_type>& verification_key)
+                            : commitment_key(commitment_key)
+                            , verification_key(verification_key)
+                        {};
+
+                        params_type& operator=(const params_type &other) = default;
                     };
 
                     struct public_key_type {
@@ -273,21 +270,20 @@ namespace nil {
                         std::vector<scalar_value_type> T;
                         std::array<std::vector<scalar_value_type>, batch_size> S;
                         std::array<math::polynomial<scalar_value_type>, batch_size> r;
-                        public_key_type() {};
-                        public_key_type(std::array<commitment_type, batch_size> commits,
-                                                std::vector<scalar_value_type> T,
-                                                std::array<std::vector<scalar_value_type>, batch_size> S,
-                                                std::array<math::polynomial<scalar_value_type>, batch_size> r) :
-                                                commits(commits), T(T), S(S), r(r) {};
-                        public_key_type operator=(const public_key_type &other) {
-                            commits = other.commits;
-                            T = other.T;
-                            S = other.S;
-                            r = other.r;
-                            return *this;
-                        }
+
+                        public_key_type() = default;
+
+                        public_key_type(const std::array<commitment_type, batch_size>& commits,
+                                        const std::vector<scalar_value_type>& T,
+                                        const std::array<std::vector<scalar_value_type>, batch_size>& S,
+                                        const std::array<math::polynomial<scalar_value_type>, batch_size>& r) 
+                            : commits(commits), T(T), S(S), r(r)
+                        {}
+
+                        public_key_type& operator=(const public_key_type &other) = default;
                     };
                 };
+
             } // namespace commitments
 
             namespace algorithms {
@@ -309,6 +305,7 @@ namespace nil {
 
                     return transcript;
                 }
+
                 template<typename KZG,
                          typename std::enable_if<
                              std::is_base_of<
@@ -349,7 +346,7 @@ namespace nil {
                                         const std::array<std::vector<typename KZG::scalar_value_type>, KZG::batch_size> S) {
                     std::array<math::polynomial<typename KZG::scalar_value_type>, KZG::batch_size> rs;
                     for (std::size_t i = 0; i < KZG::batch_size; ++i) {
-                        typename std::vector<std::pair<typename KZG::scalar_value_type, typename KZG::scalar_value_type>> evals;
+                        std::vector<std::pair<typename KZG::scalar_value_type, typename KZG::scalar_value_type>> evals;
                         for (auto s : S[i]) {
                             evals.push_back(std::make_pair(s, polys[i].evaluate(s)));
                         }
@@ -413,11 +410,11 @@ namespace nil {
                                  KZG>::value,
                              bool>::type = true>
                 static typename math::polynomial<typename KZG::scalar_value_type>
-                    create_polynom_by_zeros(const std::vector<typename KZG::scalar_value_type> S) {
+                    create_polynomial_by_zeros(const std::vector<typename KZG::scalar_value_type>& S) {
                     assert(S.size() > 0);
                     typename math::polynomial<typename KZG::scalar_value_type> Z = {-S[0], 1};
                     for (std::size_t i = 1; i < S.size(); ++i) {
-                        Z = Z * typename math::polynomial<typename KZG::scalar_value_type>({-S[i], 1});
+                        Z *= typename math::polynomial<typename KZG::scalar_value_type>({-S[i], 1});
                     }
                     return Z;
                 }
@@ -430,16 +427,19 @@ namespace nil {
                                  KZG>::value,
                              bool>::type = true>
                 static typename math::polynomial<typename KZG::scalar_value_type>
-                    set_difference_polynom(std::vector<typename KZG::scalar_value_type> T,
-                                            std::vector<typename KZG::scalar_value_type> S) {
-                    std::sort(T.begin(), T.end());
-                    std::sort(S.begin(), S.end());
+                    set_difference_polynomial(const std::vector<typename KZG::scalar_value_type>& T,
+                                           const std::vector<typename KZG::scalar_value_type>& S) {
+                    std::unordered_set<typename KZG::scalar_value_type> S_set(S.begin(), S.end());
+
                     std::vector<typename KZG::scalar_value_type> result;
-                    std::set_difference(T.begin(), T.end(), S.begin(), S.end(), std::back_inserter(result));
-                    if (result.size() == 0) {
+                    std::copy_if(T.begin(), T.end(), std::back_inserter(result),
+                        [&S_set] (const typename KZG::scalar_value_type& value) 
+                            { return S_set.find(value) == S_set.end(); });
+
+                    if (result.empty()) {
                         return typename math::polynomial<typename KZG::scalar_value_type>({{1}});
                     }
-                    return create_polynom_by_zeros<KZG>(result);
+                    return create_polynomial_by_zeros<KZG>(result);
                 }
 
                 template<typename KZG,
@@ -467,9 +467,9 @@ namespace nil {
                              bool>::type = true>
                 static typename KZG::commitment_type
                     proof_eval(const typename KZG::params_type &params, 
-                                const typename KZG::batch_of_polynomials_type &polys,
-                                typename KZG::public_key_type &public_key,
-                                typename KZG::transcript_type &transcript) {
+                               const typename KZG::batch_of_polynomials_type &polys,
+                               const typename KZG::public_key_type &public_key,
+                               typename KZG::transcript_type &transcript) {
                     update_transcript<KZG>(public_key, transcript);
 
                     auto gamma = transcript.template challenge<typename KZG::curve_type::scalar_field_type>();
@@ -478,26 +478,26 @@ namespace nil {
 
                     for (std::size_t i = 0; i < KZG::batch_size; ++i) {
                         auto spare_poly = polys[i] - public_key.r[i];
-                        auto denom = create_polynom_by_zeros<KZG>(public_key.S[i]);
+                        auto denom = create_polynomial_by_zeros<KZG>(public_key.S[i]);
                         for (auto s : public_key.S[i]) {
                             assert(spare_poly.evaluate(s) == 0);
                             assert(denom.evaluate(s) == 0);
                         }
                         assert(spare_poly % denom == typename math::polynomial<typename KZG::scalar_value_type>({{0}}));
-                        spare_poly = spare_poly / denom;
-                        accum = accum + spare_poly * factor;
-                        factor = factor * gamma;
+                        spare_poly /= denom;
+                        accum += spare_poly * factor;
+                        factor *= gamma;
                     }
 
-                    //verify without pairing
+                    // verify without pairing
                     {
                         typename math::polynomial<typename KZG::scalar_value_type> right_side({{0}});
                         factor = KZG::scalar_value_type::one();
                         for (std::size_t i = 0; i < KZG::batch_size; ++i) {
-                            right_side = right_side + factor * (polys[i] - public_key.r[i]) * set_difference_polynom<KZG>(public_key.T, public_key.S[i]);
-                            factor = factor * gamma;
+                            right_side += factor * (polys[i] - public_key.r[i]) * set_difference_polynomial<KZG>(public_key.T, public_key.S[i]);
+                            factor *= gamma;
                         }
-                        assert(accum * create_polynom_by_zeros<KZG>(public_key.T) == right_side);
+                        assert(accum * create_polynomial_by_zeros<KZG>(public_key.T) == right_side);
                     }
                     
                     return commit<KZG>(params, accum);
@@ -523,20 +523,20 @@ namespace nil {
                     for (std::size_t i = 0; i < KZG::batch_size; ++i) {
                         auto r_commit = commit<KZG>(params, public_key.r[i]);
                         auto left = factor * (public_key.commits[i] - r_commit);
-                        auto right = commit_g2<KZG>(params, set_difference_polynom<KZG>(public_key.T, public_key.S[i]));
+                        auto right = commit_g2<KZG>(params, set_difference_polynomial<KZG>(public_key.T, public_key.S[i]));
                         if (KZG::batch_size == 1) {
                             assert(right == KZG::verification_type::one());
                         }
-                        left_side_pairing = left_side_pairing * algebra::pair_reduced<typename KZG::curve_type>(left, right);
-                        factor = factor * gamma;
+                        left_side_pairing *= algebra::pair_reduced<typename KZG::curve_type>(left, right);
+                        factor *= gamma;
                     }
 
-                    auto right = commit_g2<KZG>(params, create_polynom_by_zeros<KZG>(public_key.T));
+                    auto right = commit_g2<KZG>(params, create_polynomial_by_zeros<KZG>(public_key.T));
                     auto right_side_pairing = algebra::pair_reduced<typename KZG::curve_type>(proof, right);
                     
                     return left_side_pairing == right_side_pairing;
-                    // return true;
                 }
+
             } // namespace algorithms
         }         // namespace zk
     }             // namespace crypto3

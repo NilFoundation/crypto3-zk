@@ -141,7 +141,6 @@ namespace nil {
 
                         math::polynomial_dfs<typename FieldType::value_type> one_polynomial(
                             0, V_P.size(), FieldType::value_type::one());
-                        std::array<math::polynomial<typename FieldType::value_type>, argument_size> F;
                         std::array<math::polynomial_dfs<typename FieldType::value_type>, argument_size> F_dfs;
                         math::polynomial_dfs<typename FieldType::value_type> V_P_shifted =
                             math::polynomial_shift(V_P, 1, basic_domain->m);

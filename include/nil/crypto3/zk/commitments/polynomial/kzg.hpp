@@ -87,14 +87,18 @@ namespace nil {
 
                         params_type() = default;
 
-                        params_type(std::size_t d, const scalar_value_type& alpha = algebra::random_element<field_type>()) {
-                            verification_key = alpha.data;
-                            commitment_key.reserve(d);
+                        // Do not call this code in production, this must be used only for testing.
+                        static params_type generate(
+                                std::size_t d, const scalar_value_type& alpha = algebra::random_element<field_type>()) {
+                            params_type result;
+                            result.verification_key = alpha.data;
+                            result.commitment_key.reserve(d);
                             auto alpha_com = commitment_type::one(); // Maybe here must not be one()?
                             for (std::size_t i = 0; i < d; i++) {
-                                commitment_key.push_back(alpha_com);
+                                result.commitment_key.push_back(alpha_com);
                                 alpha_com *= alpha.data;
                             }
+                            return result;
                         }
 
                         params_type(const commitment_key_type& ck, const verification_key_type& vk)
@@ -195,7 +199,7 @@ namespace nil {
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
 
-                    return gt_4.is_one();
+                    return gt_4 == KZG::gt_value_type::one();;
                 }
             } // namespace algorithms
 
@@ -239,28 +243,30 @@ namespace nil {
 
                         params_type() = default;
 
-                        params_type(std::size_t d, std::size_t t,
-                                    const scalar_value_type& alpha = algebra::random_element<typename curve_type::scalar_field_type>()) {
-                            commitment_key.resize(d);
-                            verification_key.resize(t + 1);
-                            auto alpha_comm = commitment_type::one();
-                            for (std::size_t i = 0; i < d; ++i) {
-                                commitment_key[i] = alpha_comm;
-                                alpha_comm *= alpha;
-                            }
-
-                            auto alpha_ver = verification_type::one();
-                            for (std::size_t i = 0; i <= t; ++i) {
-                                verification_key[i] = alpha_ver;
-                                alpha_ver *= alpha;
-                            }
-                        }
-
                         params_type(const std::vector<commitment_type>& commitment_key,
                                     const std::vector<verification_type>& verification_key)
                             : commitment_key(commitment_key)
                             , verification_key(verification_key)
                         {};
+
+                        static params_type generate(std::size_t d, std::size_t t,
+                                    const scalar_value_type& alpha = algebra::random_element<typename curve_type::scalar_field_type>()) {
+                            params_type result;
+                            result.commitment_key.resize(d);
+                            result.verification_key.resize(t + 1);
+                            auto alpha_comm = commitment_type::one();
+                            for (std::size_t i = 0; i < d; ++i) {
+                                result.commitment_key[i] = alpha_comm;
+                                alpha_comm *= alpha.data;
+                            }
+
+                            auto alpha_ver = verification_type::one();
+                            for (std::size_t i = 0; i <= t; ++i) {
+                                result.verification_key[i] = alpha_ver;
+                                alpha_ver *= alpha.data;
+                            }
+                            return result;
+                        }
 
                         params_type& operator=(const params_type &other) = default;
                     };

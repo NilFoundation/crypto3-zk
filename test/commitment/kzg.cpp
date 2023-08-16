@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(kzg_basic_test) {
     scalar_value_type z = 2;
     const polynomial<scalar_value_type> f = {-1, 1, 2, 3};
 
-    auto params = typename kzg_type::params_type(n, alpha);
+    auto params = kzg_type::params_type::generate(n, alpha);
     BOOST_CHECK(curve_type::template g1_type<>::value_type::one() == params.commitment_key[0]);
     BOOST_CHECK(alpha * curve_type::template g1_type<>::value_type::one() == params.commitment_key[1]);
     BOOST_CHECK(alpha * alpha * curve_type::template g1_type<>::value_type::one() == params.commitment_key[2]);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(kzg_random_test) {
     scalar_value_type z = algebra::random_element<scalar_field_type>();
     const polynomial<scalar_value_type> f = {-1, 1, 2, 3, 5, -15};
 
-    auto params = typename kzg_type::params_type(n);
+    auto params = kzg_type::params_type::generate(n);
     auto commit = zk::algorithms::commit<kzg_type>(params, f);
 
     typename kzg_type::public_key_type pk = {commit, z, f.evaluate(z)};
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(kzg_false_test) {
     scalar_value_type z = 5;
     const polynomial<scalar_value_type> f = {100, 1, 2, 3};
 
-    auto params = typename kzg_type::params_type(n, alpha);
+    auto params = kzg_type::params_type::generate(n, alpha);
 
     auto commit = zk::algorithms::commit<kzg_type>(params, f);
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(kzg_false_test) {
     // wrong params
     auto ck2 = params.commitment_key;
     ck2[0] = ck2[0] * 2;
-    auto params2 = kzg_type::params_type(ck2, params.verification_key * 2);
+    kzg_type::params_type params2(ck2, params.verification_key * 2);
     BOOST_CHECK(!zk::algorithms::verify_eval<kzg_type>(params2, proof, pk));
 
     // wrong commit
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_basic_test) {
     scalar_value_type alpha = 7;
     std::size_t d = 8;
     std::size_t t = 8;
-    auto params = typename kzg_type::params_type(d, t, alpha);
+    auto params = kzg_type::params_type::generate(d, t, alpha);
 
     std::array<std::vector<scalar_value_type>, batch_size> S = {{{101, 2, 3},}};
     std::vector<scalar_value_type> T = zk::algorithms::merge_eval_points<kzg_type>(S);
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_bigger_basic_test) {
                                                         {{21, 22, 23, 24, 25, 26, 27, 28}},
                                                         {{31, 32, 33, 34, 35, 36, 37, 38}},}};
 
-    auto params = typename kzg_type::params_type(8, 8, alpha);
+    auto params = kzg_type::params_type::generate(8, 8, alpha);
 
     std::array<std::vector<scalar_value_type>, batch_size> S = {{{101, 2, 3}, {102, 2, 3}, {1, 3}, {101, 4}}};
     std::vector<scalar_value_type> T = zk::algorithms::merge_eval_points<kzg_type>(S);

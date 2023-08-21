@@ -47,6 +47,7 @@
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
 #include <nil/crypto3/zk/math/expression.hpp>
 #include <nil/crypto3/zk/math/expression_evaluator.hpp>
+#include <nil/crypto3/zk/math/expression_visitors.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -71,15 +72,16 @@ namespace nil {
 
                     static inline void build_variable_value_map(
                         const math::expression<polynomial_dfs_variable_type>& expr,
-                        const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params> &column_polynomials,
-                        std::shared_ptr<math::evaluation_domain<FieldType>> original_domain,domain,
+                        const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params> &assignments,
+                        std::shared_ptr<math::evaluation_domain<FieldType>> domain,
                         std::size_t extended_domain_size,
                         std::unordered_map<polynomial_dfs_variable_type, polynomial_dfs_type>& variable_values_out) {
 
+std::cout << "building for " << expr << std::endl;
                         std::unordered_map<polynomial_dfs_variable_type, size_t> variable_counts;
 
                         math::expression_for_each_variable_visitor<polynomial_dfs_variable_type> visitor(
-                            [](const polynomial_dfs_variable_type& var) {
+                            [&variable_counts](const polynomial_dfs_variable_type& var) {
                                 variable_counts[var]++;
                         });
 
@@ -117,19 +119,14 @@ namespace nil {
                             const typename policy_type::constraint_system_type &constraint_system,
                             const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params>
                                 &column_polynomials,
-                            std::shared_ptr<math::evaluation_domain<FieldType>>
-                                original_domain,
+                            std::shared_ptr<math::evaluation_domain<FieldType>> original_domain,
                             std::uint32_t max_gates_degree,
                             transcript_type& transcript) {
                         PROFILE_PLACEHOLDER_SCOPE("gate_argument_time");
 
-                       
-                        //const plonk_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params>
-                        //    extended_column_polynomials = resize(column_polynomials, extended_domain_size);
-
                         typename FieldType::value_type theta = transcript.template challenge<FieldType>();
 
-                        auto value_type_to_polynomial_dfs = [&assignments=extended_column_polynomials](
+                        auto value_type_to_polynomial_dfs = [](
                             const typename variable_type::assignment_type& coeff) {
                                 return polynomial_dfs_type(0, 1, coeff);
                             };
@@ -148,6 +145,7 @@ namespace nil {
                         math::expression_max_degree_visitor<variable_type> visitor;
 
                         const auto& gates = constraint_system.gates();
+
                         for (const auto& gate: gates) {
                             bool is_gate_result_zero = true, is_gate_4_result_zero = true;
                             math::expression<polynomial_dfs_variable_type> gate_result, gate_result_4; 
@@ -155,7 +153,7 @@ namespace nil {
                             for (const auto& constraint : gate.constraints) {
                                 auto next_term = converter.convert(constraint) * value_type_to_polynomial_dfs(theta_acc);
                                 theta_acc *= theta;
-                                if (visitor.compute_max_degree(constraint) <= max_gates_degree - 3) {
+                                if (visitor.compute_max_degree(constraint) + 2 < max_gates_degree) {
                                     if (is_gate_4_result_zero) {
                                         gate_result_4 = next_term;
                                         is_gate_4_result_zero = false;
@@ -180,8 +178,6 @@ namespace nil {
                                 gate.selector_index, 0, false, polynomial_dfs_variable_type::column_type::selector);
 
                             gate_result *= selector;
-                            gate_result_4 *= selector;
- 
                             if (is_final_expression_zero) {
                                 expr = gate_result;
                                 is_final_expression_zero = false;
@@ -190,12 +186,16 @@ namespace nil {
                                 expr += gate_result;
                             }
 
-                            if (is_final_expression_4_zero) {
-                                expr_4 = gate_result_4;
-                                is_final_expression_4_zero = false;
-                            }
-                            else {
-                                expr_4 += gate_result_4;
+                            // It may happen that degree of the whole expression is <=2, so we have nothing here.
+                            if (!is_gate_4_result_zero) {
+                                gate_result_4 *= selector;
+                                if (is_final_expression_4_zero) {
+                                    expr_4 = gate_result_4;
+                                    is_final_expression_4_zero = false;
+                                }
+                                else {
+                                    expr_4 += gate_result_4;
+                                }
                             }
                         }
 
@@ -206,17 +206,30 @@ namespace nil {
                         std::unordered_map<polynomial_dfs_variable_type, polynomial_dfs_type> variable_values;
                         std::unordered_map<polynomial_dfs_variable_type, polynomial_dfs_type> variable_values_4;
 
-                        build_variable_value_map(expr, column_polynomials, domain, extended_domain_size, variable_values); 
-                        build_variable_value_map(expr_4, column_polynomials_4, domain, extended_domain_size / 4, variable_values_4); 
+                        std::cout << "build_variable_value_map 1\n";
+                        std::cout << "extended_domain_size = " << extended_domain_size << std::endl;
+                        std::cout << "max_gates_degree = " << max_gates_degree << std::endl;
+
+                        build_variable_value_map(expr, column_polynomials, original_domain,
+                            extended_domain_size, variable_values); 
+                        std::cout << "build_variable_value_map 2\n";
+                        if (!is_final_expression_4_zero) {
+                            build_variable_value_map(expr_4, column_polynomials, original_domain,
+                                extended_domain_size / 4, variable_values_4); 
+                        }
 
                         math::cached_expression_evaluator<polynomial_dfs_variable_type> evaluator(
-                            expr, [&variable_values](const polynomial_dfs_variable_type &var) {return variable_values[var]});
+                            expr, [&variable_values](const polynomial_dfs_variable_type &var) {return variable_values[var];});
 
-                        math::cached_expression_evaluator<polynomial_dfs_variable_type> evaluator_4(
-                            expr_4, [&variable_values_4](const polynomial_dfs_variable_type &var) {return variable_values_4[var]});
-
+                        
                         std::array<polynomial_dfs_type, argument_size> F;
-                        F[0] = evaluator.evaluate() + evaluator_4.evaluate();
+                        F[0] = evaluator.evaluate();
+
+                        if (!is_final_expression_4_zero) {
+                            math::cached_expression_evaluator<polynomial_dfs_variable_type> evaluator_4(
+                                expr_4, [&variable_values_4](const polynomial_dfs_variable_type &var) {return variable_values_4[var];});
+                            F[0] += evaluator_4.evaluate();
+                        }
 
                         return F;
                     }

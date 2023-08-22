@@ -177,13 +177,15 @@ std::cout << "building for " << expr << std::endl;
                             auto selector = polynomial_dfs_variable_type(
                                 gate.selector_index, 0, false, polynomial_dfs_variable_type::column_type::selector);
 
-                            gate_result *= selector;
-                            if (is_final_expression_zero) {
-                                expr = gate_result;
-                                is_final_expression_zero = false;
-                            }
-                            else {
-                                expr += gate_result;
+                            if (!is_gate_result_zero) {
+                                gate_result *= selector;
+                                if (is_final_expression_zero) {
+                                    expr = gate_result;
+                                    is_final_expression_zero = false;
+                                }
+                                else {
+                                    expr += gate_result;
+                                }
                             }
 
                             // It may happen that degree of the whole expression is <=2, so we have nothing here.

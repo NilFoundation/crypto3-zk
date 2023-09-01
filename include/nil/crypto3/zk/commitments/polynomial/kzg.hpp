@@ -77,8 +77,9 @@ namespace nil {
                     using field_type = typename curve_type::scalar_field_type;
                     using scalar_value_type = typename curve_type::scalar_field_type::value_type;
                     using commitment_key_type = std::vector<typename curve_type::template g1_type<>::value_type>;
-                    using verification_key_type = typename curve_type::template g2_type<>::value_type;
+                    using verification_key_type = std::array<typename curve_type::template g2_type<>::value_type, 2>;
                     using commitment_type = typename curve_type::template g1_type<>::value_type;
+                    using verification_type = typename curve_type::template g2_type<>::value_type;
                     using proof_type = commitment_type;
 
                     struct params_type {
@@ -91,9 +92,10 @@ namespace nil {
                         static params_type generate(
                                 std::size_t d, const scalar_value_type& alpha = algebra::random_element<field_type>()) {
                             params_type result;
-                            result.verification_key = alpha.data;
+                            result.verification_key[0] = alpha * verification_type::one();
+                            result.verification_key[1] = alpha * result.verification_key[0];
                             result.commitment_key.reserve(d);
-                            auto alpha_com = commitment_type::one(); // Maybe here must not be one()?
+                            auto alpha_com = commitment_type::one();
                             for (std::size_t i = 0; i < d; i++) {
                                 result.commitment_key.push_back(alpha_com);
                                 alpha_com *= alpha.data;
@@ -163,7 +165,7 @@ namespace nil {
                     if (r != typename KZG::scalar_value_type(0)) {
                         throw std::runtime_error("incorrect eval or point z");
                     }
-                    q /= denominator_polynom;
+                    q = q / denominator_polynom;
 
                     return commit<KZG>(params, q);
                 }
@@ -187,14 +189,13 @@ namespace nil {
                 static bool verify_eval(const typename KZG::params_type &params,
                                         const typename KZG::proof_type &proof,
                                         const typename KZG::public_key_type &public_key) {
-                    auto g2_one = KZG::curve_type::template g2_type<>::value_type::one();
 
                     auto A_1 = algebra::precompute_g1<typename KZG::curve_type>(proof);
                     auto A_2 = algebra::precompute_g2<typename KZG::curve_type>(
-                        params.verification_key - public_key.z * g2_one);
+                        params.verification_key[1] - public_key.z * params.verification_key[0]);
                     auto B_1 = algebra::precompute_g1<typename KZG::curve_type>(
-                        public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() - public_key.commit);
-                    auto B_2 = algebra::precompute_g2<typename KZG::curve_type>(g2_one);
+                        public_key.eval * params.commitment_key[0] - public_key.commit);
+                    auto B_2 = algebra::precompute_g2<typename KZG::curve_type>(params.verification_key[0]);
 
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
@@ -420,7 +421,7 @@ namespace nil {
                     assert(S.size() > 0);
                     typename math::polynomial<typename KZG::scalar_value_type> Z = {-S[0], 1};
                     for (std::size_t i = 1; i < S.size(); ++i) {
-                        Z *= typename math::polynomial<typename KZG::scalar_value_type>({-S[i], 1});
+                        Z = Z * typename math::polynomial<typename KZG::scalar_value_type>({-S[i], 1});
                     }
                     return Z;
                 }
@@ -490,8 +491,8 @@ namespace nil {
                             assert(denom.evaluate(s) == 0);
                         }
                         assert(spare_poly % denom == typename math::polynomial<typename KZG::scalar_value_type>({{0}}));
-                        spare_poly /= denom;
-                        accum += spare_poly * factor;
+                        spare_poly = spare_poly / denom;
+                        accum = accum + spare_poly * factor;
                         factor *= gamma;
                     }
 
@@ -500,7 +501,7 @@ namespace nil {
                         typename math::polynomial<typename KZG::scalar_value_type> right_side({{0}});
                         factor = KZG::scalar_value_type::one();
                         for (std::size_t i = 0; i < KZG::batch_size; ++i) {
-                            right_side += factor * (polys[i] - public_key.r[i]) * set_difference_polynomial<KZG>(public_key.T, public_key.S[i]);
+                            right_side = right_side + factor * (polys[i] - public_key.r[i]) * set_difference_polynomial<KZG>(public_key.T, public_key.S[i]);
                             factor *= gamma;
                         }
                         assert(accum * create_polynomial_by_zeros<KZG>(public_key.T) == right_side);

@@ -69,14 +69,18 @@ BOOST_AUTO_TEST_CASE(kzg_basic_test) {
     const polynomial<scalar_value_type> f = {-1, 1, 2, 3};
 
     auto params = kzg_type::params_type::generate(n, alpha);
-    BOOST_CHECK(curve_type::template g1_type<>::value_type::one() == params.commitment_key[0]);
-    BOOST_CHECK(alpha * curve_type::template g1_type<>::value_type::one() == params.commitment_key[1]);
-    BOOST_CHECK(alpha * alpha * curve_type::template g1_type<>::value_type::one() == params.commitment_key[2]);
-    BOOST_CHECK(alpha * alpha * alpha * curve_type::template g1_type<>::value_type::one() == params.commitment_key[3]);
-    BOOST_CHECK(alpha * curve_type::template g2_type<>::value_type::one() == params.verification_key);
+    auto ck0 = params.commitment_key[0];
+    for (std::size_t i = 1; i < n; ++i) {
+        BOOST_CHECK(params.commitment_key[i] == alpha.pow(i) * ck0);
+    }
 
     auto commit = zk::algorithms::commit<kzg_type>(params, f);
-    BOOST_CHECK(3209 * curve_type::template g1_type<>::value_type::one() == commit);
+
+    kzg_type::commitment_type check_commit = f[0] * params.commitment_key[0];
+    for (std::size_t i = 1; i < f.size(); ++i) {
+        check_commit += f[i] * params.commitment_key[i];
+    }
+    BOOST_CHECK(commit == check_commit);
 
     typename kzg_type::public_key_type pk = {commit, z, f.evaluate(z)};
     auto proof = zk::algorithms::proof_eval<kzg_type>(params, f, pk);
@@ -100,6 +104,11 @@ BOOST_AUTO_TEST_CASE(kzg_random_test) {
 
     auto params = kzg_type::params_type::generate(n);
     auto commit = zk::algorithms::commit<kzg_type>(params, f);
+    kzg_type::commitment_type check_commit = f[0] * params.commitment_key[0];
+    for (std::size_t i = 1; i < f.size(); ++i) {
+        check_commit += f[i] * params.commitment_key[i];
+    }
+    BOOST_CHECK(commit == check_commit);
 
     typename kzg_type::public_key_type pk = {commit, z, f.evaluate(z)};
     auto proof = zk::algorithms::proof_eval<kzg_type>(params, f, pk);
@@ -134,7 +143,7 @@ BOOST_AUTO_TEST_CASE(kzg_false_test) {
     // wrong params
     auto ck2 = params.commitment_key;
     ck2[0] = ck2[0] * 2;
-    kzg_type::params_type params2(ck2, params.verification_key * 2);
+    kzg_type::params_type params2(ck2, {params.verification_key[0] * 3, params.verification_key[1]});
     BOOST_CHECK(!zk::algorithms::verify_eval<kzg_type>(params2, proof, pk));
 
     // wrong commit

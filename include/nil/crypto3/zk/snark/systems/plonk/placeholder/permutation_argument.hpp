@@ -71,10 +71,13 @@ namespace nil {
                     static inline math::polynomial_dfs<typename FieldType::value_type> polynomial_product(
                         std::vector<math::polynomial_dfs<typename FieldType::value_type>>& multipliers)
                     {
-                        for(std::size_t i = 1; i < multipliers.size(); ++i) {
-                            multipliers[0] *= multipliers[i];
+                        std::size_t stride = 1;
+                        while (stride < multipliers.size() ) {
+                            for(std::size_t i = 0; i + stride < multipliers.size(); i += stride) {
+                                multipliers[i] *= multipliers[ i + stride ];
+                            }
+                            stride *= 2;
                         }
-                        multipliers.resize(1);
                         return multipliers[0];
                     }
 

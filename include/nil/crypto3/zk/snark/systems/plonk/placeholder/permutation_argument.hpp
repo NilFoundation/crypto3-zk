@@ -73,7 +73,7 @@ namespace nil {
                     {
                         std::size_t stride = 1;
                         while (stride < multipliers.size() ) {
-                            for(std::size_t i = 0; i + stride < multipliers.size(); i += stride) {
+                            for(std::size_t i = 0; i + stride < multipliers.size(); i += stride*2) {
                                 multipliers[i] *= multipliers[ i + stride ];
                             }
                             stride *= 2;

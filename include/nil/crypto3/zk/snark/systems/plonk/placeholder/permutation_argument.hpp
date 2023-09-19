@@ -174,7 +174,7 @@ namespace nil {
                         F_dfs[2] *= V_P;
                         F_dfs[2] *= preprocessed_data.q_last;
 
-                        prover_result_type res = {F_dfs, V_P, V_P_tree};
+                        prover_result_type res = {std::move(F_dfs), std::move(V_P), V_P_tree};
 
                         return res;
                     }

@@ -386,20 +386,26 @@ namespace nil {
                         std::array<polynomial_dfs_type, 2> &q_last_q_blind,
                         const typename ParamsType::commitment_params_type &commitment_params) {
 
-                        std::vector<polynomial_dfs_type> fixed_polys = id_perm_polys;
-                        fixed_polys.insert( fixed_polys.end(), sigma_perm_polys.begin(), sigma_perm_polys.end() );
-                        for (std::size_t i = 0; i < public_table.constants().size(); i ++){
-                            fixed_polys.push_back(public_table.constants()[i]);
+                        std::vector<polynomial_dfs_type> fixed_polys(id_perm_polys.size()+sigma_perm_polys.size()+public_table.constants().size()+public_table.selectors().size()+2);
+                        std::size_t p = 0;
+                        for(auto &i: id_perm_polys) {
+                            fixed_polys[p++] = i;
                         }
-                        for (std::size_t i = 0; i < public_table.selectors().size(); i ++){
-                            fixed_polys.push_back(public_table.selectors()[i]);
+                        for(auto &i: sigma_perm_polys) {
+                            fixed_polys[p++] = i;
                         }
-                        fixed_polys.push_back(q_last_q_blind[0]);
-                        fixed_polys.push_back(q_last_q_blind[1]);
+                        for(auto &i: public_table.constants()) {
+                            fixed_polys[p++] = i;
+                        }
+                        for(auto &i: public_table.selectors()) {
+                            fixed_polys[p++] = i;
+                        }
+                        fixed_polys[p++] = q_last_q_blind[0];
+                        fixed_polys[p++] = q_last_q_blind[1];
                         
                         typename fixed_values_commitment_scheme_type::precommitment_type fixed_values_precommitment =
                             algorithms::precommit<fixed_values_commitment_scheme_type>(
-                                fixed_polys, commitment_params.D[0],
+                                std::move(fixed_polys), commitment_params.D[0],
                                 commitment_params.step_list[0]);
 
                         return typename preprocessed_data_type::public_precommitments_type {
@@ -453,6 +459,9 @@ namespace nil {
                         // TODO: add std::vector<std::size_t> columns_with_copy_constraints;
                         cycle_representation permutation(constraint_system, table_description);
 
+                        /* vo rewrite to vector of shared_ptr ?
+                         * need to rewrite precommitments()
+                         */
                         std::vector<polynomial_dfs_type> id_perm_polys =
                             identity_polynomials(columns_with_copy_constraints, basic_domain->get_domain_element(1),
                                                  ParamsType::delta, basic_domain, commitment_params);
@@ -494,9 +503,15 @@ namespace nil {
                             public_commitments, c_rotations,  N_rows, table_description.usable_rows_amount,
                             max_gates_degree);
 
-                        preprocessed_data_type preprocessed_data({public_polynomial_table, sigma_perm_polys,
-                                                                  id_perm_polys, q_last_q_blind[0], q_last_q_blind[1],
-                                                                  public_precommitments, common_data});
+                        preprocessed_data_type preprocessed_data({
+                            std::move(public_polynomial_table), 
+                            std::move(sigma_perm_polys),
+                            std::move(id_perm_polys), 
+                            std::move(q_last_q_blind[0]), 
+                            std::move(q_last_q_blind[1]), 
+                            std::move(public_precommitments), 
+                            std::move(common_data)
+                        });
                         return preprocessed_data;
                     }
                 };

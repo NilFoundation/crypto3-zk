@@ -464,6 +464,9 @@ namespace nil {
                         // TODO: add std::vector<std::size_t> columns_with_copy_constraints;
                         cycle_representation permutation(constraint_system, table_description);
 
+                        /* vo rewrite to vector of shared_ptr ?
+                         * need to rewrite precommitments()
+                         */
                         std::vector<polynomial_dfs_type> id_perm_polys =
                             identity_polynomials(columns_with_copy_constraints, basic_domain->get_domain_element(1),
                                                  ParamsType::delta, basic_domain);
@@ -514,18 +517,19 @@ namespace nil {
                         nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
                         typename transcript_hash_type::digest_type circuit_hash = hash<transcript_hash_type>(cv);
 
-
                         typename preprocessed_data_type::verification_key vk = {circuit_hash, public_commitments.fixed_values};
                         typename preprocessed_data_type::common_data_type common_data (
                             public_commitments, c_rotations,  N_rows, table_description.usable_rows_amount, max_gates_degree, vk
                         );
 
                         // Push circuit description to transcript
-
                         preprocessed_data_type preprocessed_data({
-                            public_polynomial_table, sigma_perm_polys,
-                            id_perm_polys, q_last_q_blind[0], q_last_q_blind[1],
-                            common_data
+                            std::move(public_polynomial_table),
+                            std::move(sigma_perm_polys),
+                            std::move(id_perm_polys),
+                            std::move(q_last_q_blind[0]),
+                            std::move(q_last_q_blind[1]),
+                            std::move(common_data)
                         });
                         return preprocessed_data;
                     }

@@ -68,18 +68,12 @@ namespace nil {
                     };
 
                     static inline math::polynomial_dfs<typename FieldType::value_type> polynomial_product(
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> multipliers)
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>>& multipliers)
                     {
-                        while (multipliers.size() != 1) {
-                            for (int i = 0; i < multipliers.size() / 2; ++i) {
-                                multipliers[i] = multipliers[2 * i] * multipliers[2 * i + 1];
-                            }
-                            if (multipliers.size() % 2 != 0) {
-                                multipliers[multipliers.size() / 2] = multipliers[multipliers.size() - 1];
-                            }
-                            // Delete the second half.
-                            multipliers.resize(multipliers.size() / 2 + multipliers.size() % 2);
+                        for(std::size_t i = 1; i < multipliers.size(); ++i) {
+                            multipliers[0] *= multipliers[i];
                         }
+                        multipliers.resize(1);
                         return multipliers[0];
                     }
 
@@ -112,15 +106,22 @@ namespace nil {
                         math::polynomial_dfs<typename FieldType::value_type> V_P(basic_domain->size() - 1,
                                                                                  basic_domain->size());
 
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> g_v;
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> h_v;
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> g_v(S_id.size());
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> h_v(S_id.size());
                         for (std::size_t i = 0; i < S_id.size(); i++) {
                             BOOST_ASSERT(column_polynomials[i].size() == basic_domain->size());
                             BOOST_ASSERT(S_id[i].size() == basic_domain->size());
                             BOOST_ASSERT(S_sigma[i].size() == basic_domain->size());
 
-                            g_v.push_back(column_polynomials[i] + beta * S_id[i] + gamma);
-                            h_v.push_back(column_polynomials[i] + beta * S_sigma[i] + gamma);
+                            g_v[i] = S_id[i];
+                            g_v[i] *= beta;
+                            g_v[i] += gamma;
+                            g_v[i] += column_polynomials[i];
+
+                            h_v[i] = S_sigma[i];
+                            h_v[i] *= beta;
+                            h_v[i] += gamma;
+                            h_v[i] += column_polynomials[i];
                         }
 
                         V_P[0] = FieldType::value_type::one();
@@ -138,7 +139,7 @@ namespace nil {
                         // 4. Compute and add commitment to $V_P$ to $\text{transcript}$.
                         // TODO: Better enumeration for polynomial batches
                         commitment_scheme.append_to_batch(PERMUTATION_BATCH, V_P);
-                        
+
                         // 5. Calculate g_perm, h_perm
                         math::polynomial_dfs<typename FieldType::value_type> g = polynomial_product(g_v);
                         math::polynomial_dfs<typename FieldType::value_type> h = polynomial_product(h_v);
@@ -149,10 +150,24 @@ namespace nil {
                         math::polynomial_dfs<typename FieldType::value_type> V_P_shifted =
                             math::polynomial_shift(V_P, 1, basic_domain->m);
 
+                        F_dfs[0] = one_polynomial;
+                        F_dfs[0] -= V_P;
+                        F_dfs[0] *= preprocessed_data.common_data.lagrange_0;
 
-                        F_dfs[0] = preprocessed_data.common_data.lagrange_0 * (one_polynomial - V_P);
-                        F_dfs[1] = (one_polynomial - (preprocessed_data.q_last + preprocessed_data.q_blind)) * (V_P_shifted * h - V_P * g);
-                        F_dfs[2] = preprocessed_data.q_last * V_P * (V_P - one_polynomial);
+                        math::polynomial_dfs<typename FieldType::value_type> t1 = V_P;
+                        t1 *= g;
+                        V_P_shifted *= h;
+                        V_P_shifted -= t1;
+
+                        F_dfs[1] = one_polynomial;
+                        F_dfs[1] -= preprocessed_data.q_last;
+                        F_dfs[1] -= preprocessed_data.q_blind;
+                        F_dfs[1] *= V_P_shifted;
+
+                        F_dfs[2] = V_P;
+                        F_dfs[2] -= one_polynomial;
+                        F_dfs[2] *= V_P;
+                        F_dfs[2] *= preprocessed_data.q_last;
 
                         prover_result_type res = {F_dfs, V_P};
 
@@ -188,13 +203,16 @@ namespace nil {
 
                         for (std::size_t i = 0; i < column_polynomials_values.size(); i++) {
                             typename FieldType::value_type pp = column_polynomials_values[i] + gamma;
-                            if(i == 0){
-                                g_poly = (S_id[i] * beta + pp);
-                                h_poly = (S_sigma[i] * beta  + pp);
-                            } else {
-                                g_poly *= (S_id[i] * beta + pp);
-                                h_poly *= (S_sigma[i] * beta  + pp);
-                            }
+                            math::polynomial_dfs<typename FieldType::value_type> t_id = S_id[i];
+                            math::polynomial_dfs<typename FieldType::value_type> t_sigma = S_sigma[i];
+
+                            t_id *= beta;
+                            t_id += pp;
+                            g_poly *= t_id;
+
+                            t_sigma *= beta;
+                            t_sigma += pp;
+                            h_poly *= t_sigma;
                         }
 
                         std::array<typename FieldType::value_type, argument_size> F;
@@ -202,8 +220,11 @@ namespace nil {
 
                         F[0] = preprocessed_data.common_data.lagrange_0.evaluate(challenge) *
                                (one - perm_polynomial_value);
-                        F[1] = ((one - preprocessed_data.q_last - preprocessed_data.q_blind) *
-                               (perm_polynomial_shifted_value * h_poly - perm_polynomial_value * g_poly)).evaluate(challenge);
+                        h_poly *= perm_polynomial_shifted_value;
+                        g_poly *= perm_polynomial_value;
+                        h_poly -= g_poly;
+                        h_poly *= one - preprocessed_data.q_last - preprocessed_data.q_blind;
+                        F[1] = h_poly.evaluate(challenge);
                         F[2] = preprocessed_data.q_last.evaluate(challenge) *
                                (perm_polynomial_value.squared() - perm_polynomial_value);
 

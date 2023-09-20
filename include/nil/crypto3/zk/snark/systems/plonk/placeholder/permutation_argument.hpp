@@ -68,7 +68,7 @@ namespace nil {
                     };
 
                     static inline math::polynomial_dfs<typename FieldType::value_type> polynomial_product(
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>>& multipliers)
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> multipliers)
                     {
                         std::size_t stride = 1;
                         while (stride < multipliers.size() ) {
@@ -144,8 +144,8 @@ namespace nil {
                         commitment_scheme.append_to_batch(PERMUTATION_BATCH, V_P);
 
                         // 5. Calculate g_perm, h_perm
-                        math::polynomial_dfs<typename FieldType::value_type> g = polynomial_product(g_v);
-                        math::polynomial_dfs<typename FieldType::value_type> h = polynomial_product(h_v);
+                        math::polynomial_dfs<typename FieldType::value_type> g = polynomial_product(std::move(g_v));
+                        math::polynomial_dfs<typename FieldType::value_type> h = polynomial_product(std::move(h_v));
 
                         math::polynomial_dfs<typename FieldType::value_type> one_polynomial(
                             0, V_P.size(), FieldType::value_type::one());

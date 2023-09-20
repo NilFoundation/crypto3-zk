@@ -155,10 +155,13 @@ namespace nil {
                         math::polynomial_dfs<typename FieldType::value_type> V_P_shifted =
                             math::polynomial_shift(V_P, 1, basic_domain->m);
 
+                        /* F_dfs[0] = preprocessed_data.common_data.lagrange_0 * (one_polynomial - V_P); */
+
                         F_dfs[0] = one_polynomial;
                         F_dfs[0] -= V_P;
                         F_dfs[0] *= preprocessed_data.common_data.lagrange_0;
 
+                        /* F_dfs[1] = (one_polynomial - (preprocessed_data.q_last + preprocessed_data.q_blind)) * (V_P_shifted * h - V_P * g); */
                         math::polynomial_dfs<typename FieldType::value_type> t1 = V_P;
                         t1 *= g;
                         V_P_shifted *= h;
@@ -169,6 +172,7 @@ namespace nil {
                         F_dfs[1] -= preprocessed_data.q_blind;
                         F_dfs[1] *= V_P_shifted;
 
+                        /* F_dfs[2] = preprocessed_data.q_last * V_P * (V_P - one_polynomial); */
                         F_dfs[2] = V_P;
                         F_dfs[2] -= one_polynomial;
                         F_dfs[2] *= V_P;

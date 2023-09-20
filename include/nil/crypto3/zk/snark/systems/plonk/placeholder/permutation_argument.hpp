@@ -116,11 +116,13 @@ namespace nil {
                             BOOST_ASSERT(S_id[i].size() == basic_domain->size());
                             BOOST_ASSERT(S_sigma[i].size() == basic_domain->size());
 
+                            /* g_v.push_back(column_polynomials[i] + beta * S_id[i] + gamma); */
                             g_v[i] = S_id[i];
                             g_v[i] *= beta;
                             g_v[i] += gamma;
                             g_v[i] += column_polynomials[i];
 
+                            /* h_v.push_back(column_polynomials[i] + beta * S_sigma[i] + gamma); */
                             h_v[i] = S_sigma[i];
                             h_v[i] *= beta;
                             h_v[i] += gamma;

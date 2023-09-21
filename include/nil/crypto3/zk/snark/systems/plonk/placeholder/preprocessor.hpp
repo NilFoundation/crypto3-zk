@@ -434,7 +434,6 @@ namespace nil {
                         typename ParamsType::commitment_scheme_type &commitment_scheme,
                         std::size_t columns_with_copy_constraints
                     ) {
-    
                         PROFILE_PLACEHOLDER_SCOPE("Placeholder public preprocessor");
 
                         std::size_t N_rows = table_description.rows_amount;

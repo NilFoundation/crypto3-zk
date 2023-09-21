@@ -386,23 +386,13 @@ namespace nil {
                         std::array<polynomial_dfs_type, 2> &q_last_q_blind,
                         const typename ParamsType::commitment_params_type &commitment_params) {
 
-                        std::vector<polynomial_dfs_type> fixed_polys(id_perm_polys.size()+sigma_perm_polys.size()+public_table.constants().size()+public_table.selectors().size()+2);
-                        std::size_t p = 0;
-                        for(auto &i: id_perm_polys) {
-                            fixed_polys[p++] = i;
-                        }
-                        for(auto &i: sigma_perm_polys) {
-                            fixed_polys[p++] = i;
-                        }
-                        for(auto &i: public_table.constants()) {
-                            fixed_polys[p++] = i;
-                        }
-                        for(auto &i: public_table.selectors()) {
-                            fixed_polys[p++] = i;
-                        }
-                        fixed_polys[p++] = q_last_q_blind[0];
-                        fixed_polys[p++] = q_last_q_blind[1];
-                        
+                        std::vector<polynomial_dfs_type> fixed_polys;
+                        std::copy(id_perm_polys.begin(), id_perm_polys.end(), std::back_inserter(fixed_polys));
+                        std::copy(sigma_perm_polys.begin(), sigma_perm_polys.end(), std::back_inserter(fixed_polys));
+                        std::copy(public_table.constants().begin(), public_table.constants().end(), std::back_inserter(fixed_polys));
+                        std::copy(public_table.selectors().begin(), public_table.selectors().end(), std::back_inserter(fixed_polys));
+                        std::copy(q_last_q_blind.begin(), q_last_q_blind.end(), std::back_inserter(fixed_polys));
+
                         typename fixed_values_commitment_scheme_type::precommitment_type fixed_values_precommitment =
                             algorithms::precommit<fixed_values_commitment_scheme_type>(
                                 std::move(fixed_polys), commitment_params.D[0],

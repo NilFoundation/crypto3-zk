@@ -387,6 +387,7 @@ namespace nil {
                         const typename ParamsType::commitment_params_type &commitment_params) {
 
                         std::vector<polynomial_dfs_type> fixed_polys;
+                        fixed_polys.reserve(id_perm_polys.size() + sigma_perm_polys.size() + public_table.constants().size() + public_table.selectors().size() + 2);
                         std::copy(id_perm_polys.begin(), id_perm_polys.end(), std::back_inserter(fixed_polys));
                         std::copy(sigma_perm_polys.begin(), sigma_perm_polys.end(), std::back_inserter(fixed_polys));
                         std::copy(public_table.constants().begin(), public_table.constants().end(), std::back_inserter(fixed_polys));

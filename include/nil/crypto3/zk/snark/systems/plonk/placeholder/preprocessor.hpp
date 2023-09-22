@@ -32,6 +32,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <map>
 
 #include <nil/crypto3/math/algorithms/unity_root.hpp>
 #include <nil/crypto3/math/detail/field_utils.hpp>
@@ -126,16 +127,16 @@ namespace nil {
 
                             // Constructor with pregenerated domain
                             common_data_type(
-                                std::shared_ptr<math::evaluation_domain<FieldType>> D, 
-                                public_commitments_type commts, 
+                                std::shared_ptr<math::evaluation_domain<FieldType>> D,
+                                public_commitments_type commts,
                                 std::array<std::set<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
                                 std::size_t rows,
                                 std::size_t usable_rows, 
                                 std::uint32_t max_gates_degree,
                                 verification_key vk
                             ):  basic_domain(D),
-                                lagrange_0(D->size() - 1, D->size(), FieldType::value_type::zero()), 
-                                commitments(commts), 
+                                lagrange_0(D->size() - 1, D->size(), FieldType::value_type::zero()),
+                                commitments(commts),
                                 columns_rotations(col_rotations), rows_amount(rows), usable_rows_amount(usable_rows),
                                 Z(std::vector<typename FieldType::value_type>(rows + 1, FieldType::value_type::zero())),
                                 max_gates_degree(max_gates_degree), vk(vk)
@@ -150,7 +151,7 @@ namespace nil {
 
                             // Constructor for marshalling. Domain is regenerated.
                             common_data_type(
-                                public_commitments_type commts, 
+                                public_commitments_type commts,
                                 std::array<std::set<int>, ParamsType::arithmetization_params::total_columns> col_rotations,
                                 std::size_t rows,
                                 std::size_t usable_rows, 
@@ -175,8 +176,8 @@ namespace nil {
                             // These operators are useful for marshalling
                             // They will be implemented with marshalling procedures implementation
                             bool operator==(const common_data_type &rhs) const {
-                                return rows_amount == rhs.rows_amount && 
-                                usable_rows_amount == rhs.usable_rows_amount && 
+                                return rows_amount == rhs.rows_amount &&
+                                usable_rows_amount == rhs.usable_rows_amount &&
                                 columns_rotations == rhs.columns_rotations &&
                                 commitments == rhs.commitments &&
                                 basic_domain->size() == rhs.basic_domain->size() &&
@@ -209,7 +210,7 @@ namespace nil {
                         std::size_t number
                     ) {
                         polynomial_dfs_type f(
-                            domain->size() - 1, 
+                            domain->size() - 1,
                             domain->size(),
                             FieldType::value_type::zero()
                         );
@@ -406,7 +407,7 @@ namespace nil {
 
                         return q_blind;
                     }
- 
+
                     static inline typename preprocessed_data_type::public_commitments_type commitments(
                         const plonk_public_polynomial_dfs_table<FieldType, typename ParamsType::arithmetization_params> &public_table,
                         std::vector<polynomial_dfs_type> &id_perm_polys,
@@ -450,7 +451,7 @@ namespace nil {
                         for (const auto& gate : constraint_system.lookup_gates()) {
                             for (const auto& constr : gate.constraints) {
                                 for (const auto& li : constr.lookup_input) {
-                                    max_gates_degree = std::max(max_gates_degree, 
+                                    max_gates_degree = std::max(max_gates_degree,
                                         lookup_visitor.compute_max_degree(li));
                                 }
                             }
@@ -463,9 +464,6 @@ namespace nil {
                         // TODO: add std::vector<std::size_t> columns_with_copy_constraints;
                         cycle_representation permutation(constraint_system, table_description);
 
-                        /* vo rewrite to vector of shared_ptr ?
-                         * need to rewrite precommitments()
-                         */
                         std::vector<polynomial_dfs_type> id_perm_polys =
                             identity_polynomials(columns_with_copy_constraints, basic_domain->get_domain_element(1),
                                                  ParamsType::delta, basic_domain);

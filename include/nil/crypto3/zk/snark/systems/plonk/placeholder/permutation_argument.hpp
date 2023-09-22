@@ -110,21 +110,19 @@ namespace nil {
                         math::polynomial_dfs<typename FieldType::value_type> V_P(basic_domain->size() - 1,
                                                                                  basic_domain->size());
 
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> g_v(S_id.size());
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> h_v(S_id.size());
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> g_v = S_id;
+                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> h_v = S_sigma;
                         for (std::size_t i = 0; i < S_id.size(); i++) {
                             BOOST_ASSERT(column_polynomials[i].size() == basic_domain->size());
                             BOOST_ASSERT(S_id[i].size() == basic_domain->size());
                             BOOST_ASSERT(S_sigma[i].size() == basic_domain->size());
 
                             /* g_v.push_back(column_polynomials[i] + beta * S_id[i] + gamma); */
-                            g_v[i] = S_id[i];
                             g_v[i] *= beta;
                             g_v[i] += gamma;
                             g_v[i] += column_polynomials[i];
 
                             /* h_v.push_back(column_polynomials[i] + beta * S_sigma[i] + gamma); */
-                            h_v[i] = S_sigma[i];
                             h_v[i] *= beta;
                             h_v[i] += gamma;
                             h_v[i] += column_polynomials[i];
@@ -226,20 +224,23 @@ namespace nil {
                             math::polynomial_dfs<typename FieldType::value_type> t_id = S_id[i];
                             math::polynomial_dfs<typename FieldType::value_type> t_sigma = S_sigma[i];
 
+                            //  g_poly = g_poly * (S_id[i] * beta + pp);
                             t_id *= beta;
                             t_id += pp;
                             g_poly *= t_id;
 
+                            // h_poly = h_poly * (S_sigma[i] * beta  + pp);
                             t_sigma *= beta;
-                            t_sigma += pp;                            
+                            t_sigma += pp;
                             h_poly *= t_sigma;
-
                         }
                         std::array<typename FieldType::value_type, argument_size> F;
                         typename FieldType::value_type one = FieldType::value_type::one();
 
                         F[0] = preprocessed_data.common_data.lagrange_0.evaluate(challenge) *
                                (one - perm_polynomial_value);
+                        // F[1] = ((one - preprocessed_data.q_last - preprocessed_data.q_blind) *
+                        //       (perm_polynomial_shifted_value * h_poly - perm_polynomial_value * g_poly)).evaluate(challenge);
                         h_poly *= perm_polynomial_shifted_value;
                         g_poly *= perm_polynomial_value;
                         h_poly -= g_poly;

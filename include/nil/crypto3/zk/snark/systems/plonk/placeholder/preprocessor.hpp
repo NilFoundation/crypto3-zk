@@ -328,22 +328,22 @@ namespace nil {
                                 for (const auto& constraint: gate.constraints) {
                                     for (const auto& expr: constraint.lookup_input) {
                                         visitor.visit(expr);
-                                    } 
+                                    }
                                 }
                             }
 
                             for ( const auto &table : constraint_system.lookup_tables() ) {
                                 result[
-                                    table_description.witness_columns + 
-                                    table_description.public_input_columns + 
-                                    table_description.constant_columns + 
+                                    table_description.witness_columns +
+                                    table_description.public_input_columns +
+                                    table_description.constant_columns +
                                     table.tag_index
                                 ].insert(1);
                                 for( const auto &option:table.lookup_options){
                                     for( const auto &column:option){
                                         result[
-                                            table_description.witness_columns + 
-                                            table_description.public_input_columns + 
+                                            table_description.witness_columns +
+                                            table_description.public_input_columns +
                                             column.index
                                         ].insert(1);
                                     }

@@ -205,8 +205,10 @@ namespace nil {
                         // 2. Add commitment to V_P to transcript
 
                         // 3. Calculate h_perm, g_perm at challenge point
-                        math::polynomial_dfs<typename FieldType::value_type> g_poly;
-                        math::polynomial_dfs<typename FieldType::value_type> h_poly;
+                        math::polynomial_dfs<typename FieldType::value_type> one_polynomial(
+                            0, preprocessed_data.common_data.basic_domain->size(), FieldType::value_type::one());
+                        math::polynomial_dfs<typename FieldType::value_type> g_poly = one_polynomial;
+                        math::polynomial_dfs<typename FieldType::value_type> h_poly = one_polynomial;
 
                         for (std::size_t i = 0; i < column_polynomials_values.size(); i++) {
                             typename FieldType::value_type pp = column_polynomials_values[i] + gamma;
@@ -229,6 +231,7 @@ namespace nil {
 
                         F[0] = preprocessed_data.common_data.lagrange_0.evaluate(challenge) *
                                (one - perm_polynomial_value);
+
                         // F[1] = ((one - preprocessed_data.q_last - preprocessed_data.q_blind) *
                         //       (perm_polynomial_shifted_value * h_poly - perm_polynomial_value * g_poly)).evaluate(challenge);
                         h_poly *= perm_polynomial_shifted_value;
@@ -236,6 +239,7 @@ namespace nil {
                         h_poly -= g_poly;
                         h_poly *= one - preprocessed_data.q_last - preprocessed_data.q_blind;
                         F[1] = h_poly.evaluate(challenge);
+
                         F[2] = preprocessed_data.q_last.evaluate(challenge) *
                                (perm_polynomial_value.squared() - perm_polynomial_value);
 

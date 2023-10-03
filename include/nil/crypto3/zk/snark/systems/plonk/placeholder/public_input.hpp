@@ -110,7 +110,7 @@ namespace nil {
 
                         for(std::size_t i = 0; i < public_input_gate.size(); i++){
                             const auto &var = public_input_gate[i];
-                            auto key = std::tuple(var.index, var.rotation, var.type);
+                            auto key = std::tuple(var.index, 0, var.type);
                             auto value = columns_at_y[key] - public_input[i];
                             value *= math::polynomial_shift(common_data.lagrange_0, var.rotation, common_data.basic_domain->m).evaluate(challenge);
                             result *= alpha;

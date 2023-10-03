@@ -478,7 +478,7 @@ namespace nil {
                     test_circuit.lookup_gates.push_back(lookup_gate);
 
                     plonk_variable<assignment_type> pi0(0, 0, false,  plonk_variable<assignment_type>::column_type::witness);
-                    plonk_variable<assignment_type> pi1(1, 0, false,  plonk_variable<assignment_type>::column_type::witness);
+                    plonk_variable<assignment_type> pi1(1, 2, false,  plonk_variable<assignment_type>::column_type::witness);
                     test_circuit.public_input_gate.push_back(pi0);
                     test_circuit.public_input_gate.push_back(pi1);
 

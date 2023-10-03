@@ -36,6 +36,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/permutation_argument.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/public_input.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -59,7 +60,7 @@ namespace nil {
                     constexpr static const std::size_t gate_parts = 1;
                     constexpr static const std::size_t permutation_parts = 3;
                     constexpr static const std::size_t lookup_parts = 4;
-                    constexpr static const std::size_t f_parts = 8;
+                    constexpr static const std::size_t f_parts = 9;
 
                 public:
                     static void generate_evaluation_points(
@@ -138,6 +139,8 @@ namespace nil {
                         commitment_scheme_type commitment_scheme,
                         const std::array<std::vector<typename FieldType::value_type>, ParamsType::arithmetization_params::public_input_columns> public_input
                     ){
+                        BOOST_ASSERT(constraint_system.public_input_gate().size() == 0);
+
                         // TODO: process rotations for public input.
                         auto omega = preprocessed_public_data.common_data.basic_domain->get_domain_element(1);
                         auto challenge = proof.eval_proof.challenge;
@@ -157,12 +160,13 @@ namespace nil {
                         }
                         return process(preprocessed_public_data, proof, constraint_system, commitment_scheme);
                     }
-                    
+                                       
                     static inline bool process(
                         const typename public_preprocessor_type::preprocessed_data_type &preprocessed_public_data,
                         const placeholder_proof<FieldType, ParamsType> &proof,
                         const plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params> &constraint_system,
-                        commitment_scheme_type commitment_scheme
+                        commitment_scheme_type commitment_scheme,
+                        const std::vector<typename FieldType::value_type> public_input = {}
                     ) {                        
                         // 1. Add circuit definition to transcript
                         // transcript(short_description); 
@@ -283,6 +287,13 @@ namespace nil {
                             placeholder_gates_argument<FieldType, ParamsType>::verify_eval(
                                 constraint_system.gates(), columns_at_y, proof.eval_proof.challenge, transcript);
                         
+                        // 7. public input argument
+                        typename FieldType::value_type public_input_argument = public_input_processor<ParamsType>::verify(
+                            public_input, columns_at_y, 
+                            proof.eval_proof.challenge, constraint_system.public_input_gate(), 
+                            preprocessed_public_data.common_data, transcript
+                        );
+
                         std::array<typename FieldType::value_type, f_parts> alphas =
                             transcript.template challenges<FieldType, f_parts>();
 
@@ -318,6 +329,7 @@ namespace nil {
                         F[5] = lookup_argument[2];
                         F[6] = lookup_argument[3];
                         F[7] = gate_argument[0];
+                        F[8] = public_input_argument;
 
                         typename FieldType::value_type F_consolidated = FieldType::value_type::zero();
                         for (std::size_t i = 0; i < f_parts; i++) {

@@ -45,6 +45,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/gates_argument.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/public_input.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -92,7 +93,7 @@ namespace nil {
                     constexpr static const std::size_t gate_parts = 1;
                     constexpr static const std::size_t permutation_parts = 3;
                     constexpr static const std::size_t lookup_parts = 6;
-                    constexpr static const std::size_t f_parts = 8;
+                    constexpr static const std::size_t f_parts = 9;
 
               public:
 
@@ -183,6 +184,12 @@ namespace nil {
                             preprocessed_public_data.common_data.max_gates_degree,
                             transcript
                         )[0];
+
+                        _F_dfs[8] = public_input_processor<ParamsType>::prove(
+                            constraint_system.public_input_gate(),
+                            preprocessed_public_data.common_data,
+                            _polynomial_table, transcript
+                        );
 
                         /////TEST
 #ifdef ZK_PLACEHOLDER_DEBUG_ENABLED

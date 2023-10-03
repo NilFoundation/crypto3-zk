@@ -84,8 +84,9 @@ namespace nil {
                                 l = assignments.selector(var.index);
                             } else {
                             }
-                            l -=  typename field_type::value_type(l[0]);
-                            l *=  math::polynomial_shift(common_data.lagrange_0, var.rotation, common_data.basic_domain->m);
+                            l -=  typename field_type::value_type(l[var.rotation]);
+                            auto shift = math::polynomial_shift(common_data.lagrange_0, -var.rotation, common_data.basic_domain->m);
+                            l *=  shift;
                             result *= alpha;
                             result += l;
                         }
@@ -112,7 +113,7 @@ namespace nil {
                             const auto &var = public_input_gate[i];
                             auto key = std::tuple(var.index, 0, var.type);
                             auto value = columns_at_y[key] - public_input[i];
-                            value *= math::polynomial_shift(common_data.lagrange_0, var.rotation, common_data.basic_domain->m).evaluate(challenge);
+                            value *= math::polynomial_shift(common_data.lagrange_0, -var.rotation, common_data.basic_domain->m).evaluate(challenge);
                             result *= alpha;
                             result += value;
                         }

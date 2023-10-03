@@ -418,13 +418,13 @@ namespace nil {
                     // lookup inputs
                     typename FieldType::value_type one = FieldType::value_type::one();
                     typename FieldType::value_type zero = FieldType::value_type::zero();
-                    table[0] = {1, 0, 0, 0, 0, 0, 0, 0}; // Witness 1
-                    table[1] = {0, 0, 0, 0, 0, 0, 0, 0};
-                    table[2] = {0, 0, 0, 0, 0, 0, 0, 0};
+                    table[0] = {1, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()}; // Witness 1
+                    table[1] = {0, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()};
+                    table[2] = {0, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()};
 
-                    table[3] = {0, 1,  0, 1, 0, 0, 0, 0};  //Lookup values
-                    table[4] = {0, 0,  1, 0, 0, 0, 0, 0}; //Lookup values
-                    table[5] = {0, 1,  0, 0, 0, 0, 0, 0}; //Lookup values
+                    table[3] = {0, 1,  0, 1, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()};  //Lookup values
+                    table[4] = {0, 0,  1, 0, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()}; //Lookup values
+                    table[5] = {0, 1,  0, 0, alg_rnd(), alg_rnd(), alg_rnd(), alg_rnd()}; //Lookup values
 
                     std::array<plonk_column<FieldType>, witness_columns> private_assignment;
                     for (std::size_t i = 0; i < witness_columns; i++) {

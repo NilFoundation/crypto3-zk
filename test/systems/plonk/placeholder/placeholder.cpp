@@ -707,7 +707,7 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         preprocessed_public_data, preprocessed_private_data, desc, constraint_system, assignments, lpc_scheme);
 
     bool verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
-        preprocessed_public_data, proof, constraint_system, lpc_scheme, {1,0}); // check with correct public input for public_input gate
+        preprocessed_public_data, proof, constraint_system, lpc_scheme, {1,assignments.witness(1)[2]}); // check with correct public input for public_input gate
     BOOST_CHECK(verifier_res);
     verifier_res = placeholder_verifier<field_type, lpc_placeholder_params_type>::process(
         preprocessed_public_data, proof, constraint_system, lpc_scheme, {0,1}); // check with incorrect public input for public_input gate

@@ -59,12 +59,14 @@ namespace nil {
                     typedef std::vector<plonk_lookup_gate<FieldType, plonk_lookup_constraint<FieldType>>> lookup_gates_container_type;
                     typedef plonk_lookup_table<FieldType> lookup_table_type;
                     typedef std::vector<lookup_table_type> lookup_tables_type;
+                    typedef std::vector<plonk_variable<typename FieldType::value_type>> public_input_gate_type;
 
                 protected:
                     gates_container_type _gates;
                     copy_constraints_container_type _copy_constraints;
                     lookup_gates_container_type _lookup_gates;
                     lookup_tables_type _lookup_tables;
+                    public_input_gate_type _public_input_gate;
                 public:
                     typedef FieldType field_type;
 
@@ -74,11 +76,13 @@ namespace nil {
                     plonk_constraint_system(const gates_container_type &gates,
                                             const copy_constraints_container_type &copy_constraints,
                                             const lookup_gates_container_type &lookup_gates = {},
-                                            const lookup_tables_type &lookup_tables = {}) :
+                                            const lookup_tables_type &lookup_tables = {},
+                                            const public_input_gate_type &public_input_gate = {}) :
                         _gates(gates),
                         _copy_constraints(copy_constraints), 
                         _lookup_gates(lookup_gates),
-                        _lookup_tables(lookup_tables)
+                        _lookup_tables(lookup_tables),
+                        _public_input_gate(public_input_gate)
                     {
                     }
 
@@ -98,6 +102,10 @@ namespace nil {
 
                     //     return true;
                     // }
+
+                    const public_input_gate_type &public_input_gate() const {
+                        return _public_input_gate;
+                    }
 
                     const gates_container_type &gates() const {
                         return _gates;
@@ -141,10 +149,11 @@ namespace nil {
                         }
                         return result;
                     }
-
+                
                     bool operator==(const plonk_constraint_system<FieldType, ArithmetizationParams> &other) const {
                         return (this->_gates == other._gates) && (this->_copy_constraints == other._copy_constraints) &&
-                               (this->_lookup_gates == other._lookup_gates) && (this->_lookup_tables == other._lookup_tables);
+                               (this->_lookup_gates == other._lookup_gates) && (this->_lookup_tables == other._lookup_tables) && 
+                               (this->_public_input_gate == other._public_input_gate);
                     }
                 };
             }    // namespace snark

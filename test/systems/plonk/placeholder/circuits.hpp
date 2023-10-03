@@ -73,6 +73,7 @@ namespace nil {
                     std::vector<plonk_gate<FieldType, plonk_constraint<FieldType>>> gates;
                     std::vector<plonk_copy_constraint<FieldType>> copy_constraints;
                     std::vector<plonk_lookup_gate<FieldType, plonk_lookup_constraint<FieldType>>> lookup_gates;
+                    std::vector<plonk_variable<typename FieldType::value_type>> public_input_gate;
 
                     std::vector<plonk_lookup_table<FieldType>> lookup_tables;
 
@@ -365,9 +366,20 @@ namespace nil {
                     test_circuit.gates.push_back(mul_gate);
 
                     return test_circuit;
-                }
+                } 
 
 
+                //---------------------------------------------------------------------------//
+                // Test circuit 3 (simplest lookup)
+                //  i  | w_0 | w_1 | w_2 | c_0 | c_1 | c_2 |  s  |  lt   |
+                //  0  |  1  |  0  |  0  |  0  |  0  |  0  |  1  |   0   |
+                //  1  |     |     |     |  1  |  0  |  1  |  0  |   1   |
+                //  2  |     |     |     |  0  |  1  |  0  |  0  |   1   |
+                //  3  |     |     |     |  1  |  0  |  0  |  0  |   1   |
+                //
+                //  {w_0, w_1, w_2} \in {c_0, c_1, c_2}
+                //  public_input_gate: w_0[0], w_1[0], w_2[0]
+                //---------------------------------------------------------------------------//
                 constexpr static const std::size_t witness_columns_3 = 3;
                 constexpr static const std::size_t public_columns_3 = 0;
                 constexpr static const std::size_t constant_columns_3 = 3;
@@ -464,6 +476,11 @@ namespace nil {
                     std::vector<plonk_lookup_constraint<FieldType>> lookup_constraints = {lookup_constraint};
                     plonk_lookup_gate<FieldType, plonk_lookup_constraint<FieldType>> lookup_gate(0, lookup_constraints);
                     test_circuit.lookup_gates.push_back(lookup_gate);
+
+                    plonk_variable<assignment_type> pi0(0, 0, false,  plonk_variable<assignment_type>::column_type::witness);
+                    plonk_variable<assignment_type> pi1(1, 0, false,  plonk_variable<assignment_type>::column_type::witness);
+                    test_circuit.public_input_gate.push_back(pi0);
+                    test_circuit.public_input_gate.push_back(pi1);
 
                     // Add constructor for lookup table
                     plonk_lookup_table<FieldType> table1(3, 1); // 1 -- selector_id, 3 -- number of columns;

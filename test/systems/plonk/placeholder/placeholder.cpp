@@ -270,7 +270,9 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
     desc.rows_amount = placeholder_test_params::table_rows;
     desc.usable_rows_amount = placeholder_test_params::usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables, circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -358,7 +360,9 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer){
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables, circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -468,8 +472,11 @@ BOOST_AUTO_TEST_CASE(permutation_polynomials_test) {
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints,
-                                                                   circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints,
+        circuit.lookup_gates, circuit.lookup_tables, 
+        circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -565,8 +572,9 @@ BOOST_AUTO_TEST_CASE(permutation_argument_test) {
     desc.rows_amount = table_rows;
     desc.usable_rows_amount = usable_rows;
 
-    typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints,
-                                                                   circuit.lookup_gates);
+    typename policy_type::constraint_system_type constraint_system(
+        circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables, circuit.public_input_gate
+    );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -677,7 +685,8 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -715,7 +724,8 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -881,7 +891,8 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -919,7 +930,8 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -1083,7 +1095,8 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -1161,7 +1174,8 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         circuit.gates, 
         circuit.copy_constraints, 
         circuit.lookup_gates,
-        circuit.lookup_tables
+        circuit.lookup_tables,
+        circuit.public_input_gate
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 

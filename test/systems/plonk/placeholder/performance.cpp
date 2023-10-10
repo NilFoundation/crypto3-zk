@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------//
 // Copyright (c) 2023 Elena Tatuzova <e.tatuzova@nil.foundation>
+// Copyright (c) 2023 Martun Karapetyan <martun@nil.foundation>
 //
 // MIT License
 //
@@ -22,7 +23,9 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
-#define BOOST_TEST_MODULE placeholder_test
+#define BOOST_TEST_MODULE placeholder_performance_test
+
+// NOTE: Most of the following code is taken from main.cpp of transpiler.
 
 // Do it forsefully because it is a main purpose of this test.
 #define ZK_PLACEHOLDER_PROFILING_ENABLED
@@ -140,10 +143,6 @@ public:
     using hash_type = hashes::keccak_1600<256>;
 
     static constexpr std::size_t m = 2;
-    static constexpr std::size_t table_rows_log = 4;
-    static constexpr std::size_t table_rows = 1 << table_rows_log;
-    static constexpr std::size_t permutation_size = 4;
-    static constexpr std::size_t usable_rows = (1 << table_rows_log) - 3;
 
     // These values were taken from the transpiler code.
     static constexpr std::size_t WitnessColumns = 15;
@@ -152,7 +151,7 @@ public:
     static constexpr std::size_t SelectorColumns = 35;
 
     using lpc_params_type = commitments::list_polynomial_commitment_params<        
-        hash_type, hash_type, lambda, m>;
+        hash_type, hash_type, lambda, m, true /* use grinding */>;
 
      using arithmetization_params_type = zk::snark::plonk_arithmetization_params<
         WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
@@ -191,8 +190,9 @@ public:
         typename lpc_type::fri_type::params_type fri_params = 
             create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
 
-        std::size_t permutation_size = table_description.witness_columns + table_description.public_input_columns +
-            table_description.constant_columns;
+        std::size_t permutation_size = table_description.witness_columns + 
+            table_description.public_input_columns + table_description.constant_columns;
+
         std::cout << "table_rows_log = " << table_rows_log << std::endl;
     
         lpc_scheme_type lpc_scheme(fri_params);
@@ -200,7 +200,7 @@ public:
     
         auto lpc_preprocessed_public_data = placeholder_public_preprocessor<field_type, lpc_placeholder_params_type>::process(
                 constraint_system, assignments.public_table(), table_description, lpc_scheme,
-                4 // columns_with_copy_constraints.size()
+                permutation_size
             );
         std::cout << "max_gates_degree = " << lpc_preprocessed_public_data.common_data.max_gates_degree << std::endl;
     
@@ -223,7 +223,6 @@ public:
 
 private:
 
-    // TODO: refactor this function.
     bool read_buffer_from_file(std::istream &ifile, std::vector<std::uint8_t> &v) {
         char c;
         char c1;
@@ -355,11 +354,6 @@ using field_type = typename curve_type::base_field_type;
 
 // lpc params
 constexpr static const std::size_t m = 2;
-
-constexpr static const std::size_t table_rows_log = 4;
-constexpr static const std::size_t table_rows = 1 << table_rows_log;
-constexpr static const std::size_t permutation_size = 4;
-constexpr static const std::size_t usable_rows = (1 << table_rows_log) - 3;
 
 struct placeholder_fibonacci_params {
     using merkle_hash_type = hashes::keccak_1600<512>;

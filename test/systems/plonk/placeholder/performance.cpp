@@ -72,6 +72,7 @@
 #include <nil/crypto3/marshalling/math/types/term.hpp>
 #include <nil/crypto3/marshalling/math/types/flat_expression.hpp>
 #include <nil/crypto3/marshalling/math/types/expression.hpp>
+#include <nil/crypto3/marshalling/zk/types/plonk/assignment_table.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/copy_constraint.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/gate.hpp>
@@ -144,10 +145,11 @@ public:
     static constexpr std::size_t permutation_size = 4;
     static constexpr std::size_t usable_rows = (1 << table_rows_log) - 3;
 
+    // These values were taken from the transpiler code.
     static constexpr std::size_t WitnessColumns = 15;
-    static constexpr std::size_t PublicInputColumns = 5;
+    static constexpr std::size_t PublicInputColumns = 1;
     static constexpr std::size_t ConstantColumns = 5;
-    static constexpr std::size_t SelectorColumns = 30;
+    static constexpr std::size_t SelectorColumns = 35;
 
     using lpc_params_type = commitments::list_polynomial_commitment_params<        
         hash_type, hash_type, lambda, m>;
@@ -166,18 +168,23 @@ public:
 
     using Endianness = nil::marshalling::option::big_endian;
     using TTypeBase = nil::marshalling::field_type<Endianness>;
-    using value_marshalling_type = marshalling::types::plonk_constraint_system<TTypeBase, constraint_system_type>;
-    using columns_rotations_type = std::array<std::set<int>, arithmetization_params_type::total_columns>;
     using column_type = zk::snark::plonk_column<field_type>;
-    using table_assignment_type = zk::snark::plonk_table<field_type, arithmetization_params_type, column_type>;
+
+    using circuit_marshalling_type = marshalling::types::plonk_constraint_system<TTypeBase, constraint_system_type>;
+    using assignment_table_type = zk::snark::plonk_table<field_type, arithmetization_params_type, column_type>;
+    using assignment_table_marshalling_type = marshalling::types::plonk_assignment_table<TTypeBase, assignment_table_type>;
+
+    using columns_rotations_type = std::array<std::set<int>, arithmetization_params_type::total_columns>;
     using transcript_type = typename transcript::fiat_shamir_heuristic_sequential<hash_type>;
 
     void run_placeholder_perf_test(std::string test_name, std::string circuit_file_path,
             std::string assignment_table_file_path) {
     
-        std::cout << std::endl << "Running " << test_name << " performance test" <<  std::endl;
+        std::cout << std::endl << "Running '" << test_name << "' performance test" <<  std::endl;
     
-        load_circuit_and_table(circuit_file_path, assignment_table_file_path);
+        load_circuit(circuit_file_path);
+        load_assignment_table(assignment_table_file_path);
+
         compute_columns_rotations();
     
         std::size_t table_rows_log = std::ceil(std::log2(table_description.rows_amount));
@@ -217,7 +224,7 @@ public:
 private:
 
     // TODO: refactor this function.
-    bool read_buffer_from_file(std::ifstream &ifile, std::vector<std::uint8_t> &v) {
+    bool read_buffer_from_file(std::istream &ifile, std::vector<std::uint8_t> &v) {
         char c;
         char c1;
         uint8_t b;
@@ -243,58 +250,27 @@ private:
         return true;
     }
     
+    void load_assignment_table(std::string assignment_file_path) {
 
-    template<class ContainerType>
-    void read_columns(std::istream &istr, std::size_t rows_amount, ContainerType& container_out) {
-        // witnesses.size() == arithmetization_params_type.WitnessColumns
-        for (size_t i = 0; i < container_out.size(); i++) {    
-            column_type column;
-            typename field_type::integral_type num;
-            for (size_t j = 0; j < rows_amount; j++) {
-                istr >> num;
-                column.push_back(typename field_type::value_type(num));
-            }
-            container_out[i] = column;
-        }
-    }
+        std::ifstream iassignment;
+        iassignment.open(assignment_file_path);
+        BOOST_CHECK(iassignment);    
 
-    std::tuple<std::size_t, std::size_t,
-               zk::snark::plonk_table<field_type, arithmetization_params_type, column_type>>
-        load_assignment_table(std::istream &istr) {
-
-        using PrivateTableType =
-            zk::snark::plonk_private_table<field_type, arithmetization_params_type, column_type>;
-        using PublicTableType =
-            zk::snark::plonk_public_table<field_type, arithmetization_params_type, column_type>;
-        using table_assignment_type =
-            zk::snark::plonk_table<field_type, arithmetization_params_type, column_type>;
-        std::size_t usable_rows;
-        std::size_t rows_amount;
+        std::vector<std::uint8_t> v;
+        BOOST_CHECK(read_buffer_from_file(iassignment, v));    
     
-        typename PrivateTableType::witnesses_container_type witness;
-        typename PublicTableType::public_input_container_type public_input;
-        typename PublicTableType::constant_container_type constant;
-        typename PublicTableType::selector_container_type selector;
+        iassignment.close();
+
+        assignment_table_marshalling_type marshalled_data;
+        auto read_iter = v.begin();
+        auto status = marshalled_data.read(read_iter, v.size());
+        std::tie(table_description.usable_rows_amount, assignments) =
+            marshalling::types::make_assignment_table<Endianness, assignment_table_type>(marshalled_data);
     
-        istr >> usable_rows;
-        istr >> rows_amount;
-
-        read_columns(istr, rows_amount, witness); 
-        read_columns(istr, rows_amount, public_input); 
-        read_columns(istr, rows_amount, constant); 
-        read_columns(istr, rows_amount, selector); 
-
-        return std::make_tuple(
-            usable_rows, rows_amount,
-            table_assignment_type(
-                PrivateTableType(witness), 
-                PublicTableType(public_input, constant, selector))
-        );
+        table_description.rows_amount = assignments.rows_amount();
     }
     
-    void load_circuit_and_table(
-            std::string circuit_file_path, std::string assignment_file_path) {
-
+    void load_circuit(std::string circuit_file_path) {
         std::ifstream ifile;
         ifile.open(circuit_file_path);
         BOOST_CHECK(ifile.is_open());    
@@ -303,19 +279,11 @@ private:
         BOOST_CHECK(read_buffer_from_file(ifile, v));    
         ifile.close();
     
-        value_marshalling_type marshalled_data;
+        circuit_marshalling_type marshalled_data;
         auto read_iter = v.begin();
         auto status = marshalled_data.read(read_iter, v.size());
         constraint_system = marshalling::types::make_plonk_constraint_system<
             Endianness, constraint_system_type>(marshalled_data);
-    
-        std::ifstream iassignment;
-        iassignment.open(assignment_file_path);
-        BOOST_CHECK(iassignment);    
-
-        std::tie(table_description.usable_rows_amount, table_description.rows_amount, assignments) =
-            load_assignment_table(iassignment);
-        iassignment.close();
     }
 
     void compute_columns_rotations() {
@@ -353,7 +321,7 @@ private:
     }
 
     constraint_system_type constraint_system;
-    table_assignment_type assignments;
+    assignment_table_type assignments;
     table_description_type table_description;
     columns_rotations_type columns_rotations;
 };
@@ -364,16 +332,16 @@ BOOST_FIXTURE_TEST_CASE(placeholder_merkle_tree_poseidon_test, placeholder_perfo
 
     run_placeholder_perf_test(
         "Merkle tree poseidon performance test",
-        "../libs/zk/test/systems/plonk/placeholder/data/merkle_tree_poseidon/circuit.crct",
-        "../libs/zk/test/systems/plonk/placeholder/data/merkle_tree_poseidon/assignment.tbl"
+        "../libs/zk/test/systems/plonk/placeholder/data/merkle_tree_poseidon/merkle_tree_posseidon_circuit.crct",
+        "../libs/zk/test/systems/plonk/placeholder/data/merkle_tree_poseidon/merkle_tree_posseidon_assignment.tbl"
     );
 }
 
 BOOST_FIXTURE_TEST_CASE(placeholder_many_hashes_test, placeholder_performance_test<2>) {
     run_placeholder_perf_test(
         "Many hashes performance test",
-        "../libs/zk/test/systems/plonk/placeholder/data/many_hashes/circuit.crct",
-        "../libs/zk/test/systems/plonk/placeholder/data/many_hashes/assignment.tbl"
+        "../libs/zk/test/systems/plonk/placeholder/data/many_hashes/many_hashes_circuit.crct",
+        "../libs/zk/test/systems/plonk/placeholder/data/many_hashes/many_hashes_assignment.tbl"
     );
 }
 

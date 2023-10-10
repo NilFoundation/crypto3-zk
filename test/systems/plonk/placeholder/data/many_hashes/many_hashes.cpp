@@ -25,7 +25,11 @@ using namespace nil::crypto3::algebra::curves;
     __zkllvm_field_curve25519_base curve_mul;
     __zkllvm_field_curve25519_base curve_sub;
 
-    for( int i = 0; i < 3; i++ ) {
+    // We can not commit the assignment table for larger rounds.
+    // This number can be changed to manually run larger performance tests.
+    int rounds = 3;
+
+    for( int i = 0; i < rounds; i++ ) {
         curve_add = f+g;
         curve_sub = f-g;
         curve_mul = f*g;

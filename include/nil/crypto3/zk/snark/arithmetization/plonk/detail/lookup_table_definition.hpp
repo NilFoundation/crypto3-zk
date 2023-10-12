@@ -56,6 +56,8 @@ namespace nil {
                         }                        
 
                         virtual void generate() = 0;
+                        virtual std::size_t get_columns_number() = 0;
+                        virtual std::size_t get_rows_number() = 0;
 
                         const std::vector<std::vector<typename FieldType::value_type>> &get_table(){
                             if(_table.size() == 0){
@@ -74,6 +76,12 @@ namespace nil {
                         }
                         virtual void generate() {};
                         virtual ~filled_lookup_table_definition() {};
+                        virtual std::size_t get_columns_number(){
+                            return this->_table.size();
+                        }
+                        virtual std::size_t get_rows_number(){
+                            return this->_table[0].size();
+                        }
                     };
 
                     // Returned value -- new usable_rows.

@@ -71,8 +71,8 @@ namespace nil {
                     template<typename FieldType>
                     class filled_lookup_table_definition:public lookup_table_definition<FieldType>{
                     public:
-                        filled_lookup_table_definition(std::shared_ptr<lookup_table_definition<FieldType>> &other):lookup_table_definition<FieldType>(other->table_name){
-                            this->_table = other->get_table();
+                        filled_lookup_table_definition(lookup_table_definition<FieldType> &other):lookup_table_definition<FieldType>(other.table_name){
+                            this->_table = other.get_table();
                         }
                         virtual void generate() {};
                         virtual ~filled_lookup_table_definition() {};
@@ -108,11 +108,10 @@ namespace nil {
                         cur_selector_id++;
 
                         // Allocate constant columns
-                        std::vector<plonk_column<FieldType>> constant_columns(constant_columns_ids.size());
+                        std::vector<plonk_column<FieldType>> constant_columns(
+                            constant_columns_ids.size(), plonk_column<FieldType>(usable_rows, FieldType::value_type::zero())
+                        );
                         std::vector<plonk_column<FieldType>> selector_columns;
-                        for(std::size_t i = 0; i < constant_columns.size(); i++){
-                            constant_columns[i] = plonk_column<FieldType>(usable_rows, FieldType::value_type::zero());
-                        }
 
                         std::size_t start_row = 1;
                         std::size_t table_index = 0;
@@ -142,15 +141,15 @@ namespace nil {
                                 bp_lookup_tables[lookup_table_ids.at(full_table_name) - 1] = plonk_lookup_table<FieldType>(subtable.column_indices.size(), cur_selector_id);
                                 std::vector<plonk_variable<typename FieldType::value_type>> option;
                                 for( const auto &column_index:subtable.column_indices ){
-                                    plonk_variable<typename FieldType::value_type> var(
-                                        constant_columns_ids[column_index], 0, false, plonk_variable<typename FieldType::value_type>::column_type::constant
-                                    );
-                                    option.push_back(var);
+                                    option.emplace_back( plonk_variable<typename FieldType::value_type>(
+                                        constant_columns_ids[column_index], 0, 
+                                        false, plonk_variable<typename FieldType::value_type>::column_type::constant
+                                    ) );
                                 }
                                 bp_lookup_tables[lookup_table_ids.at(full_table_name) - 1].append_option(option);
 
                                 assignment.fill_selector(cur_selector_id, selector_column);
-                                selector_columns.push_back(selector_column);
+                                selector_columns.push_back(std::move(selector_column));
                                 // Create table declaration
                                 table_index++;
                                 cur_selector_id++;
@@ -158,7 +157,7 @@ namespace nil {
                             start_row += table->get_table()[0].size();
                         }
                         for(std::size_t i = 0; i < bp_lookup_tables.size(); i++){
-                            bp.add_lookup_table(bp_lookup_tables[i]);
+                            bp.add_lookup_table(std::move(bp_lookup_tables[i]));
                         }
                         for( std::size_t i = 0; i < constant_columns.size(); i++ ){
                             assignment.fill_constant(constant_columns_ids[i], constant_columns[i]);

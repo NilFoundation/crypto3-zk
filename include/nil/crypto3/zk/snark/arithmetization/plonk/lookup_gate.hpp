@@ -46,8 +46,7 @@ namespace nil {
                     std::size_t tag_index;
                     std::vector<ConstraintType> constraints;
 
-                    plonk_lookup_gate(  ) :
-                        constraints({}), tag_index(0) {
+                    plonk_lookup_gate(  ) : tag_index(0) {
                     }
 
                     plonk_lookup_gate( std::size_t tag_index, const ConstraintType &constraint ) :

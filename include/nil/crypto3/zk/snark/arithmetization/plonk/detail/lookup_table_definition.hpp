@@ -26,6 +26,7 @@
 #define CRYPTO3_ZK_PLONK_DETAIL_LOOKUP_TABLE_DEFINITION_HPP
 
 #include <string>
+#include <map>
 
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
 
@@ -33,7 +34,7 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace snark {
-                namespace detail {                    
+                namespace detail {
                     // Interf-ace for lookup table definitions.
                     template<typename FieldType>
                     class lookup_subtable_definition{
@@ -53,7 +54,7 @@ namespace nil {
 
                         lookup_table_definition(const std::string table_name){
                             this->table_name = table_name;
-                        }                        
+                        }
 
                         virtual void generate() = 0;
                         virtual std::size_t get_columns_number() = 0;
@@ -103,10 +104,10 @@ namespace nil {
 
                     // Returned value -- new usable_rows.
                     // All tables are necessary for circuit generation.
-                    template<typename FieldType, typename ArithmetizationParams>
-                    std::size_t pack_lookup_tables_vertical(
-                        const std::map<std::string, std::size_t> &lookup_table_ids,
-                        const std::map<std::string, std::shared_ptr<lookup_table_definition<FieldType>>> &lookup_tables, 
+                    template<typename FieldType, typename ArithmetizationParams, typename TableIdsMapType = std::map<std::string, std::size_t>>
+                    std::size_t pack_lookup_tables(
+                        const TableIdsMapType &lookup_table_ids,
+                        const std::map<std::string, std::shared_ptr<lookup_table_definition<FieldType>>> &lookup_tables,
                         plonk_constraint_system<FieldType, ArithmetizationParams> &bp,
                         plonk_assignment_table<FieldType, ArithmetizationParams> &assignment,
                         const std::vector<std::size_t> &constant_columns_ids,
@@ -163,7 +164,7 @@ namespace nil {
                                 std::vector<plonk_variable<typename FieldType::value_type>> option;
                                 for( const auto &column_index:subtable.column_indices ){
                                     option.emplace_back( plonk_variable<typename FieldType::value_type>(
-                                        constant_columns_ids[column_index], 0, 
+                                        constant_columns_ids[column_index], 0,
                                         false, plonk_variable<typename FieldType::value_type>::column_type::constant
                                     ) );
                                 }
@@ -187,9 +188,9 @@ namespace nil {
                         return usable_rows_after;
                     }
 
-                    template<typename FieldType, typename ArithmetizationParams>
+                    template<typename FieldType, typename ArithmetizationParams, typename TableIdsMapType = std::map<std::string, std::size_t>>
                     std::size_t pack_lookup_tables_horizontal(
-                        const std::map<std::string, std::size_t> &lookup_table_ids,
+                        const TableIdsMapType &lookup_table_ids,
                         const std::map<std::string, std::shared_ptr<lookup_table_definition<FieldType>>> &lookup_tables, 
                         plonk_constraint_system<FieldType, ArithmetizationParams> &bp,
                         plonk_assignment_table<FieldType, ArithmetizationParams> &assignment,

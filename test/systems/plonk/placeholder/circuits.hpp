@@ -186,7 +186,7 @@ namespace nil {
                         plonk_public_assignment_table<FieldType, arithmetization_params_1>(
                             public_input_assignment, constant_assignment, selectors_assignment));
 
-                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_1, plonk_column<FieldType>>(test_circuit.table);
+                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_1, plonk_column<FieldType>>(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(0, 0, true, plonk_variable<assignment_type>::column_type::witness);
                     plonk_variable<assignment_type> w1(1, 0, true, plonk_variable<assignment_type>::column_type::witness);
@@ -326,7 +326,7 @@ namespace nil {
                         plonk_private_assignment_table<FieldType, arithmetization_params_t>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_t>(
                             public_input_assignment, constant_assignment, selectors_assignment));
-                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_t, plonk_column<FieldType>>(test_circuit.table);
+                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_t, plonk_column<FieldType>>(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(0, 0, true,
                                                  plonk_variable<assignment_type>::column_type::witness);
@@ -433,7 +433,7 @@ namespace nil {
                         plonk_private_assignment_table<FieldType, arithmetization_params_3>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_3>(
                             public_input_assignment, constant_assignment, selectors_assignment));
-                    test_circuit.table_rows = zk_padding(test_circuit.table);
+                    test_circuit.table_rows = zk_padding(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(0, 0, true,  plonk_variable<assignment_type>::column_type::witness);
                     plonk_variable<assignment_type> w1(1, 0, true,  plonk_variable<assignment_type>::column_type::witness);
@@ -613,7 +613,9 @@ namespace nil {
 
                 template<typename FieldType, std::size_t usable_rows>
                 circuit_description<FieldType, placeholder_circuit_params<FieldType, arithmetization_params_fib>, usable_rows, 2>
-                circuit_test_fib() {
+                circuit_test_fib(
+                    typename nil::crypto3::random::algebraic_engine<FieldType> alg_rnd = nil::crypto3::random::algebraic_engine<FieldType>()
+                ) {
                     using assignment_type = typename FieldType::value_type;
 
                     constexpr static const std::size_t permutation = 2;
@@ -681,7 +683,7 @@ namespace nil {
                         plonk_private_assignment_table<FieldType, arithmetization_params_fib>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_fib>(
                             public_input_assignment, constant_assignment, selectors_assignment));
-                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_fib, plonk_column<FieldType>>(test_circuit.table);
+                    test_circuit.table_rows = zk_padding<FieldType, arithmetization_params_fib, plonk_column<FieldType>>(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(0, -1, true, plonk_variable<assignment_type>::column_type::witness);
                     plonk_variable<assignment_type> w1(0, 0, true, plonk_variable<assignment_type>::column_type::witness);
@@ -796,7 +798,7 @@ namespace nil {
                         plonk_private_assignment_table<FieldType, arithmetization_params_6>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_6>(
                             public_input_assignment, constant_assignment, selectors_assignment));
-                    test_circuit.table_rows = zk_padding(test_circuit.table);
+                    test_circuit.table_rows = zk_padding(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(  0, 0, true, plonk_variable<assignment_type>::column_type::witness);
                     plonk_variable<assignment_type> w0_1(0,-1, true, plonk_variable<assignment_type>::column_type::witness);
@@ -958,7 +960,7 @@ namespace nil {
                         plonk_private_assignment_table<FieldType, arithmetization_params_7>(private_assignment),
                         plonk_public_assignment_table<FieldType, arithmetization_params_7>(
                             public_input_assignment, constant_assignment, selectors_assignment));
-                    test_circuit.table_rows = zk_padding(test_circuit.table);
+                    test_circuit.table_rows = zk_padding(test_circuit.table, alg_rnd);
 
                     plonk_variable<assignment_type> w0(  0, 0, true, plonk_variable<assignment_type>::column_type::witness);
                     plonk_variable<assignment_type> w0__7(0,-7, true, plonk_variable<assignment_type>::column_type::witness);

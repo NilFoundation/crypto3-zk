@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit3)
     using policy_type = zk::snark::detail::placeholder_policy<field_type, circuit_params>;
 
 BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
-    auto circuit = circuit_test_3<field_type>();
+    auto circuit = circuit_test_3<field_type>(test_global_alg_rnd_engine<field_type>);
 
     plonk_table_description<field_type, typename circuit_params::arithmetization_params> desc;
 
@@ -1068,7 +1068,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit6)
     using policy_type = zk::snark::detail::placeholder_policy<field_type, circuit_params>;
 
 BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
-    auto circuit = circuit_test_6<field_type>();
+    auto circuit = circuit_test_6<field_type>(test_global_alg_rnd_engine<field_type>);
 
     plonk_table_description<field_type, typename circuit_params::arithmetization_params> desc;
 

@@ -37,9 +37,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
 
-// There are pack.hpp files in the exact same location in many projects, and they are different.
-#include </home/martun/nil/solana5/solana-consensus-proof/libs/hash/include/nil/crypto3/detail/pack.hpp>
-
 #include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/pairing/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>

@@ -37,6 +37,9 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/data/monomorphic.hpp>
 
+// There are pack.hpp files in the exact same location in many projects, and they are different.
+#include </home/martun/nil/solana5/solana-consensus-proof/libs/hash/include/nil/crypto3/detail/pack.hpp>
+
 #include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/pairing/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>
@@ -227,11 +230,9 @@ struct test_initializer {
 BOOST_AUTO_TEST_SUITE(placeholder_circuit1)
     using curve_type = algebra::curves::pallas;
     using field_type = typename curve_type::base_field_type;
-
-    using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
+    using policy = hashes::detail::mina_poseidon_policy<field_type>;
     using merkle_hash_type = hashes::poseidon<policy>;
     using transcript_hash_type = hashes::poseidon<policy>;
-
     constexpr static const std::size_t table_rows_log = 4;
 
     struct placeholder_test_params {
@@ -313,9 +314,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
     constexpr static const std::size_t usable_rows = (1 << table_rows_log) - 3;
 
     struct placeholder_test_params {
-        using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
-        using merkle_hash_type = hashes::poseidon<policy>;
-        using transcript_hash_type = hashes::poseidon<policy>;
+        using merkle_hash_type = hashes::keccak_1600<512>;
+        using transcript_hash_type = hashes::keccak_1600<512>;
 
         constexpr static const std::size_t witness_columns = 3;
         constexpr static const std::size_t public_input_columns = 1;
@@ -640,9 +640,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit3)
     constexpr static const std::size_t usable_rows = 4;
 
     struct placeholder_test_params {
-        using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
-        using merkle_hash_type = hashes::poseidon<policy>;
-        using transcript_hash_type = hashes::poseidon<policy>;
+        using merkle_hash_type = hashes::keccak_1600<512>;
+        using transcript_hash_type = hashes::keccak_1600<512>;
 
         constexpr static const std::size_t witness_columns = witness_columns_3;
         constexpr static const std::size_t public_input_columns = public_columns_3;
@@ -845,9 +844,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4)
     constexpr static const std::size_t usable_rows = 5;
 
     struct placeholder_test_params {
-        using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
-        using merkle_hash_type = hashes::poseidon<policy>;
-        using transcript_hash_type = hashes::poseidon<policy>;
+        using merkle_hash_type = hashes::keccak_1600<512>;
+        using transcript_hash_type = hashes::keccak_1600<512>;
 
         constexpr static const std::size_t witness_columns = witness_columns_4;
         constexpr static const std::size_t public_input_columns = public_columns_4;
@@ -1048,9 +1046,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit6)
     constexpr static const std::size_t usable_rows = 6;
 
     struct placeholder_test_params {
-        using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
-        using merkle_hash_type = hashes::poseidon<policy>;
-        using transcript_hash_type = hashes::poseidon<policy>;
+        using merkle_hash_type = hashes::keccak_1600<512>;
+        using transcript_hash_type = hashes::keccak_1600<512>;
 
         constexpr static const std::size_t witness_columns = witness_columns_6;
         constexpr static const std::size_t public_input_columns = public_columns_6;
@@ -1128,9 +1125,8 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit7)
     constexpr static const std::size_t usable_rows = 14;
 
     struct placeholder_test_params {
-        using policy = hashes::detail::poseidon_policy<field_type, 128, 2>;
-        using merkle_hash_type = hashes::poseidon<policy>;
-        using transcript_hash_type = hashes::poseidon<policy>;
+        using merkle_hash_type = hashes::keccak_1600<512>;
+        using transcript_hash_type = hashes::keccak_1600<512>;
 
         constexpr static const std::size_t witness_columns = witness_columns_7;
         constexpr static const std::size_t public_input_columns = public_columns_7;

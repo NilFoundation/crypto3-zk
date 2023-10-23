@@ -34,6 +34,10 @@
 #include <nil/crypto3/hash/sha2.hpp>
 #include <nil/crypto3/hash/keccak.hpp>
 
+#include <nil/crypto3/hash/poseidon.hpp>
+#include <nil/crypto3/hash/detail/poseidon/poseidon_sponge.hpp>
+#include <nil/crypto3/hash/detail/poseidon/poseidon_policy.hpp>
+
 #include <nil/crypto3/multiprecision/cpp_int.hpp>
 
 namespace nil {
@@ -116,8 +120,9 @@ namespace nil {
                     }
                 };
 
-                template<typename Hash>
-                struct fiat_shamir_heuristic_sequential {
+                template<typename Hash, typename Enable = void>
+                struct fiat_shamir_heuristic_sequential
+                {
                     typedef Hash hash_type;
 
                     fiat_shamir_heuristic_sequential() : state(hash<hash_type>({0})) {
@@ -184,6 +189,71 @@ namespace nil {
                 private:
                     typename hash_type::digest_type state;
                 };
+
+                // Specialize for posseidon.
+                template<typename Hash>
+                struct fiat_shamir_heuristic_sequential<
+                        Hash,
+                        typename std::enable_if_t<crypto3::detail::is_poseidon<Hash>::value>> {
+
+                    typedef Hash hash_type;
+
+                    fiat_shamir_heuristic_sequential() : state(hash<hash_type>(Hash::digest_type::zero())) {
+                    }
+
+                    template<typename InputRange>
+                    fiat_shamir_heuristic_sequential(const InputRange &r) : state(hash<hash_type>(r)) {
+                    }
+
+                    template<typename InputIterator>
+                    fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) :
+                        state(hash<hash_type>(first, last)) {
+                    }
+
+                    
+                    template<typename InputRange> 
+                    void operator()(const InputRange &r) {
+                        state = hash<hash_type>(r, hash<hash_type>(state));
+                    }
+
+                    template<typename InputIterator>
+                    void operator()(InputIterator first, InputIterator last) {
+                        state = hash<hash_type>(first, last, hash<hash_type>(state));
+                    }
+
+                    template<typename Field>
+                    typename Field::value_type challenge() {
+                        state = hash<hash_type>(state);
+                        return state;
+                    }
+
+                    template<typename Integral>
+                    Integral int_challenge() {
+
+                        state = hash<hash_type>(state);
+
+                        // Hopefully std::stoul will work.
+                        Integral raw_result = state.data.template convert_to<Integral>();
+
+                        return raw_result;
+                    }
+
+                    template<typename Field, std::size_t N>
+                    std::array<typename Field::value_type, N> challenges() {
+
+                        std::array<typename Field::value_type, N> result;
+                        for (auto &ch : result) {
+                            ch = challenge<Field>();
+                        }
+
+                        return result;
+                    }
+
+                private:
+                    typename hash_type::digest_type state;
+
+                };
+
             }    // namespace transcript
         }        // namespace zk
     }            // namespace crypto3

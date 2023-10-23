@@ -232,7 +232,6 @@ namespace nil {
 
                         state = hash<hash_type>(state);
 
-                        // Hopefully std::stoul will work.
                         Integral raw_result = state.data.template convert_to<Integral>();
 
                         return raw_result;

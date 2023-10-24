@@ -26,6 +26,9 @@
 #ifndef CRYPTO3_ZK_PLONK_PADDING_HPP
 #define CRYPTO3_ZK_PLONK_PADDING_HPP
 
+#include <nil/crypto3/random/algebraic_random_device.hpp>
+#include <nil/crypto3/random/algebraic_engine.hpp>
+
 namespace nil {
     namespace crypto3 {
         namespace zk {

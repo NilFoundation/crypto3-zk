@@ -124,7 +124,7 @@ namespace nil {
                             std::shared_ptr<math::evaluation_domain<FieldType>> basic_domain;
                             std::uint32_t max_gates_degree;
                             verification_key vk;
-                            std::map<std::size_t, std::vector<typename field_type::value_type>>fixed_polys_values;
+                            typename commitment_scheme_type::preprocessed_data_type commitment_scheme_data;
 
                             // Constructor with pregenerated domain
                             common_data_type(
@@ -520,6 +520,11 @@ namespace nil {
                             public_commitments, c_rotations,  N_rows, table_description.usable_rows_amount, max_gates_degree, vk
                         );
 
+                        transcript_type transcript(std::vector<std::uint8_t>({}));
+                        transcript(vk.constraint_system_hash);
+                        transcript(vk.fixed_values_commitment);
+                        common_data.commitment_scheme_data = commitment_scheme.preprocess(transcript);
+
                         // Push circuit description to transcript
                         preprocessed_data_type preprocessed_data({
                             std::move(public_polynomial_table),
@@ -529,11 +534,6 @@ namespace nil {
                             std::move(q_last_q_blind[1]),
                             std::move(common_data)
                         });
-
-                        transcript_type transcript(std::vector<std::uint8_t>({}));
-                        transcript(vk.constraint_system_hash);
-                        transcript(vk.fixed_values_commitment);
-                        commitment_scheme.preprocess(transcript);
 
                         return preprocessed_data;
                     }

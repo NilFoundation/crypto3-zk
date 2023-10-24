@@ -88,15 +88,17 @@ public:
     using field_type = typename params_type::field_type;
     using transcript_hash_type = TranscriptHashType;
     using transcript_type = transcript::fiat_shamir_heuristic_sequential<TranscriptHashType>;
+    using preprocessed_data_type = bool;
 
     struct proof_type{
         nil::crypto3::zk::commitments::eval_storage<field_type> z;
     };
 
-    void preprocess(transcript_type &preprocessed_transript){
+    preprocessed_data_type preprocess(transcript_type &preprocessed_transript) const{
+        return true;
     }
 
-    void setup(transcript_type &preprocessed_transript){
+    void setup(transcript_type &preprocessed_transript, preprocessed_data_type prep = true){
     }
 
     void mark_batch_as_fixed(std::size_t batch_id){

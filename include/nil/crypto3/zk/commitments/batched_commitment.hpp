@@ -216,14 +216,20 @@ namespace nil {
                     // TODO check, that SchemeType has commitment_type and commit functions
                     // Is called from preprocessor
                     template<typename FieldType, typename SchemeType>
-                    static void preprocess(SchemeType &scheme, typename SchemeType::transcript_type &transcript ){
+                    static typename SchemeType::preprocessed_data_type preprocess(
+                        SchemeType &scheme, typename SchemeType::transcript_type &transcript
+                    ){
                         return scheme.preprocess(transcript);
                     }
 
                     // Is called from prover and verifier. Checks, that transcript is well-initialized
                     template<typename FieldType, typename SchemeType>
-                    static void setup(SchemeType &scheme, typename SchemeType::transcript_type &transcript ){
-                        return scheme.setup(transcript);
+                    static void setup(
+                        SchemeType &scheme,
+                        typename SchemeType::transcript_type &transcript,
+                        const typename SchemeType::preprocessed_data_type preprocessed_data
+                    ){
+                        return scheme.setup(transcript, preprocessed_data);
                     }
 
                     // TODO check, that SchemeType has commitment_type and commit functions

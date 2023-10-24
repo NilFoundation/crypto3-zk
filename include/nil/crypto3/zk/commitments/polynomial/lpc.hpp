@@ -65,40 +65,37 @@ namespace nil {
                     using poly_type = PolynomialType;
                     using lpc = LPCScheme;
                     using eval_storage_type = typename LPCScheme::eval_storage_type;
+                    using preprocessed_data_type = std::map<std::size_t, std::vector<typename field_type::value_type>>;
 
                 private:
                     std::map<std::size_t, precommitment_type> _trees;
                     typename fri_type::params_type _fri_params;
                     value_type _etha;
                     std::map<std::size_t, bool> _batch_fixed;
-                    std::map<std::size_t, std::vector<typename field_type::value_type>> _fixed_polys_values;
-                public:
+                    preprocessed_data_type _fixed_polys_values;
 
+                public:
                     lpc_commitment_scheme(const typename fri_type::params_type &fri_params)
                         : _fri_params(fri_params), _etha(0) {
                     }
 
-                    void preprocess(transcript_type& transcript) {
-                        if(_etha != 0 ){
-                            throw std::runtime_error(
-                                "LPC commitment scheme preprocess function may be called only once from placeholder_preprocessor"
-                            );
-                        }
-                        _etha = transcript.template challenge<field_type>();
+                    preprocessed_data_type preprocess(transcript_type& transcript) const{
+                        auto etha = transcript.template challenge<field_type>();
+
+                        preprocessed_data_type result;
                         for(auto const&[index, fixed]: _batch_fixed) {
                             if(!fixed) continue;
-                            _fixed_polys_values[index] = {};
-                            for( std::size_t i = 0; i < this->_polys[index].size(); i++) {
-                                this->_fixed_polys_values[index].push_back(this->_polys[index][i].evaluate(_etha));
+                            result[index] = {};
+                            for( std::size_t i = 0; i < this->_polys.at(index).size(); i++) {
+                                result[index].push_back(this->_polys.at(index)[i].evaluate(etha));
                             }
                         }
+                        return result;
                     }
 
-                    void setup(transcript_type& transcript) {
-                        auto etha = transcript.template challenge<field_type>();
-                        if( etha != _etha ) {
-                            throw std::runtime_error("Wrong lpc commitment scheme setup");
-                        }
+                    void setup(transcript_type& transcript, const preprocessed_data_type &preprocessed_data) {
+                        _etha = transcript.template challenge<field_type>();
+                        _fixed_polys_values = preprocessed_data;
                     }
 
                     commitment_type commit(std::size_t index) {

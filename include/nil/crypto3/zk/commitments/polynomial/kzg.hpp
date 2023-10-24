@@ -715,15 +715,17 @@ namespace nil {
                         return result;
                     }
 
-                    void setup(transcript_type& transcript){
-                        nil::crypto3::zk::algorithms::setup_transcript<KZGScheme>(_params, transcript);
+                    using preprocessed_data_type = bool;
+                    preprocessed_data_type preprocess(transcript_type& transcript) const{
+                        return true;
                     }
 
-                    void preprocess(transcript_type& transcript){
+                    void setup(transcript_type& transcript, preprocessed_data_type b = true){
                         nil::crypto3::zk::algorithms::setup_transcript<KZGScheme>(_params, transcript);
                     }
 
                     proof_type proof_eval(transcript_type &transcript){
+
                         this->eval_polys();
                         this->merge_eval_points();
 

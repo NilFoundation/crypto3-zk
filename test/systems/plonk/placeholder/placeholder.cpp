@@ -93,6 +93,9 @@ public:
         nil::crypto3::zk::commitments::eval_storage<field_type> z;
     };
 
+    void preprocess(transcript_type &preprocessed_transript){
+    }
+
     void setup(transcript_type &preprocessed_transript){
     }
 

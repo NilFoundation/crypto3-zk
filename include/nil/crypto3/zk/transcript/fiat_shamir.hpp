@@ -30,6 +30,7 @@
 #include <nil/marshalling/algorithms/pack.hpp>
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
+#include <nil/crypto3/hash/type_traits.hpp>
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
 #include <nil/crypto3/hash/keccak.hpp>
@@ -194,7 +195,7 @@ namespace nil {
                 template<typename Hash>
                 struct fiat_shamir_heuristic_sequential<
                         Hash,
-                        typename std::enable_if_t<crypto3::detail::is_poseidon<Hash>::value>> {
+                        typename std::enable_if_t<crypto3::hashes::is_poseidon<Hash>::value>> {
 
                     typedef Hash hash_type;
 

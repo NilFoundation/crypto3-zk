@@ -86,8 +86,8 @@ namespace nil {
                         for(auto const&[index, fixed]: _batch_fixed) {
                             if(!fixed) continue;
                             result[index] = {};
-                            for( std::size_t i = 0; i < this->_polys.at(index).size(); i++) {
-                                result[index].push_back(this->_polys.at(index)[i].evaluate(etha));
+                            for (const auto& poly: this->_polys.at(index)){
+                                result[index].push_back(poly.evaluate(etha));
                             }
                         }
                         return result;

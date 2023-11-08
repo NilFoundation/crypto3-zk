@@ -41,13 +41,15 @@ namespace nil {
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
                     using output_type = OutType;
 
-                    static inline boost::property_tree::ptree get_params(){
+                    constexpr static std::uint32_t mask = mask;
+
+                    static inline boost::property_tree::ptree get_params() {
                         boost::property_tree::ptree params;
                         params.put("mask", mask);
                         return params;
                     }
 
-                    static inline OutType generate(transcript_type &transcript){
+                    static inline OutType generate(transcript_type &transcript) {
                         output_type proof_of_work = std::rand();
                         output_type result;
                         std::vector<std::uint8_t> bytes(4);
@@ -70,7 +72,7 @@ namespace nil {
                         return proof_of_work;
                     }
 
-                    static inline bool verify(transcript_type &transcript, output_type proof_of_work){
+                    static inline bool verify(transcript_type &transcript, output_type proof_of_work) {
                         std::vector<std::uint8_t> bytes(4);
                         bytes[0] = std::uint8_t((proof_of_work&0xFF000000)>>24);
                         bytes[1] = std::uint8_t((proof_of_work&0x00FF0000)>>16);

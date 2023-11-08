@@ -136,12 +136,14 @@ namespace nil {
                         // transcript(short_description);
 
                         // Initialize transcript. 
+                        transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
+                        transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
+
                         transcript_initialization_context<ParamsType> context(
-                            preprocessed_public_data.common_data.vk.constraint_system_hash,
-                            preprocessed_public_data.common_data.vk.fixed_values_commitment,
                             preprocessed_public_data.common_data.rows_amount,
                             preprocessed_public_data.common_data.usable_rows_amount,
-                            "Default_application_dependent_init_string"
+                            _commitment_scheme.get_commitment_params(),
+                            "Default application dependent transcript initialization string"
                         );
 
                         // Marshall the initialization context and push it to the transcript.
@@ -157,7 +159,7 @@ namespace nil {
 
                         transcript(cv);
 
-                        // Setup commitment scheme. Commitment parameters will be added into transcript on this stage.
+                        // Setup commitment scheme. LPC adds an additional point here.
                         _commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
                     }
 

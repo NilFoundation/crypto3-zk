@@ -22,7 +22,6 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 // @file Declaration of a struct used to initialize a transcript in the beginning of the prover.
-//       This structure will contain all the data used for initialization, except commitment parameters.
 //
 //---------------------------------------------------------------------------//
 
@@ -51,34 +50,32 @@ namespace nil {
 
                         transcript_initialization_context() = default;
                         transcript_initialization_context(
-                                const typename transcript_hash_type::digest_type& constraint_system_hash,
-                                const commitment_type& fixed_values_commitment,
                                 std::size_t rows_amount,
                                 std::size_t usable_rows_amount,
+                                const typename commitment_type::params_type& commitment_params,
                                 const std::string& application_id)
-                            : constraint_system_hash(constraint_system_hash)
-                            , fixed_values_commitment(fixed_values_commitment)
-                            , rows_amount(rows_amount)
+                            : rows_amount(rows_amount)
                             , usable_rows_amount(usable_rows_amount)
+                            , commitment_params(commitment_params)
                             , application_id(application_id)
                         { }
  
-                        // All the fields of this struct must be included in the transcript initilization, including
+                        // All fields below this line must be included in the transcript initilization, including
                         // static const fields.
 
                         constexpr static const std::size_t witness_columns = PlaceholderParamsType::witness_columns;
                         constexpr static const std::size_t public_input_columns = PlaceholderParamsType::public_input_columns;
                         constexpr static const std::size_t constant_columns = PlaceholderParamsType::constant_columns;
                         constexpr static const std::size_t selector_columns = PlaceholderParamsType::selector_columns;
+
                         constexpr static const typename field_type::value_type delta = PlaceholderParamsType::delta;
  
-                        // Parts of 'common_data_type'.
-                        // verification_key
-                        typename transcript_hash_type::digest_type constraint_system_hash;
-                        commitment_type fixed_values_commitment;
-    
                         std::size_t rows_amount;
                         std::size_t usable_rows_amount;
+
+                        // Commitment params. All fields of this data structure must be included on marshalling,
+                        // including some static constexpr parameters.
+                        typename commitment_type::params_type commitment_params;
 
                         constexpr static const typename field_type::value_type modulus = field_type::modulus;
 

@@ -94,8 +94,6 @@ namespace nil {
                     }
 
                     void setup(transcript_type& transcript, const preprocessed_data_type &preprocessed_data) {
-                        nil::crypto3::zk::algorithms::setup_transcript<fri_type>(_fri_params, transcript);
-
                         _etha = transcript.template challenge<field_type>();
                         _fixed_polys_values = preprocessed_data;
                     }

@@ -132,16 +132,16 @@ namespace nil {
                             bool operator==(const params_type &rhs) const = default;
                             bool operator!=(const params_type &rhs) const = default;
 
-                            std::size_t max_degree;
-                            std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D;
+                            const std::size_t max_degree;
+                            const std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D;
  
                             // The total number of FRI-rounds, the sum of 'step_list'.
-                            std::size_t r;
-                            std::vector<std::size_t> step_list;
+                            const std::size_t r;
+                            const std::vector<std::size_t> step_list;
 
                             // Degrees of D are degree_log + expand_factor. This is unused in FRI,
                             // but we still want to keep the parameter with which it was constructed.
-                            std::size_t expand_factor;
+                            const std::size_t expand_factor;
                         };
 
                         struct round_proof_type {
@@ -960,35 +960,6 @@ namespace nil {
 
                     return true;
                 }
-
-                template<typename FRI, typename PolynomialType,
-                    typename std::enable_if<
-                        std::is_base_of<
-                            commitments::detail::basic_batched_fri<
-                                typename FRI::field_type, typename FRI::merkle_tree_hash_type,
-                                typename FRI::transcript_hash_type,
-                                FRI::lambda, FRI::m,
-                                FRI::use_grinding, typename FRI::grinding_type>,
-                            FRI>::value,
-                        bool>::type = true>
-                static void setup_transcript(
-                        const typename FRI::params_type &fri_params,
-                        typename FRI::transcript_type &transcript
-                        ) {
-                    // Marshall the FRI params and push them to the transcript.
-                    using Endianness = nil::marshalling::option::big_endian;
-                    using TTypeBase = nil::marshalling::field_type<Endianness>;
-                    using value_marshalling_type = nil::crypto3::marshalling::types::fri_params<
-                        TTypeBase, typename FRI::params_type>;
-                    auto filled_val = nil::crypto3::marshalling::types::fill_fri_params<
-                        Endianness, typename FRI::params_type>(fri_params);
-
-                    std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
-                    nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
-
-                    transcript(cv);
-                }
-
             }    // namespace algorithms
         }        // namespace zk
     }            // namespace crypto3

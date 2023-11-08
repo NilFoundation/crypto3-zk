@@ -718,7 +718,7 @@ namespace nil {
                         return true;
                     }
 
-                    void setup(transcript_type& transcript, preprocessed_data_type b = true){
+                    void setup(transcript_type& transcript, preprocessed_data_type b = true) {
                         nil::crypto3::zk::algorithms::setup_transcript<KZGScheme>(_params, transcript);
                     }
 

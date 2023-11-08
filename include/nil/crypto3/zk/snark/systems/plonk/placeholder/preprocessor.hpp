@@ -81,7 +81,7 @@ namespace nil {
                             }
                         };
 
-                        struct verification_key{
+                        struct verification_key {
                             typename transcript_hash_type::digest_type constraint_system_hash;
                             commitment_type                            fixed_values_commitment;
 
@@ -509,10 +509,8 @@ namespace nil {
                         using ConstraintSystem = plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>;
                         using value_marshalling_type = nil::crypto3::marshalling::types::plonk_constraint_system<TTypeBase, ConstraintSystem>;
                         auto filled_val = nil::crypto3::marshalling::types::fill_plonk_constraint_system<Endianness, ConstraintSystem>(constraint_system);
-                        std::vector<std::uint8_t> cv;
-                        cv.resize(filled_val.length(), 0x00);
-                        auto write_iter = cv.begin();
-                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
+                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
+                        nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
                         typename transcript_hash_type::digest_type circuit_hash = hash<transcript_hash_type>(cv);
 
                         typename preprocessed_data_type::verification_key vk = {circuit_hash, public_commitments.fixed_values};

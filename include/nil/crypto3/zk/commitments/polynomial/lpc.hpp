@@ -94,6 +94,8 @@ namespace nil {
                     }
 
                     void setup(transcript_type& transcript, const preprocessed_data_type &preprocessed_data) {
+                        nil::crypto3::zk::algorithms::setup_transcript<fri_type>(_fri_params, transcript);
+
                         _etha = transcript.template challenge<field_type>();
                         _fixed_polys_values = preprocessed_data;
                     }
@@ -289,7 +291,9 @@ namespace nil {
                         return true;
                     }
 
-                    const typename fri_type::params_type &get_fri_params() const {
+                    // Params for LPC are actually FRI params. We can return some LPC params from here in the future if needed.
+                    // This params are used for initializing transcript in the prover.
+                    const typename params_type &get_commitment_params() const {
                         return _fri_params;
                     }
 

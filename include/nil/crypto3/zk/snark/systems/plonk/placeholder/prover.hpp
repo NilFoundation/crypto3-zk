@@ -134,10 +134,30 @@ namespace nil {
                     {
                         // 1. Add circuit definition to transcript
                         // transcript(short_description);
-                        transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
-                        transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
 
-                        // setup commitment scheme
+                        // Initialize transcript. 
+                        transcript_initialization_context<ParamsType> context(
+                            preprocessed_public_data.common_data.vk.constraint_system_hash,
+                            preprocessed_public_data.common_data.vk.fixed_values_commitment,
+                            preprocessed_public_data.common_data.rows_amount,
+                            preprocessed_public_data.common_data.usable_rows_amount,
+                            "Default_application_dependent_init_string"
+                        );
+
+                        // Marshall the initialization context and push it to the transcript.
+                        using Endianness = nil::marshalling::option::big_endian;
+                        using TTypeBase = nil::marshalling::field_type<Endianness>;
+                        using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
+                            TTypeBase, transcript_initialization_context<ParamsType>>;
+                        auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
+                            Endianness, transcript_initialization_context<ParamsType>>(context);
+
+                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
+                        nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
+
+                        transcript(cv);
+
+                        // Setup commitment scheme. Commitment parameters will be added into transcript on this stage.
                         _commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
                     }
 

@@ -109,31 +109,39 @@ namespace nil {
                             using precommitment_type = merkle_tree_type;
                             using commitment_type = typename precommitment_type::value_type;
                             using transcript_type = transcript::fiat_shamir_heuristic_sequential<TranscriptHashType>;
+                            using grinding_type = GrindingType;
 
-                            bool operator==(const params_type &rhs) const {
-                                return r == rhs.r && max_degree == rhs.max_degree && D == rhs.D && step_list == rhs.step_list;
-                            }
+                            constexpr static std::size_t lambda = Lambda;
+                            constexpr static std::size_t m = M;
+                            constexpr bool use_grinding = UseGrinding;
 
-                            bool operator!=(const params_type &rhs) const {
-                                return !(rhs == *this);
-                            }
-
-                            // TODO: Better if we can construct params_type from any batch size to another
+                            params_type(const params_type &other) = default;
+                            params_type() = default;
                             params_type(
-                                const typename basic_batched_fri<FieldType, MerkleTreeHashType, TranscriptHashType, Lambda, M, UseGrinding, GrindingType>::params_type &obj
-                            ) {
-                                r = obj.r;
-                                max_degree = obj.max_degree;
-                                D = obj.D;
-                                step_list = obj.step_list;
-                            }
+                                std::size_t max_degree,
+                                std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D,
+                                std::vector<std::size_t> step_list,
+                                std::size_t expand_factor
+                            ) : max_degree(max_degree)
+                              , D(D)
+                              , r(std::accumulate(step_list.begin(), step_list.end(), 0))
+                              , step_list(step_list)
+                              , expand_factor(expand_factor)
+                            {}
 
-                            params_type() {};
+                            bool operator==(const params_type &rhs) const = default;
+                            bool operator!=(const params_type &rhs) const = default;
 
-                            std::size_t r;
                             std::size_t max_degree;
                             std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D;
+ 
+                            // The total number of FRI-rounds, the sum of 'step_list'.
+                            std::size_t r;
                             std::vector<std::size_t> step_list;
+
+                            // Degrees of D are degree_log + expand_factor. This is unused in FRI,
+                            // but we still want to keep the parameter with which it was constructed.
+                            std::size_t expand_factor;
                         };
 
                         struct round_proof_type {
@@ -568,8 +576,6 @@ namespace nil {
                     return correct_order_idx;
                 }
                  
-                //template<typename FRI, typename PolynomialType>
-
                 template<typename FRI, typename PolynomialType,
                     typename std::enable_if<
                             std::is_base_of<
@@ -954,6 +960,35 @@ namespace nil {
 
                     return true;
                 }
+
+                template<typename FRI, typename PolynomialType,
+                    typename std::enable_if<
+                        std::is_base_of<
+                            commitments::detail::basic_batched_fri<
+                                typename FRI::field_type, typename FRI::merkle_tree_hash_type,
+                                typename FRI::transcript_hash_type,
+                                FRI::lambda, FRI::m,
+                                FRI::use_grinding, typename FRI::grinding_type>,
+                            FRI>::value,
+                        bool>::type = true>
+                static void setup_transcript(
+                        const typename FRI::params_type &fri_params,
+                        typename FRI::transcript_type &transcript
+                        ) {
+                    // Marshall the FRI params and push them to the transcript.
+                    using Endianness = nil::marshalling::option::big_endian;
+                    using TTypeBase = nil::marshalling::field_type<Endianness>;
+                    using value_marshalling_type = nil::crypto3::marshalling::types::fri_params<
+                        TTypeBase, typename FRI::params_type>;
+                    auto filled_val = nil::crypto3::marshalling::types::fill_fri_params<
+                        Endianness, typename FRI::params_type>(fri_params);
+
+                    std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
+                    nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
+
+                    transcript(cv);
+                }
+
             }    // namespace algorithms
         }        // namespace zk
     }            // namespace crypto3

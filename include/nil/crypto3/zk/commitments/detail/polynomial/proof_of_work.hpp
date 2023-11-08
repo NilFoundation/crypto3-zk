@@ -52,15 +52,17 @@ namespace nil {
                         output_type result;
                         std::vector<std::uint8_t> bytes(4);
 
-                        while( true ){
+                        while( true ) {
                             transcript_type tmp_transcript = transcript;
                             bytes[0] = std::uint8_t((proof_of_work&0xFF000000)>>24);
                             bytes[1] = std::uint8_t((proof_of_work&0x00FF0000)>>16);
                             bytes[2] = std::uint8_t((proof_of_work&0x0000FF00)>>8);
                             bytes[3] = std::uint8_t(proof_of_work&0x000000FF);
+
                             tmp_transcript(bytes);
                             result = tmp_transcript.template int_challenge<output_type>();
-                            if((result & mask) == 0) break;
+                            if ((result & mask) == 0)
+                                break;
                             proof_of_work++;
                         }
                         transcript(bytes);

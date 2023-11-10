@@ -46,6 +46,8 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
 
+#include <nil/crypto3/marshalling/zk/types/placeholder/transcript_initialization_context.hpp>
+
 namespace nil {
     namespace crypto3 {
         namespace zk {
@@ -164,7 +166,7 @@ namespace nil {
                     }
 
                     placeholder_proof<FieldType, ParamsType> process() {
-                        PROFILE_PLACEHOLDER_SCOPE("Placeholder prover, total time:");
+                        PROFILE_PLACEHOLDER_SCOPE("Placeholder prover, total time");
 
                         // 2. Commit witness columns and public_input columns
                         _commitment_scheme.append_to_batch(VARIABLE_VALUES_BATCH, _polynomial_table.witnesses());

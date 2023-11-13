@@ -84,7 +84,7 @@ set(TESTS_NAMES
     "systems/plonk/pickles/oracles"
     "systems/plonk/pickles/to_field"
     "systems/plonk/pickles/to_group"
-    
+
     "systems/plonk/placeholder/placeholder"
     "systems/plonk/placeholder/performance"
 
@@ -104,6 +104,8 @@ set(TESTS_NAMES
 
     "transcript/transcript"
     "transcript/kimchi_transcript"
+
+    "systems/plonk/placeholder/lookup_table_packer"
 
     "systems/plonk/plonk_constraint")
 

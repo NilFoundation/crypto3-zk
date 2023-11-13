@@ -344,8 +344,9 @@ namespace nil {
                             for (std::size_t column = layout_x + fold * column_amount;
                                     column < layout_x + (fold + 1) * column_amount; column++) {
 
-                                for (std::size_t row = layout_y, table_row = 0; row < layout_y + rows_amount;
-                                        row++, table_row++) {
+                                for (std::size_t row = layout_y, table_row = fold * rows_amount;
+                                     row < layout_y + rows_amount;
+                                     row++, table_row++) {
 
                                     if (table_row < table_rows_amount) {
                                         constant_columns[column][row] =
@@ -366,7 +367,7 @@ namespace nil {
                                 continue;
                             }
                             // Check if the current rows are already included in some selector so that we reuse it
-                            // Because folded table would not have a non-full subtable, this works
+                            // This works because a folded table would not have a non-full subtable
                             std::size_t next_selector;
                             if (selector_ids.find(std::make_pair(subtable.begin, subtable.end)) !=
                                 selector_ids.end()) {
@@ -386,7 +387,7 @@ namespace nil {
                             for(std::size_t fold = 0; fold < fold_count; fold++) {
                                 std::vector<plonk_variable<typename FieldType::value_type>> option;
                                 for(const auto &column_index : subtable.column_indices) {
-                                    option.emplace_back( plonk_variable<typename FieldType::value_type>(
+                                    option.emplace_back(plonk_variable<typename FieldType::value_type>(
                                         constant_columns_ids[layout_x + fold * column_amount + column_index], 0,
                                         false, plonk_variable<typename FieldType::value_type>::column_type::constant
                                     ));

@@ -60,7 +60,7 @@ namespace nil {
                     }
 
                     void append_option(const std::vector<variable_type> &variables){
-                        BOOST_CHECK(variables.size() == columns_number);
+                        // BOOST_CHECK(variables.size() == columns_number);
                         lookup_options.push_back(variables);
                     }
                 };

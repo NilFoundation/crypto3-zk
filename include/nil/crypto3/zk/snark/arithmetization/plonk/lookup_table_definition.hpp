@@ -34,7 +34,6 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace snark {
-                namespace detail {
                     // Interf-ace for lookup table definitions.
                     template<typename FieldType>
                     class lookup_subtable_definition{
@@ -189,9 +188,9 @@ namespace nil {
                         return usable_rows_after;
                     }
 
-                    template<typename FieldType, typename ArithmetizationParams>
+                    template<typename FieldType, typename ArithmetizationParams, typename TableIdsMapType>
                     std::size_t pack_lookup_tables_horizontal(
-                        const std::map<std::string, std::size_t> &lookup_table_ids,
+                        const TableIdsMapType &lookup_table_ids,
                         const std::map<std::string, std::shared_ptr<lookup_table_definition<FieldType>>> &lookup_tables,
                         plonk_constraint_system<FieldType, ArithmetizationParams> &bp,
                         plonk_assignment_table<FieldType, ArithmetizationParams> &assignment,
@@ -359,7 +358,6 @@ namespace nil {
                         }
                         return usable_rows_after;
                     }
-                }    // namespace detail
             }        // namespace snark
         }            // namespace zk
     }                // namespace crypto3

@@ -181,14 +181,14 @@ namespace nil {
                         return _selectors;
                     }
 
-                    void fill_constant(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_constant(std::uint32_t index, const ColumnType& column) {
                         BOOST_ASSERT(index < constants_amount());
                         BOOST_ASSERT(_constants[index].size() == 0);
 
                         _constants[index] = column;
                     }
 
-                    void fill_selector(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_selector(std::uint32_t index, const ColumnType& column) {
                         BOOST_ASSERT(index < selectors_amount());
                         BOOST_ASSERT(_selectors[index].size() == 0);
 
@@ -272,11 +272,11 @@ namespace nil {
                         return _public_table.selector(index);
                     }
 
-                    void fill_constant(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_constant(std::uint32_t index, const ColumnType& column) {
                         _public_table.fill_constant(index, column);
                     }
 
-                    void fill_selector(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_selector(std::uint32_t index, const ColumnType& column) {
                         _public_table.fill_selector(index, column);
                     }
 

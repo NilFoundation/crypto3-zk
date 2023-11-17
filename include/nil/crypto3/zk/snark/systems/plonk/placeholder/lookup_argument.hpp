@@ -143,7 +143,6 @@ namespace nil {
                         std::map<typename FieldType::value_type, std::size_t> sorting_map;
                         {
                             PROFILE_PLACEHOLDER_SCOPE("Sorting map building");
-                            sorting_map[FieldType::value_type::zero()] = zeroes;
                             for( std::size_t i = 0; i < reduced_value.size(); i++){
                                 for( std::size_t j = 0; j < usable_rows_amount; j++){
                                     if(reduced_value[i][j] == FieldType::value_type::zero()) continue;

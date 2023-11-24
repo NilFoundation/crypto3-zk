@@ -85,6 +85,8 @@ namespace nil {
                     struct params_type {
                         using commitment_type = typename curve_type::template g1_type<>::value_type;
                         using field_type = typename curve_type::scalar_field_type;
+                        using single_commitment_type = single_commitment_type;
+                        using verification_key_type = verification_key_type;
 
                         single_commitment_type commitment_key;
                         verification_key_type verification_key;
@@ -795,7 +797,7 @@ namespace nil {
                         return left_side_accum == right_side_pairing;
                     }
                     
-                    const typename params_type &get_commitment_params() const {
+                    const params_type& get_commitment_params() const {
                         return _params;
                     }
 

@@ -103,17 +103,21 @@ namespace nil {
                         using polynomial_type = math::polynomial<typename FieldType::value_type>;
 
                         struct params_type {
+                            
                             using field_type = FieldType;
                             using merkle_tree_type = containers::merkle_tree<MerkleTreeHashType, 2>;
                             using merkle_proof_type =  typename containers::merkle_proof<MerkleTreeHashType, 2>;
                             using precommitment_type = merkle_tree_type;
                             using commitment_type = typename precommitment_type::value_type;
                             using transcript_type = transcript::fiat_shamir_heuristic_sequential<TranscriptHashType>;
+
+                            // We need these constants duplicated here, so we can access them from marshalling easier. Everything that
+                            // needs to be marshalled is a part of params_type.
                             using grinding_type = GrindingType;
 
                             constexpr static std::size_t lambda = Lambda;
                             constexpr static std::size_t m = M;
-                            constexpr bool use_grinding = UseGrinding;
+                            constexpr static bool use_grinding = UseGrinding;
 
                             params_type(const params_type &other) = default;
                             params_type() = default;

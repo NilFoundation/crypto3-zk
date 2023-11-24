@@ -45,6 +45,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/gates_argument.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/transcript_initialization_context.hpp>
 
 #include <nil/crypto3/marshalling/zk/types/placeholder/transcript_initialization_context.hpp>
 
@@ -141,7 +142,7 @@ namespace nil {
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
                         transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
 
-                        transcript_initialization_context<ParamsType> context(
+                        nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType> context(
                             preprocessed_public_data.common_data.rows_amount,
                             preprocessed_public_data.common_data.usable_rows_amount,
                             _commitment_scheme.get_commitment_params(),
@@ -152,12 +153,13 @@ namespace nil {
                         using Endianness = nil::marshalling::option::big_endian;
                         using TTypeBase = nil::marshalling::field_type<Endianness>;
                         using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
-                            TTypeBase, transcript_initialization_context<ParamsType>>;
+                            TTypeBase, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>;
                         auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
-                            Endianness, transcript_initialization_context<ParamsType>>(context);
+                            Endianness, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>(context);
 
                         std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
-                        nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
+                        auto write_iter = cv.begin();
+                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
 
                         transcript(cv);
 

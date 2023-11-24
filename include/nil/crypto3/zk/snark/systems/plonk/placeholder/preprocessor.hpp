@@ -508,9 +508,13 @@ namespace nil {
                         using TTypeBase = nil::marshalling::field_type<Endianness>;
                         using ConstraintSystem = plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>;
                         using value_marshalling_type = nil::crypto3::marshalling::types::plonk_constraint_system<TTypeBase, ConstraintSystem>;
+
                         auto filled_val = nil::crypto3::marshalling::types::fill_plonk_constraint_system<Endianness, ConstraintSystem>(constraint_system);
                         std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
-                        nil::marshalling::status_type status = filled_val.write(cv.begin(), cv.size());
+
+                        // Function write wants an lvalue as 1st parameter.
+                        auto write_iter = cv.begin();
+                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
                         typename transcript_hash_type::digest_type circuit_hash = hash<transcript_hash_type>(cv);
 
                         typename preprocessed_data_type::verification_key vk = {circuit_hash, public_commitments.fixed_values};

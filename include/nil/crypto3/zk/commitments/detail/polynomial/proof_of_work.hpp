@@ -34,14 +34,14 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace commitments {
-                template<typename TranscriptHashType, typename OutType = std::uint32_t, std::uint32_t mask=0xFFFF0000>
+                template<typename TranscriptHashType, typename OutType = std::uint32_t, std::uint32_t MASK=0xFFFF0000>
                 class proof_of_work {
                 public:
                     using transcript_hash_type = TranscriptHashType;
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
                     using output_type = OutType;
 
-                    constexpr static std::uint32_t mask = mask;
+                    constexpr static std::uint32_t mask = MASK;
 
                     static inline boost::property_tree::ptree get_params() {
                         boost::property_tree::ptree params;

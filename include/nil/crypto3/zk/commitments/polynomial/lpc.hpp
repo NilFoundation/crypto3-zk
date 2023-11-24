@@ -291,7 +291,7 @@ namespace nil {
 
                     // Params for LPC are actually FRI params. We can return some LPC params from here in the future if needed.
                     // This params are used for initializing transcript in the prover.
-                    const typename params_type &get_commitment_params() const {
+                    const params_type& get_commitment_params() const {
                         return _fri_params;
                     }
 

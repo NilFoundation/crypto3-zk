@@ -44,7 +44,6 @@ namespace nil {
 
                         using arithmetization_params = typename PlaceholderParamsType::arithmetization_params;
                         using commitment_scheme_type = typename PlaceholderParamsType::commitment_scheme_type;
-                        using commitment_type = typename commitment_scheme_type::commitment_type;
                         using transcript_type = typename commitment_scheme_type::transcript_type;
                         using transcript_hash_type = typename commitment_scheme_type::transcript_hash_type;
 
@@ -52,7 +51,7 @@ namespace nil {
                         transcript_initialization_context(
                                 std::size_t rows_amount,
                                 std::size_t usable_rows_amount,
-                                const typename commitment_type::params_type& commitment_params,
+                                const typename commitment_scheme_type::params_type& commitment_params,
                                 const std::string& application_id)
                             : rows_amount(rows_amount)
                             , usable_rows_amount(usable_rows_amount)
@@ -75,7 +74,7 @@ namespace nil {
 
                         // Commitment params. All fields of this data structure must be included on marshalling,
                         // including some static constexpr parameters.
-                        typename commitment_type::params_type commitment_params;
+                        typename commitment_scheme_type::params_type commitment_params;
 
                         constexpr static const typename field_type::value_type modulus = field_type::modulus;
 

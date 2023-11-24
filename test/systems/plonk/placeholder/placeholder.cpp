@@ -80,7 +80,7 @@ using namespace nil::crypto3::zk;
 using namespace nil::crypto3::zk::snark;
 
 template<typename CommitmentSchemeParamsType, typename TranscriptHashType>
-class dummy_commitment_scheme_type:public nil::crypto3::zk::commitments::polys_evaluator<CommitmentSchemeParamsType, TranscriptHashType>{
+class dummy_commitment_scheme_type : public nil::crypto3::zk::commitments::polys_evaluator<CommitmentSchemeParamsType, TranscriptHashType> {
 private:
 public:
     using params_type = CommitmentSchemeParamsType;
@@ -89,6 +89,10 @@ public:
     using transcript_hash_type = TranscriptHashType;
     using transcript_type = transcript::fiat_shamir_heuristic_sequential<TranscriptHashType>;
     using preprocessed_data_type = bool;
+
+    params_type get_commitment_params() const {
+        return params_type();
+    }
 
     struct proof_type{
         nil::crypto3::zk::commitments::eval_storage<field_type> z;

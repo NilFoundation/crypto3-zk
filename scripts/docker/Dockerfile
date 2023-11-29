@@ -28,8 +28,8 @@ RUN apt-get update \
 RUN cd /tmp && curl -L -O https://launchpadlibrarian.net/466750967/libfmt-dev_6.1.2+ds-2_amd64.deb \
     && apt install /tmp/libfmt-dev_6.1.2+ds-2_amd64.deb
 
-#RUN cd /tmp && curl -L -O https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 
-RUN cd /tmp && curl -O http://192.168.123.11:8000/boost_1_76_0.tar.bz2
+RUN cd /tmp && curl -L -O https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 
+#RUN cd /tmp && curl -O http://192.168.123.11:8000/boost_1_76_0.tar.bz2
 
 RUN cd /tmp && tar jxf boost_1_76_0.tar.bz2 \
     && cd boost_1_76_0 && ./bootstrap.sh && ./b2 install

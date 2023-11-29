@@ -40,7 +40,7 @@ jobs:
       - name: Run CI script
         run: |
           pwd
-          find . -name 'build.sh'
+          find .
           cd suite
           cp libs/${{ env.LIB_NAME }}/scripts/build.sh .
           libs/${{ env.LIB_NAME }}/scripts/ci.sh

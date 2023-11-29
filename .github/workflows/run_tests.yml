@@ -10,10 +10,36 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   #workflow_dispatch:
 
+env:
+  SUITE_REPO: "NilFoundation/crypto3"
+  LIB_NAME: "zk"
+  CACHE_NAME: "checkout-job-cache"
+
 jobs:
   checkout:
     runs-on: [self-hosted, tests-runner]
     steps:
+      - name: Cleanup # TODO - move to scripts on runner
+        run: |
+          rm -rf ./suite/* || true
+          mkdir ./suite || true
+
+      - name: Checkout suite
+        uses: actions/checkout@v3
+        with:
+          path: ./suite
+          repository: ${{ env.SUITE_REPO }}
+          submodules: recursive
+
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          path: ./suite/libs/${{ env.LIB_NAME }}
+          submodules: recursive
+
       - name: Run CI script
         run: |
-          scripts/ci.sh
+          cd suite
+          cp libs/${{ env.LIB_NAME }}/scripts/build.sh .
+          libs/${{ env.LIB_NAME }}/scripts/ci.sh
+

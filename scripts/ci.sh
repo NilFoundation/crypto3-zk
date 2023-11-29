@@ -9,10 +9,3 @@ docker run --rm --volume ${PWD}:/home:Z -w /home \
     -u $(id -u ${USER}):$(id -g ${USER}) \
     crypto3-zk-test ./build.sh
 
-# Run tests
-#sudo docker run --rm --volume ${PWD}:/home:Z -w /home \
-#    -u $(id -u ${USER}):$(id -g ${USER}) \
-#    crypto3-zk-test ./run.sh
-
-
-

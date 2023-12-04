@@ -142,7 +142,7 @@ namespace nil {
                         auto omega = preprocessed_public_data.common_data.basic_domain->get_domain_element(1);
                         auto challenge = proof.eval_proof.challenge;
                         auto numerator = challenge.pow(preprocessed_public_data.common_data.rows_amount) - FieldType::value_type::one();
-                        numerator = numerator / (typename FieldType::value_type(preprocessed_public_data.common_data.rows_amount));
+                        numerator /= typename FieldType::value_type(preprocessed_public_data.common_data.rows_amount);
 
                         for( std::size_t i = 0; i < ParamsType::arithmetization_params::public_input_columns; ++i ){
                             typename FieldType::value_type value = FieldType::value_type::zero();
@@ -166,7 +166,8 @@ namespace nil {
                     ) {
                         // 1. Add circuit definition to transcript
                         // transcript(short_description);
-                        transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(std::vector<std::uint8_t>());
+                        std::vector<std::uint8_t> init_blob = {};
+                        transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(init_blob);
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
                         transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
 
@@ -352,8 +353,8 @@ namespace nil {
 
                         typename FieldType::value_type T_consolidated = FieldType::value_type::zero();
                         for (std::size_t i = 0; i < proof.eval_proof.eval_proof.z.get_batch_size(QUOTIENT_BATCH); i++) {
-                            T_consolidated = T_consolidated + proof.eval_proof.eval_proof.z.get(QUOTIENT_BATCH, i, 0) *
-                                                                  challenge.pow((preprocessed_public_data.common_data.rows_amount) * i);
+                            T_consolidated += proof.eval_proof.eval_proof.z.get(QUOTIENT_BATCH, i, 0) *
+                                challenge.pow((preprocessed_public_data.common_data.rows_amount) * i);
                         }
 
                         // Z is polynomial -1, 0 ...., 0, 1

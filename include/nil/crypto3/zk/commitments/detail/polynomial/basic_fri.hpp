@@ -133,8 +133,13 @@ namespace nil {
                               , expand_factor(expand_factor)
                             {}
 
-                            bool operator==(const params_type &rhs) const = default;
-                            bool operator!=(const params_type &rhs) const = default;
+                            bool operator==(const params_type &rhs) const {
+                                return r == rhs.r && max_degree == rhs.max_degree && D == rhs.D && step_list == rhs.step_list;
+                            }
+
+                            bool operator!=(const params_type &rhs) const {
+                                return !(rhs == *this);
+                            }
 
                             const std::size_t max_degree;
                             const std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D;

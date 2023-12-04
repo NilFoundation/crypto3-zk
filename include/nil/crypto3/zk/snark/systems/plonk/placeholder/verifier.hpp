@@ -166,12 +166,33 @@ namespace nil {
                     ) {
                         // 1. Add circuit definition to transcript
                         // transcript(short_description);
-                        std::vector<std::uint8_t> init_blob = {};
-                        transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(init_blob);
+                        transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(std::vector<std::uint8_t>());
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
                         transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
-                        commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
 
+                        nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType> context(
+                            preprocessed_public_data.common_data.rows_amount,
+                            preprocessed_public_data.common_data.usable_rows_amount,
+                            commitment_scheme.get_commitment_params(),
+                            "Default application dependent transcript initialization string"
+                        );
+
+                        // Marshall the initialization context and push it to the transcript.
+                        using Endianness = nil::marshalling::option::big_endian;
+                        using TTypeBase = nil::marshalling::field_type<Endianness>;
+                        using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
+                            TTypeBase, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>;
+                        auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
+                            Endianness, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>(context);
+
+                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
+                        auto write_iter = cv.begin();
+                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
+
+                        transcript(cv);
+
+                        // Setup commitment scheme. LPC adds an additional point here.
+                        commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
 
                         // 3. append witness commitments to transcript
                         transcript(proof.commitments.at(VARIABLE_VALUES_BATCH));

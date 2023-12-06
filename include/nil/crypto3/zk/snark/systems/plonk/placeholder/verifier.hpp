@@ -153,7 +153,9 @@ namespace nil {
                             }
                             value *= numerator;
                             if( value != proof.eval_proof.eval_proof.z.get(VARIABLE_VALUES_BATCH, ParamsType::arithmetization_params::witness_columns + i, 0) )
+{
                                 return false;
+}
                         }
                         return process(preprocessed_public_data, proof, constraint_system, commitment_scheme);
                     }
@@ -171,26 +173,13 @@ namespace nil {
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
                         transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
 
-                        nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType> context(
+                        nil::crypto3::zk::snark::detail::init_transcript<ParamsType, transcript_hash_type>(
+                            transcript,
                             preprocessed_public_data.common_data.rows_amount,
                             preprocessed_public_data.common_data.usable_rows_amount,
                             commitment_scheme.get_commitment_params(),
                             "Default application dependent transcript initialization string"
                         );
-
-                        // Marshall the initialization context and push it to the transcript.
-                        using Endianness = nil::marshalling::option::big_endian;
-                        using TTypeBase = nil::marshalling::field_type<Endianness>;
-                        using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
-                            TTypeBase, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>;
-                        auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
-                            Endianness, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>(context);
-
-                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
-                        auto write_iter = cv.begin();
-                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
-
-                        transcript(cv);
 
                         // Setup commitment scheme. LPC adds an additional point here.
                         commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
@@ -322,7 +311,7 @@ namespace nil {
                         commitment_scheme.set_batch_size(VARIABLE_VALUES_BATCH, proof.eval_proof.eval_proof.z.get_batch_size(VARIABLE_VALUES_BATCH));
                         commitment_scheme.set_batch_size(PERMUTATION_BATCH, proof.eval_proof.eval_proof.z.get_batch_size(PERMUTATION_BATCH));
                         commitment_scheme.set_batch_size(QUOTIENT_BATCH, proof.eval_proof.eval_proof.z.get_batch_size(QUOTIENT_BATCH));
-                        if(is_lookup_enabled)
+                        if (is_lookup_enabled)
                             commitment_scheme.set_batch_size(LOOKUP_BATCH, proof.eval_proof.eval_proof.z.get_batch_size(LOOKUP_BATCH));
                         generate_evaluation_points(commitment_scheme, preprocessed_public_data, constraint_system, challenge, is_lookup_enabled);
 
@@ -348,7 +337,7 @@ namespace nil {
 
                         typename FieldType::value_type F_consolidated = FieldType::value_type::zero();
                         for (std::size_t i = 0; i < f_parts; i++) {
-                            F_consolidated = F_consolidated + alphas[i] * F[i];
+                            F_consolidated += alphas[i] * F[i];
                         }
 
                         typename FieldType::value_type T_consolidated = FieldType::value_type::zero();

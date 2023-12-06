@@ -124,12 +124,12 @@ namespace nil {
                             params_type(
                                 std::size_t max_degree,
                                 std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D,
-                                std::vector<std::size_t> step_list,
+                                std::vector<std::size_t> step_list_in,
                                 std::size_t expand_factor
                             ) : max_degree(max_degree)
                               , D(D)
-                              , r(std::accumulate(step_list.begin(), step_list.end(), 0))
-                              , step_list(step_list)
+                              , r(std::accumulate(step_list_in.begin(), step_list_in.end(), 0))
+                              , step_list(step_list_in)
                               , expand_factor(expand_factor)
                             {}
 

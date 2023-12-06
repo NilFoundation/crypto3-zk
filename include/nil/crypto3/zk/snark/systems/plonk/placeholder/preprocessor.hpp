@@ -50,6 +50,7 @@
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/detail/column_polynomial.hpp>
 #include <nil/crypto3/marshalling/zk/types/plonk/constraint_system.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/transcript_initialization_context.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -525,8 +526,16 @@ namespace nil {
                         transcript_type transcript(std::vector<std::uint8_t>({}));
                         transcript(vk.constraint_system_hash);
                         transcript(vk.fixed_values_commitment);
-                        common_data.commitment_scheme_data = commitment_scheme.preprocess(transcript);
 
+                        nil::crypto3::zk::snark::detail::init_transcript<ParamsType, transcript_hash_type>(
+                            transcript,
+                            common_data.rows_amount,
+                            common_data.usable_rows_amount,
+                            commitment_scheme.get_commitment_params(),
+                            "Default application dependent transcript initialization string"
+                        );
+
+                        common_data.commitment_scheme_data = commitment_scheme.preprocess(transcript);
                         // Push circuit description to transcript
                         preprocessed_data_type preprocessed_data({
                             std::move(public_polynomial_table),

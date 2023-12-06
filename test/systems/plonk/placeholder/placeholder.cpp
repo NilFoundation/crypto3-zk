@@ -1220,6 +1220,7 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer) {
         preprocessed_public_data, proof, constraint_system, lpc_scheme);
     BOOST_CHECK(verifier_res);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(placeholder_circuit7)

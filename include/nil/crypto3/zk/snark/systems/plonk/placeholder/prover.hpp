@@ -47,8 +47,6 @@
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/transcript_initialization_context.hpp>
 
-#include <nil/crypto3/marshalling/zk/types/placeholder/transcript_initialization_context.hpp>
-
 namespace nil {
     namespace crypto3 {
         namespace zk {
@@ -142,26 +140,13 @@ namespace nil {
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_hash);
                         transcript(preprocessed_public_data.common_data.vk.fixed_values_commitment);
 
-                        nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType> context(
+                        nil::crypto3::zk::snark::detail::init_transcript<ParamsType, transcript_hash_type>(
+                            transcript,
                             preprocessed_public_data.common_data.rows_amount,
                             preprocessed_public_data.common_data.usable_rows_amount,
                             _commitment_scheme.get_commitment_params(),
                             "Default application dependent transcript initialization string"
                         );
-
-                        // Marshall the initialization context and push it to the transcript.
-                        using Endianness = nil::marshalling::option::big_endian;
-                        using TTypeBase = nil::marshalling::field_type<Endianness>;
-                        using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
-                            TTypeBase, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>;
-                        auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
-                            Endianness, nil::crypto3::zk::snark::detail::transcript_initialization_context<ParamsType>>(context);
-
-                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
-                        auto write_iter = cv.begin();
-                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
-
-                        transcript(cv);
 
                         // Setup commitment scheme. LPC adds an additional point here.
                         _commitment_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);

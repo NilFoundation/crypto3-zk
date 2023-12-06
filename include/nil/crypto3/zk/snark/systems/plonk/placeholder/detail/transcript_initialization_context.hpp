@@ -30,6 +30,9 @@
 
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
+#include <nil/crypto3/zk/transcript/fiat_shamir.hpp>
+
+#include <nil/crypto3/marshalling/zk/types/placeholder/transcript_initialization_context.hpp>
 
 namespace nil {
     namespace crypto3 {
@@ -82,6 +85,34 @@ namespace nil {
                         std::string application_id;
                     };
 
+                    template <typename PlaceholderParamsType, typename transcript_hash_type>
+                    void init_transcript(
+                            transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>& transcript,
+                            std::size_t rows_amount,
+                            std::size_t usable_rows_amount,
+                            const typename PlaceholderParamsType::commitment_scheme_type::params_type& commitment_params,
+                            const std::string& application_id) {
+                        nil::crypto3::zk::snark::detail::transcript_initialization_context<PlaceholderParamsType> context(
+                            rows_amount,
+                            usable_rows_amount,
+                            commitment_params,
+                            application_id
+                        );
+
+                        // Marshall the initialization context and push it to the transcript.
+                        using Endianness = nil::marshalling::option::big_endian;
+                        using TTypeBase = nil::marshalling::field_type<Endianness>;
+                        using value_marshalling_type = nil::crypto3::marshalling::types::transcript_initialization_context<
+                            TTypeBase, nil::crypto3::zk::snark::detail::transcript_initialization_context<PlaceholderParamsType>>;
+                        auto filled_val = nil::crypto3::marshalling::types::fill_transcript_initialization_context<
+                            Endianness, nil::crypto3::zk::snark::detail::transcript_initialization_context<PlaceholderParamsType>>(context);
+
+                        std::vector<std::uint8_t> cv(filled_val.length(), 0x00);
+                        auto write_iter = cv.begin();
+                        nil::marshalling::status_type status = filled_val.write(write_iter, cv.size());
+
+                        transcript(cv);
+                    }
                 }    // namespace detail
             }        // namespace snark
         }            // namespace zk

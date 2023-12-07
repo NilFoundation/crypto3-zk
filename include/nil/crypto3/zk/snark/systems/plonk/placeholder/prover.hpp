@@ -248,6 +248,13 @@ namespace nil {
                             (split_polynomial_size / preprocessed_public_data.common_data.rows_amount + 1):
                             (split_polynomial_size / preprocessed_public_data.common_data.rows_amount);
 
+                        // We need split_polynomial_size computation because proof size shouldn't depend on public input size.
+                        // we set this size as maximum of
+                        //      F[2] (from permutation argument)
+                        //      F[5] (from lookup argument)
+                        //      F[7] (from gates argument)
+                        // If some columns used in permutation or lookup argument are zero, real quotient polynomial degree
+                        //      may be less than split_polynomial_size.
                         std::vector<polynomial_dfs_type> T_splitted_dfs(split_polynomial_size,
                             polynomial_dfs_type(0, _F_dfs[0].size(), FieldType::value_type::zero()));
 

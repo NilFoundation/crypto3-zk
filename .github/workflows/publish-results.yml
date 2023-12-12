@@ -12,11 +12,11 @@ jobs:
     name: Call Reusable Testing Callback Workflow for Linux
     uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-publish-result.yml@v1
     with:
-      artifact-name: 'test-results-linux'
+      check_name: 'Test Results Linux'
 
   call-reusable-workflow-mac:
     name: Call Reusable Testing Callback Workflow for Mac
     uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-publish-result.yml@v1
     with:
-      artifact-name: 'test-results-mac'
+      check_name: 'Test Results Mac'
 

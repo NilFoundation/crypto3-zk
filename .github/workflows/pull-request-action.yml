@@ -20,7 +20,7 @@ jobs:
     name: Linux Reusable Crypto3 Testing
     needs:
       - handle-syncwith
-    uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-linux.yml@453d6c51a930b9faa7b82ba635c73f6bb0963c66
+    uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-linux.yml@f9d91d2a62f5fb8d6767e4a458cae49da29aefe9
 
     secrets: inherit
     with:
@@ -32,7 +32,7 @@ jobs:
     name: Mac Reusable Crypto3 Testing
     needs:
       - handle-syncwith
-    uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-mac.yml@453d6c51a930b9faa7b82ba635c73f6bb0963c66
+    uses: NilFoundation/ci-cd/.github/workflows/reusable-crypto3-testing-mac.yml@f9d91d2a62f5fb8d6767e4a458cae49da29aefe9
 
     secrets: inherit
     with:

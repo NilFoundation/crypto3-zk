@@ -274,13 +274,16 @@ namespace nil {
                         auto c = challenge<field_type>();
                         nil::marshalling::status_type status;
 
-                        nil::crypto3::multiprecision::cpp_int intermediate_result = nil::marshalling::pack(c, status);
+                        nil::crypto3::multiprecision::cpp_int intermediate_result = 
+                            c.data.template convert_to<nil::crypto3::multiprecision::cpp_int>();
                         Integral result = 0;
                         Integral factor = 1;
-                        while (intermediate_result > 0) {
+                        size_t bytes_to_fill = sizeof(Integral);
+                        while (intermediate_result > 0 && bytes_to_fill != 0) {
                             result += factor * (Integral)(intermediate_result % 0x100);
                             factor *= 0x100;
                             intermediate_result = intermediate_result / 0x100;
+                            bytes_to_fill -= 2;
                         }
                         return result;
                     }

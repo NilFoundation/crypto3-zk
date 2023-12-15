@@ -28,8 +28,8 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/test.value()/test_case.hpp>
-#include <boost/test.value()/monomorphic.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/data/monomorphic.hpp>
 
 #include <nil/crypto3/algebra/curves/bls12.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/bls12.hpp>
@@ -54,12 +54,12 @@ BOOST_AUTO_TEST_CASE(zk_transcript_manual_test) {
     auto ch2 = tr.challenge<field_type>();
     auto ch_n = tr.challenges<field_type, 3>();
 
-    BOOST_CHECK_EQUAL(ch1.value(), field_type::value_type(0xe858ba005424eabd6d97de7e930779def59a85c1a9ff7e8a5d001cdb07f6e4_cppui256));
-    BOOST_CHECK_EQUAL(ch2.value(), field_type::value_type(0xf61f38f58a55b3bbee0480fc5ec3cf8df81603579f4f7134f764bfd3ca5938b_cppui256));
+    BOOST_CHECK_EQUAL(ch1.data, field_type::value_type(0xe858ba005424eabd6d97de7e930779def59a85c1a9ff7e8a5d001cdb07f6e4_cppui256).data);
+    BOOST_CHECK_EQUAL(ch2.data, field_type::value_type(0xf61f38f58a55b3bbee0480fc5ec3cf8df81603579f4f7134f764bfd3ca5938b_cppui256).data);
 
-    BOOST_CHECK_EQUAL(ch_n[0].value(), field_type::value_type(0x4f6b97a9bc99d6996fab5e03d1cd0b418a9b3c97ed64cca070e15777e7cc99a_cppui256));
-    BOOST_CHECK_EQUAL(ch_n[1].value(), field_type::value_type(0x2414ddf7ecff246500beb2c01b0c5912a400bc3cdca6d7f24bd2bd4987b21e04_cppui256));
-    BOOST_CHECK_EQUAL(ch_n[2].value(), field_type::value_type(0x10bfe2f4a414eec551dda5fd9899e9b46e327648b4fa564ed0517b6a99396aec_cppui256));
+    BOOST_CHECK_EQUAL(ch_n[0].data, field_type::value_type(0x4f6b97a9bc99d6996fab5e03d1cd0b418a9b3c97ed64cca070e15777e7cc99a_cppui256).data);
+    BOOST_CHECK_EQUAL(ch_n[1].data, field_type::value_type(0x2414ddf7ecff246500beb2c01b0c5912a400bc3cdca6d7f24bd2bd4987b21e04_cppui256).data);
+    BOOST_CHECK_EQUAL(ch_n[2].data, field_type::value_type(0x10bfe2f4a414eec551dda5fd9899e9b46e327648b4fa564ed0517b6a99396aec_cppui256).data);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(zk_poseidon_transcript_test_suite)
 
 // We need this test to make sure that poseidon keeps working exactly the same after any refactoring/code changes.
-BOOST_AUTO_TEST_CASE(zk_poseidon_transcript_manual_test) {
+BOOST_AUTO_TEST_CASE(zk_poseidon_transcript_init_test) {
     using curve_type = algebra::curves::pallas;
     using field_type = typename curve_type::base_field_type;
     using poseidon_type = hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<field_type>>;
@@ -79,9 +79,24 @@ BOOST_AUTO_TEST_CASE(zk_poseidon_transcript_manual_test) {
     auto ch2 = tr.challenge<field_type>();
     int ch_int = tr.int_challenge<int>();
 
-    BOOST_CHECK_EQUAL(ch1.value(), field_type::value_type(0x6b671f5c63fa3c99a37a008771e15402914c057ba3246eada3050f6ae27a357_cppui256));
-    BOOST_CHECK_EQUAL(ch2.value(), field_type::value_type(0x3d20314554eef41287229e8752b063aec62a482a365b5d592dede44c9fc88464_cppui256));
-    BOOST_CHECK_EQUAL(ch_int, 45561);
+    BOOST_CHECK_EQUAL(ch1.data, field_type::value_type(0x7f034babb3066560c2597048bdbbd61327f13734ebe59a225e0c162e869e8f4_cppui256).data);
+    BOOST_CHECK_EQUAL(ch2.data, field_type::value_type(0x3a60c875ae6475d5ac1d73178284ee752e8ad78066aa688752b1436960948b93_cppui256).data);
+    BOOST_CHECK_EQUAL(ch_int, 0x7574);
+}
+
+BOOST_AUTO_TEST_CASE(zk_poseidon_transcript_no_init_test) {
+    using curve_type = algebra::curves::pallas;
+    using field_type = typename curve_type::base_field_type;
+    using poseidon_type = hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<field_type>>;
+
+    transcript::fiat_shamir_heuristic_sequential<poseidon_type> tr;
+    auto ch1 = tr.challenge<field_type>();
+    auto ch2 = tr.challenge<field_type>();
+    int ch_int = tr.int_challenge<int>();
+
+    BOOST_CHECK_EQUAL(ch1.data, field_type::value_type(0x35626947fa1063436f4e5434029ccaec64075c9fc80034c0923054a2b1d30bd2_cppui256).data);
+    BOOST_CHECK_EQUAL(ch2.data, field_type::value_type(0x1b961886411ee8722dd6b576cba5876eb30999b5237fe0e14255e6d006cff63c_cppui256).data);
+    BOOST_CHECK_EQUAL(ch_int, 0xc92);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

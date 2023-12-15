@@ -209,64 +209,36 @@ namespace nil {
                     using permutation_type = nil::crypto3::hashes::detail::poseidon_permutation<poseidon_policy>;
                     using state_type = typename permutation_type::state_type;
 
-                    fiat_shamir_heuristic_sequential() : state({0,0,0}), cur(1) {
+                    fiat_shamir_heuristic_sequential() {
                     }
 
                     template<typename InputRange>
-                    fiat_shamir_heuristic_sequential(const InputRange &r)
-                        : state({hash<hash_type>(r), 0, 0})
-                        , cur(1) {
+                    fiat_shamir_heuristic_sequential(const InputRange &r) {
+                        sponge.absorb(hash<hash_type>(r));
                     }
 
                     template<typename InputIterator>
-                    fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last)
-                        :  state({hash<hash_type>(first, last), 0, 0})
-                        , cur(1) {
+                    fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) {
+                        sponge.absorb(hash<hash_type>(first, last));
                     }
 
                     void operator()(const typename hash_type::digest_type input) {
-                        state[cur] = input;
-                        if (cur == 2) {
-                            state_type poseidon_state;
-                            std::copy(state.begin(), state.end(), poseidon_state.begin());
-                            permutation_type::permute(poseidon_state);
-
-                            state[0] = poseidon_state[2];
-                            state[1] = 0;
-                            state[2] = 0;
-                            cur = 1;
-                        } else {
-                            cur++;
-                        }
+                        sponge.absorb(input);
                     }
 
                     template<typename InputRange>
                     void operator()(const InputRange &r) {
-                        // Used for initilization code, where we pass a marshalled structure to transcript.
-                        state = {hash<hash_type>(r, hash<hash_type>(state)), 0, 0};
-                        cur = 1;
+                        sponge.absorb(hash<hash_type>(r));
                     }
 
                     template<typename InputIterator>
                     void operator()(InputIterator first, InputIterator last) {
-                        state = {hash<hash_type>(first, last, hash<hash_type>(state)), 0, 0};
-                        cur = 1;
+                        sponge.absorb(hash<hash_type>(first, last));
                     }
 
                     template<typename Field>
                     typename Field::value_type challenge() {
-                        // TODO(martun): use sponge here.
-                        // state[0] = hash<hash_type>(state);
-                        state_type poseidon_state;
-                        std::copy(state.begin(), state.end(), poseidon_state.begin());
-                        permutation_type::permute(poseidon_state);
-
-                        state[0] = poseidon_state[2];
-                        state[1] = 0;
-                        state[2] = 0;
-                        cur = 1;
- 
-                        return state[0];
+                        return sponge.squeeze();
                     }
 
                     template<typename Integral>
@@ -300,8 +272,7 @@ namespace nil {
                     }
 
                 private:
-                    std::vector<typename hash_type::digest_type> state;
-                    std::size_t cur = 1;
+                    hashes::detail::poseidon_sponge_construction<typename Hash::policy_type> sponge;
                 };
 
             }    // namespace transcript

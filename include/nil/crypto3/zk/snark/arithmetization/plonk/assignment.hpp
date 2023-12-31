@@ -151,7 +151,8 @@ namespace nil {
                         return _public_inputs;
                     }
 
-                    public_input_container_type move_public_inputs() const {
+                    public_input_container_type move_public_inputs() {
+
                         return std::move(_public_inputs);
                     }
 
@@ -172,7 +173,8 @@ namespace nil {
                         return _constants;
                     }
 
-                    constant_container_type move_constants() const {
+                    constant_container_type move_constants() {
+
                         return std::move(_constants);
                     }
 
@@ -193,7 +195,8 @@ namespace nil {
                         return _selectors;
                     }
 
-                    selector_container_type move_selectors() const {
+                    selector_container_type move_selectors() {
+
                         return std::move(_selectors);
                     }
 

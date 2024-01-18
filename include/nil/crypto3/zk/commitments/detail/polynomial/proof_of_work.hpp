@@ -113,12 +113,17 @@ namespace nil {
                             transcript_type tmp_transcript = transcript;
                             tmp_transcript(proof_of_work);
                             result = integral_type(tmp_transcript.template challenge<FieldType>().data);
-                            if ((result & mask) == 0)
+                            if ((result & mask) == 0){
+                                std::cout << "Result is " << std::hex << result << std::dec << std::endl;
+                                std::cout << "Mask is   " << std::hex << mask << std::dec << std::endl;
+                                std::cout << "MASK is   " << std::hex << MASK << std::dec << std::endl;
                                 break;
+                            }
                             proof_of_work++;
                         }
                         transcript(proof_of_work);
                         result = integral_type(transcript.template challenge<FieldType>().data);
+//                        std::cout << "Result is " << std::hex << result << std::dec << std::endl;
                         return proof_of_work;
                     }
 

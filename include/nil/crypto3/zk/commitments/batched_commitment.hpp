@@ -91,7 +91,6 @@ namespace nil {
                     }
 
                     math::polynomial<typename field_type::value_type> get_U(std::size_t b_ind, std::size_t poly_ind) const {
-
                         const auto &points = _points.at(b_ind)[poly_ind];
                         BOOST_ASSERT(points.size() == this->_z.get_poly_points_number(b_ind, poly_ind));
                         std::vector<std::pair<typename field_type::value_type,typename field_type::value_type>> U_interpolation_points;
@@ -104,7 +103,23 @@ namespace nil {
                         return math::lagrange_interpolation(U_interpolation_points);
                     }
 
-                    std::vector<std::vector<typename field_type::value_type>> get_unique_points_list() const{
+                    // We call them singles in recursive verifier
+                    std::vector<typename field_type::value_type> get_unique_points(){
+                        std::vector<typename field_type::value_type> result;
+
+                        for( auto const &[k, point_batch]:_points ){
+                            for( auto const &point_set: point_batch ){
+                                for( auto const &point:point_set ){
+                                    if( std::find(result.begin(), result.end(), point) == result.end() )
+                                        result.push_back(point);
+                                }
+                            }
+                        }
+
+                        return result;
+                    }
+
+                    std::vector<std::vector<typename field_type::value_type>> get_unique_point_sets_list() const{
                         std::vector<std::vector<typename field_type::value_type>> unique_points;
 
                         for(auto const &[k, point]:_points){

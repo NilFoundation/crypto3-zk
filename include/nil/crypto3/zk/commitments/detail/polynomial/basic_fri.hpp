@@ -281,7 +281,7 @@ namespace nil {
                           const std::size_t fri_step) {
 
                     if (f.size() != D->size()) {
-                        f.resize(D->size());
+                        f.resize(D->size(), nullptr, D);
                     }
                     std::size_t domain_size = D->size();
                     std::size_t coset_size = 1 << fri_step;

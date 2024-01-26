@@ -563,18 +563,17 @@ namespace nil {
                     }
                     std::vector<std::pair<std::size_t, std::size_t>> correct_order_idx(coset_size / FRI::m);
                     for (i = 0; i < coset_size / FRI::m; i++) {
+                        const std::size_t paired_index = get_paired_index<FRI>(correctly_ordered_s_indices[i],
+                                                                               domain_size);
                         auto found_it =
                                 std::find_if(std::cbegin(input_s_indices), std::cend(input_s_indices),
                                              [&](const auto &v) {
                                                  if (v[0] == correctly_ordered_s_indices[i] &&
-                                                     v[1] == get_paired_index<FRI>(correctly_ordered_s_indices[i],
-                                                                                   domain_size)) {
+                                                     v[1] == paired_index) {
                                                      correct_order_idx[i].second = 0;
                                                      return true;
                                                  } else if (v[1] == correctly_ordered_s_indices[i] &&
-                                                            v[0] ==
-                                                            get_paired_index<FRI>(correctly_ordered_s_indices[i],
-                                                                                  domain_size)) {
+                                                            v[0] == paired_index) {
                                                      correct_order_idx[i].second = 1;
                                                      return true;
                                                  }

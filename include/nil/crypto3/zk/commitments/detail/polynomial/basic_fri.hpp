@@ -30,6 +30,10 @@
 #ifndef CRYPTO3_ZK_COMMITMENTS_BASIC_FRI_HPP
 #define CRYPTO3_ZK_COMMITMENTS_BASIC_FRI_HPP
 
+#include <memory>
+#include <unordered_map>
+#include <map>
+
 #include <nil/crypto3/marshalling/algebra/types/field_element.hpp>
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
@@ -681,10 +685,16 @@ namespace nil {
                         math::polynomial_dfs<typename FRI::field_type::value_type>,
                         PolynomialType>::value
                     ) {
+                        std::unordered_map<std::size_t,
+                                       std::shared_ptr<math::evaluation_domain<typename FRI::field_type>>> d_cache;
                         for (const auto &[key, poly_vector]: g) {
                             for (const auto& poly: poly_vector) {
                                 if (poly.size() != fri_params.D[0]->size()) {
-                                   g_coeffs[key].emplace_back(poly.coefficients());
+                                    if (d_cache.find(poly.size()) == d_cache.end()) { [[unlikely]]
+                                        d_cache[poly.size()] =
+                                            math::make_evaluation_domain<typename FRI::field_type>(poly.size());
+                                    }
+                                    g_coeffs[key].emplace_back(poly.coefficients(d_cache[poly.size()]));
                                 } else {
                                     // These polynomials won't be used
                                     g_coeffs[key].emplace_back(math::polynomial<typename FRI::field_type::value_type>());

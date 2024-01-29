@@ -229,7 +229,7 @@ namespace nil {
                         // We don't use lookup_value after this line.
                         lookup_value_ptr.reset(nullptr);
 
-                        g *= polynomial_product(std::move(g_multipliers));
+                        g *= math::polynomial_product<FieldType>(std::move(g_multipliers));
                         return g;
                     }
 
@@ -245,7 +245,7 @@ namespace nil {
                             auto sorted_shifted = math::polynomial_shift(sorted[i], 1, basic_domain->m);
                             h_multipliers.push_back((one + beta) * gamma + sorted[i] + beta * sorted_shifted);
                         }
-                        return polynomial_product(h_multipliers);
+                        return math::polynomial_product<FieldType>(h_multipliers);
                     }
 
                     math::polynomial_dfs<typename FieldType::value_type> compute_V_L(
@@ -503,21 +503,6 @@ namespace nil {
                             sorted[i][usable_rows_amount] = sorted[i+1][0];
                         }
                         return sorted;
-                    }
-
-                    math::polynomial_dfs<typename FieldType::value_type> polynomial_product(
-                        std::vector<math::polynomial_dfs<typename FieldType::value_type>> multipliers)
-                    {
-                        std::size_t stride = 1;
-                        while (stride < multipliers.size() ) {
-                            for(std::size_t i = 0; i + stride < multipliers.size(); i += stride*2) {
-                                multipliers[i] *= multipliers[ i + stride ];
-                                // Free the memeory we don't use. any more.
-                                multipliers[ i + stride ] = math::polynomial_dfs<typename FieldType::value_type>();
-                            }
-                            stride *= 2;
-                        }
-                        return std::move(multipliers[0]);
                     }
 
                     const plonk_constraint_system<FieldType, typename ParamsType::arithmetization_params>& constraint_system;

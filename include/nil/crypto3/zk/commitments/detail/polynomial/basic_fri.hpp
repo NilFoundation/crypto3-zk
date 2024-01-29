@@ -685,7 +685,7 @@ namespace nil {
                         PolynomialType>::value
                     ) {
                         std::unordered_map<std::size_t,
-                                       std::shared_ptr<math::evaluation_domain<typename FRI::field_type>>> d_cache;
+                                           std::shared_ptr<math::evaluation_domain<typename FRI::field_type>>> d_cache;
                         for (const auto &[key, poly_vector]: g) {
                             for (const auto& poly: poly_vector) {
                                 if (poly.size() != fri_params.D[0]->size()) {

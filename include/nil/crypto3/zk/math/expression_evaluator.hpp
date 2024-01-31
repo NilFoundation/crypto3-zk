@@ -24,7 +24,6 @@
 #ifndef CRYPTO3_ZK_MATH_EXPRESSION_EVALUATOR_HPP
 #define CRYPTO3_ZK_MATH_EXPRESSION_EVALUATOR_HPP
 
-#include "nil/crypto3/math/algorithms/make_evaluation_domain.hpp"
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -32,6 +31,7 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <nil/crypto3/zk/math/expression.hpp>
 
+#include <nil/crypto3/math/algorithms/make_evaluation_domain.hpp>
 #include <nil/crypto3/math/polynomial/polynomial_dfs.hpp>
 #include <nil/crypto3/math/domains/evaluation_domain.hpp>
 

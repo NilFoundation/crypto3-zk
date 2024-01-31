@@ -364,15 +364,14 @@ namespace nil {
                         (std::is_same<typename ContainerType::value_type, math::polynomial_dfs<typename FRI::field_type::value_type>>::value),
                         typename FRI::precommitment_type>::type
                 precommit(ContainerType poly,
-                          std::shared_ptr<math::evaluation_domain<typename FRI::field_type>>
-                          D,
+                          std::shared_ptr<math::evaluation_domain<typename FRI::field_type>> D,
                           const std::size_t fri_step
                 ) {
                     PROFILE_PLACEHOLDER_SCOPE("Basic FRI Precommit time");
 
                     for (int i = 0; i < poly.size(); ++i) {
                         if (poly[i].size() != D->size()) {
-                            poly[i].resize(D->size());
+                            poly[i].resize(D->size(), nullptr, D);
                         }
                     }
 
@@ -443,7 +442,7 @@ namespace nil {
                     std::vector<math::polynomial_dfs<typename FRI::field_type::value_type>> poly_dfs(list_size);
                     for (std::size_t i = 0; i < list_size; i++) {
                         poly_dfs[i].from_coefficients(poly[i]);
-                        poly_dfs[i].resize(D->size());
+                        poly_dfs[i].resize(D->size(), nullptr, D);
                     }
 
                     return precommit<FRI>(poly_dfs, D, fri_step);
@@ -689,7 +688,7 @@ namespace nil {
                         for (const auto &[key, poly_vector]: g) {
                             for (const auto& poly: poly_vector) {
                                 if (poly.size() != fri_params.D[0]->size()) {
-                                    if (d_cache.find(poly.size()) == d_cache.end()) { [[unlikely]]
+                                    if (d_cache.find(poly.size()) == d_cache.end()) {
                                         d_cache[poly.size()] =
                                             math::make_evaluation_domain<typename FRI::field_type>(poly.size());
                                     }

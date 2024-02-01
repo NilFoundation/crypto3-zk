@@ -133,46 +133,36 @@ namespace nil {
                         math::polynomial<value_type> V;
 
                         auto points = this->get_unique_points();
-                        if constexpr (std::is_same<math::polynomial_dfs<value_type>, PolynomialType>::value ) {
-                            math::polynomial<value_type> combined_Q_normal;
-                            for (auto const &point: points){
-                                bool first = true;
-                                V = {-point, 1};
-                                math::polynomial<value_type> Q_normal;
-                                for(std::size_t i: this->_z.get_batches()){
-                                    for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
-                                        auto it = std::find(this->_points[i][j].begin(), this->_points[i][j].end(), point);
-                                        if( it == this->_points[i][j].end()) continue;
-                                        math::polynomial<value_type> g_normal(this->_polys[i][j].coefficients());
-                                        g_normal *= theta_acc;
-                                        Q_normal += g_normal;
-                                        Q_normal -= this->_z.get(i, j, it - this->_points[i][j].begin()) * theta_acc;
-                                        theta_acc *= theta;
+                        math::polynomial<value_type> combined_Q_normal;
+
+                        for (auto const &point: points){
+                            bool first = true;
+                            V = {-point, 1};
+                            math::polynomial<value_type> Q_normal;
+                            for(std::size_t i: this->_z.get_batches()){
+                                for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
+                                    auto it = std::find(this->_points[i][j].begin(), this->_points[i][j].end(), point);
+                                    if( it == this->_points[i][j].end()) continue;
+                                    math::polynomial<value_type> g_normal;
+                                    if constexpr(std::is_same<math::polynomial_dfs<value_type>, PolynomialType>::value ) {
+                                        g_normal = math::polynomial<value_type>(this->_polys[i][j].coefficients());
+                                    } else {
+                                        g_normal = this->_polys[i][j];
                                     }
+                                    g_normal *= theta_acc;
+                                    Q_normal += g_normal;
+                                    Q_normal -= this->_z.get(i, j, it - this->_points[i][j].begin()) * theta_acc;
+                                    theta_acc *= theta;
                                 }
-                                Q_normal = Q_normal / V;
-                                combined_Q_normal += Q_normal;
                             }
+                            Q_normal = Q_normal / V;
+                            combined_Q_normal += Q_normal;
+                        }
+
+                        if constexpr (std::is_same<math::polynomial_dfs<value_type>, PolynomialType>::value ) {
                             combined_Q.from_coefficients(combined_Q_normal);
                         } else {
-                            for (auto const &point: points){
-                                bool first = true;
-                                V = {-point, 1};
-                                math::polynomial<value_type> Q_normal;
-                                for(std::size_t i: this->_z.get_batches()){
-                                    for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
-                                        auto it = std::find(this->_points[i][j].begin(), this->_points[i][j].end(), point);
-                                        if( it == this->_points[i][j].end()) continue;
-                                        math::polynomial<value_type> g_normal = this->_polys[i][j];
-                                        g_normal *= theta_acc;
-                                        Q_normal += g_normal;
-                                        Q_normal -= this->_z.get(i, j, it - this->_points[i][j].begin()) * theta_acc;
-                                        theta_acc *= theta;
-                                    }
-                                }
-                                Q_normal = Q_normal / V;
-                                combined_Q += Q_normal;
-                            }
+                            combined_Q = combined_Q_normal;
                         }
 
                         precommitment_type combined_Q_precommitment = nil::crypto3::zk::algorithms::precommit<fri_type>(

@@ -25,6 +25,7 @@
 #ifndef CRYPTO3_ZK_STUB_PLACEHOLDER_COMMITMENT_SCHEME_HPP
 #define CRYPTO3_ZK_STUB_PLACEHOLDER_COMMITMENT_SCHEME_HPP
 
+#include <unordered_set>
 #include <set>
 #include <map>
 
@@ -106,12 +107,15 @@ namespace nil {
                     // We call them singles in recursive verifier
                     std::vector<typename field_type::value_type> get_unique_points(){
                         std::vector<typename field_type::value_type> result;
+//                        std::unordered_set<typename field_type::value_type> result_set;
 
                         for( auto const &[k, point_batch]:_points ){
                             for( auto const &point_set: point_batch ){
                                 for( auto const &point:point_set ){
-                                    if( std::find(result.begin(), result.end(), point) == result.end() )
+                                    if( std::find(result.begin(), result.end(), point) == result.end() ){
                                         result.push_back(point);
+  //                                      result_set.insert(point);
+                                    }
                                 }
                             }
                         }

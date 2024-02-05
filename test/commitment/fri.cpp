@@ -56,7 +56,7 @@
 
 using namespace nil::crypto3;
 
-inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, const int max_step) {
+inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, const std::size_t max_step) {
     using dist_type = std::uniform_int_distribution<int>;
     static std::random_device random_engine;
 

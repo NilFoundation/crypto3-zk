@@ -142,7 +142,7 @@ inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, c
     std::vector<std::size_t> step_list;
     std::size_t steps_sum = 0;
     while (steps_sum != r) {
-        if (std::size_t(r - steps_sum) <= max_step) {
+        if (r - steps_sum <= std::size_t(max_step)) {
             while (r - steps_sum != 1) {
                 step_list.emplace_back(r - steps_sum - 1);
                 steps_sum += step_list.back();
@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE(permutation_argument_test) {
     // Challenge phase
     typename field_type::value_type y = algebra::random_element<field_type>();
     std::vector<typename field_type::value_type> f_at_y(permutation_size);
-    for (int i = 0; i < permutation_size; i++) {
+    for (std::size_t i = 0; i < permutation_size; i++) {
         f_at_y[i] = polynomial_table[i].evaluate(y);
     }
 
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(permutation_argument_test) {
     typename field_type::value_type prover_next_challenge = prover_transcript.template challenge<field_type>();
     BOOST_CHECK(verifier_next_challenge == prover_next_challenge);
 
-    for (int i = 0; i < argument_size; i++) {
+    for (std::size_t i = 0; i < argument_size; i++) {
         BOOST_CHECK(prover_res.F_dfs[i].evaluate(y) == verifier_res[i]);
         for (std::size_t j = 0; j < desc.rows_amount; j++) {
             BOOST_CHECK(
@@ -1072,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     typename field_type::value_type prover_next_challenge = prover_transcript.template challenge<field_type>();
     BOOST_CHECK(verifier_next_challenge == prover_next_challenge);
 
-    for (int i = 0; i < argument_size; i++) {
+    for (std::size_t i = 0; i < argument_size; i++) {
         BOOST_CHECK(prover_res.F_dfs[i].evaluate(y) == verifier_res[i]);
         for (std::size_t j = 0; j < desc.rows_amount; j++) {
             if (prover_res.F_dfs[i].evaluate(preprocessed_public_data.common_data.basic_domain->get_domain_element(j)) !=
@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4)
 using curve_type = algebra::curves::pallas;
 using field_type = typename curve_type::base_field_type;
 using poseidon_type = hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<field_type>>;
-const size_t usable_rows_4 = 5;
+const size_t usable_rows_4 = 5; //www
 const size_t permutation_size = 3;
 
 using TestFixtures = boost::mpl::list<

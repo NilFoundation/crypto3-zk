@@ -665,7 +665,6 @@ namespace nil {
                         final_polynomial = f;
                     }
 
-                    typename FRI::grinding_type::output_type proof_of_work;
                     // Grinding
                     if( FRI::use_grinding ){
                         proof.proof_of_work = FRI::grinding_type::generate(transcript);

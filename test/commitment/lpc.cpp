@@ -193,8 +193,6 @@ BOOST_FIXTURE_TEST_CASE(lpc_basic_test, test_fixture) {
     static_assert(!zk::is_commitment<merkle_tree_type>::value);
     static_assert(!zk::is_commitment<std::size_t>::value);
 
-    typedef typename lpc_type::proof_type proof_type;
-
     constexpr static const std::size_t d_extended = d;
     std::size_t extended_log = boost::static_log2<d_extended>::value;
     std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D =
@@ -292,8 +290,6 @@ BOOST_FIXTURE_TEST_CASE(lpc_basic_skipping_layers_test, test_fixture) {
     static_assert(!zk::is_commitment<merkle_tree_type>::value);
     static_assert(!zk::is_commitment<std::size_t>::value);
 
-    typedef typename lpc_type::proof_type proof_type;
-
     constexpr static const std::size_t d_extended = d;
     std::size_t extended_log = boost::static_log2<d_extended>::value;
     std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D =
@@ -388,7 +384,6 @@ BOOST_FIXTURE_TEST_CASE(lpc_dfs_basic_test, test_fixture) {
     static_assert(!zk::is_commitment<merkle_tree_type>::value);
     static_assert(!zk::is_commitment<std::size_t>::value);
 
-    typedef typename lpc_type::proof_type proof_type;
     // Setup params
     constexpr static const std::size_t d_extended = d;
     std::size_t extended_log = boost::static_log2<d_extended>::value;
@@ -484,8 +479,6 @@ BOOST_FIXTURE_TEST_CASE(lpc_batches_num_3_test, test_fixture){
     static_assert(!zk::is_commitment<merkle_tree_type>::value);
     static_assert(!zk::is_commitment<std::size_t>::value);
 
-    typedef typename lpc_type::proof_type proof_type;
-
     constexpr static const std::size_t d_extended = d;
     std::size_t extended_log = boost::static_log2<d_extended>::value;
     std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D =
@@ -574,8 +567,6 @@ BOOST_FIXTURE_TEST_CASE(lpc_different_hash_types_test, test_fixture) {
     static_assert(!zk::is_commitment<merkle_hash_type>::value);
     static_assert(!zk::is_commitment<merkle_tree_type>::value);
     static_assert(!zk::is_commitment<std::size_t>::value);
-
-    typedef typename lpc_type::proof_type proof_type;
 
     constexpr static const std::size_t d_extended = d;
     std::size_t extended_log = boost::static_log2<d_extended>::value;

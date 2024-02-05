@@ -142,7 +142,7 @@ inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, c
     std::vector<std::size_t> step_list;
     std::size_t steps_sum = 0;
     while (steps_sum != r) {
-        if (r - steps_sum <= max_step) {
+        if (std::size_t(r - steps_sum) <= max_step) {
             while (r - steps_sum != 1) {
                 step_list.emplace_back(r - steps_sum - 1);
                 steps_sum += step_list.back();
@@ -196,7 +196,7 @@ struct test_initializer {
     test_initializer() {
         test_global_seed = 0;
 
-        for (std::size_t i = 0; i + 1 < boost::unit_test::framework::master_test_suite().argc; i++) {
+        for (std::size_t i = 0; i + 1 < std::size_t(boost::unit_test::framework::master_test_suite().argc); i++) {
             if (std::string(boost::unit_test::framework::master_test_suite().argv[i]) == "--seed") {
                 if (std::string(boost::unit_test::framework::master_test_suite().argv[i + 1]) == "random") {
                     std::random_device rd;
@@ -471,8 +471,6 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer){
 }
 
 BOOST_AUTO_TEST_CASE(permutation_polynomials_test) {
-    constexpr std::size_t argument_size = 4;
-
     typename field_type::value_type pi0 = test_global_alg_rnd_engine<field_type>();
     auto circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
 
@@ -763,7 +761,6 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit3_lookup_test)
 
     constexpr static const std::size_t table_rows_log = 3;
     constexpr static const std::size_t table_rows = 1 << table_rows_log;
-    constexpr static const std::size_t permutation_size = 4;
     constexpr static const std::size_t usable_rows = 4;
 
     struct placeholder_test_params {
@@ -929,7 +926,6 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4_lookup_test)
 
     constexpr static const std::size_t table_rows_log = 3;
     constexpr static const std::size_t table_rows = 1 << table_rows_log;
-    constexpr static const std::size_t permutation_size = 3;
     constexpr static const std::size_t usable_rows = 5;
 
     struct placeholder_test_params {

@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4)
 using curve_type = algebra::curves::pallas;
 using field_type = typename curve_type::base_field_type;
 using poseidon_type = hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<field_type>>;
-const size_t usable_rows_4 = 5; //www
+const size_t usable_rows_4 = 5;
 const size_t permutation_size = 3;
 
 using TestFixtures = boost::mpl::list<

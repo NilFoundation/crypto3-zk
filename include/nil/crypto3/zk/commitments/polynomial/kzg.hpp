@@ -779,9 +779,7 @@ namespace nil {
                                 }
                                 auto i_th_commitment = KZGScheme::serializer::octets_to_g1_point(byteblob);
                                 auto U_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->get_U(k,i));
-                                //auto poly_commit = factor*(i_th_commitment - U_commit);
 
-                                //auto result_bytes = KZGScheme::serializer::point_to_octets(poly_commit);
                                 auto left_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>(
                                     factor*(i_th_commitment - U_commit),
                                     commit_g2(set_difference_polynom(_merged_points, this->_points.at(k)[i]))

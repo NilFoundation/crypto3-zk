@@ -829,7 +829,6 @@ namespace nil {
                     BOOST_ASSERT(combined_U.size() == denominators.size());
                     BOOST_ASSERT(combined_U.size() == poly_ids.size());
 
-                    //std::size_t points_num = combined_U.size();
                     // TODO: Add size correcness checks.
 
                     if (proof.final_polynomial.degree() >

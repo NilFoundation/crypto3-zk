@@ -1203,6 +1203,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 BOOST_AUTO_TEST_SUITE(placeholder_circuit2_mnt6)
+    /* This is stub for MNT6 curve, until proper marshaling is implemented */
     using curve_type = algebra::curves::bls12<381>;
 //    using curve_type = algebra::curves::mnt6_298;
     using field_type = typename curve_type::scalar_field_type;

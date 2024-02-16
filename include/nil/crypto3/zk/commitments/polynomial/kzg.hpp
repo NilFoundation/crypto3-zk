@@ -322,7 +322,6 @@ namespace nil {
                     nil::marshalling::status_type status;
 
                     for (const auto &commit : public_key.commits) {
-
                         std::vector<uint8_t> byteblob = nil::marshalling::pack<KZG::endianness>(commit, status);
                         BOOST_ASSERT(status == nil::marshalling::status_type::success);
                         transcript(byteblob);
@@ -615,7 +614,6 @@ namespace nil {
                     using poly_type = PolynomialType;
                     using proof_type = typename KZGScheme::proof_type;
                     using endianness = nil::marshalling::option::big_endian;
-
                 private:
                     params_type _params;
                     std::map<std::size_t, commitment_type> _commitments;
@@ -701,7 +699,6 @@ namespace nil {
                             BOOST_ASSERT(this->_polys[index][i].degree() <= _params.commitment_key.size());
                             auto single_commitment = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->_polys[index][i]);
                             this->_ind_commitments[index].push_back(single_commitment);
-
                             nil::marshalling::status_type status;
                             std::vector<uint8_t> single_commitment_bytes =
                                 nil::marshalling::pack<endianness>(single_commitment, status);

@@ -310,29 +310,6 @@ namespace nil {
                 };
             } // namespace commitments
 
-
-            template<typename T>
-            static void dump_vector(std::vector<T> const& v, std::string label="Vector")
-            {
-                std::cout << label << "[" << std::dec << v.size() << "]: ";
-                for(auto x: v) {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << int(x) << " ";
-                }
-                std::cout << std::endl;
-            }
-
-            template<typename T, std::size_t len>
-            static void dump_vector(std::array<T, len> const& v, std::string label="Array")
-            {
-                std::cout << label << "[" << std::dec << v.size() << "]: ";
-                for(auto x: v) {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << int(x) << " ";
-                }
-                std::cout << std::endl;
-            }
-
-
-
             namespace algorithms {
                 template<typename KZG,
                     typename std::enable_if<
@@ -623,7 +600,7 @@ namespace nil {
 
 
             namespace commitments{
-                                // Placeholder-friendly class
+                // Placeholder-friendly class
                 template<typename KZGScheme, typename PolynomialType = typename math::polynomial_dfs<typename KZGScheme::field_type::value_type>>
                 class kzg_commitment_scheme : public polys_evaluator<typename KZGScheme::params_type, typename KZGScheme::commitment_type, PolynomialType>{
                 public:
@@ -637,8 +614,8 @@ namespace nil {
                     using transcript_hash_type = typename KZGScheme::transcript_hash_type;
                     using poly_type = PolynomialType;
                     using proof_type = typename KZGScheme::proof_type;
+                    using endianness = nil::marshalling::option::big_endian;
 
-                    using endianness = nil::marshalling::option::little_endian;
                 private:
                     params_type _params;
                     std::map<std::size_t, commitment_type> _commitments;
@@ -712,21 +689,6 @@ namespace nil {
                     void mark_batch_as_fixed(std::size_t index) {
                     }
 
-                    template<std::size_t len>
-                    bool compare_arr_and_vec(std::array<std::uint8_t, len> const&a,
-                            std::vector<uint8_t> const&b) {
-                        if (b.size() != a.size()) {
-                            return false;
-                        }
-
-                        for(std::size_t i = 0; i < len; ++i) {
-                            if ( a[i] != b[i] ) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-
                     kzg_commitment_scheme(params_type kzg_params) : _params(kzg_params) {}
 
                     // Differs from static, because we pack the result into byte blob.
@@ -740,7 +702,6 @@ namespace nil {
                             auto single_commitment = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->_polys[index][i]);
                             this->_ind_commitments[index].push_back(single_commitment);
 
-                            using endianness = nil::marshalling::option::big_endian;
                             nil::marshalling::status_type status;
                             std::vector<uint8_t> single_commitment_bytes =
                                 nil::marshalling::pack<endianness>(single_commitment, status);

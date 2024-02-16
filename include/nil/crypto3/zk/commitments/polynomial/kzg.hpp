@@ -230,7 +230,6 @@ namespace nil {
                     using batch_of_polynomials_type = std::vector<poly_type>;
                     using evals_type = std::vector<std::vector<scalar_value_type>>;
                     using transcript_type = transcript::fiat_shamir_heuristic_sequential<TranscriptHashType>;
-                    using endianness = nil::marshalling::option::big_endian;
                     using serializer = typename nil::marshalling::curve_element_serializer<curve_type>;
                     using multi_commitment_type = std::vector<single_commitment_type>;
 
@@ -322,14 +321,15 @@ namespace nil {
                     nil::marshalling::status_type status;
 
                     for (const auto &commit : public_key.commits) {
-                        std::vector<uint8_t> byteblob = nil::marshalling::pack<KZG::endianness>(commit, status);
+                        std::vector<uint8_t> byteblob =
+                            nil::marshalling::pack<nil::marshalling::option::big_endian>(commit, status);
                         BOOST_ASSERT(status == nil::marshalling::status_type::success);
                         transcript(byteblob);
                     }
                     for (const auto &S : public_key.S) {
                         for (const auto &s : S) {
                             std::vector<uint8_t> byteblob =
-                                nil::marshalling::pack<KZG::endianness>(s, status);
+                                nil::marshalling::pack<nil::marshalling::option::big_endian>(s, status);
                             BOOST_ASSERT(status == nil::marshalling::status_type::success);
                             transcript(byteblob);
                         }
@@ -337,7 +337,7 @@ namespace nil {
                     for (const auto &r : public_key.r) {
                         for (std::size_t i = 0; i < r.size(); ++i) {
                             std::vector<uint8_t> byteblob =
-                                nil::marshalling::pack<KZG::endianness>(r[i], status);
+                                nil::marshalling::pack<nil::marshalling::option::big_endian>(r[i], status);
                             BOOST_ASSERT(status == nil::marshalling::status_type::success);
                             transcript(byteblob);
                         }

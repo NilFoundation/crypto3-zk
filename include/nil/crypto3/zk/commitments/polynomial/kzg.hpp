@@ -318,6 +318,10 @@ namespace nil {
                         bool>::type = true>
                 static void update_transcript(const typename KZG::public_key_type &public_key,
                                             typename KZG::transcript_type &transcript) {
+
+                    /* The procedure of updating the transcript is subject to review and change 
+                     * #295 */
+
                     nil::marshalling::status_type status;
 
                     for (const auto &commit : public_key.commits) {
@@ -656,6 +660,9 @@ namespace nil {
                     }
 
                     void update_transcript(std::size_t batch_ind, typename KZGScheme::transcript_type &transcript) {
+                        /* The procedure of updating the transcript is subject to review and change 
+                         * #295 */
+
                         // Push commitments to transcript
                         transcript(_commitments[batch_ind]);
 

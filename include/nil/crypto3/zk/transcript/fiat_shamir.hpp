@@ -127,6 +127,7 @@ namespace nil {
                     }
                 };
 
+
                 template<typename Hash, typename Enable = void>
                 struct fiat_shamir_heuristic_sequential
                 {
@@ -140,6 +141,16 @@ namespace nil {
                     }
 
                     template<typename InputIterator>
+                        static void dump_buffer(InputIterator first, InputIterator last)
+                    {
+                        std::cout << "updating transcript with [[[" << std::endl;
+                        for(auto x = first; x!= last; ++x) {
+                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
+                        }
+                        std::cout << std::endl << "]]]" << std::endl;
+                    }
+
+                    template<typename InputIterator>
                     fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) :
                         state(hash<hash_type>(first, last)) {
                     }
@@ -147,6 +158,7 @@ namespace nil {
                     template<typename InputRange>
                     void operator()(const InputRange &r) {
                         auto acc_convertible = hash<hash_type>(state);
+                        dump_buffer(r.begin(), r.end());
                         state = accumulators::extract::hash<hash_type>(
                             hash<hash_type>(r, static_cast<accumulator_set<hash_type> &>(acc_convertible)));
                     }
@@ -154,6 +166,7 @@ namespace nil {
                     template<typename InputIterator>
                     void operator()(InputIterator first, InputIterator last) {
                         auto acc_convertible = hash<hash_type>(state);
+                        dump_buffer(first, last);
                         state = accumulators::extract::hash<hash_type>(
                             hash<hash_type>(first, last, static_cast<accumulator_set<hash_type> &>(acc_convertible)));
                     }
@@ -167,6 +180,7 @@ namespace nil {
                         nil::marshalling::status_type status;
                         nil::crypto3::multiprecision::cpp_int raw_result = nil::marshalling::pack(state, status);
 
+                        std::cout << "transcript challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 
@@ -177,6 +191,7 @@ namespace nil {
                         nil::marshalling::status_type status;
                         Integral raw_result = nil::marshalling::pack(state, status);
 
+                        std::cout << "transcript int_challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 

@@ -1224,19 +1224,13 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         constexpr static const std::size_t constant_columns = ConstantColumns;
         constexpr static const std::size_t selector_columns = SelectorColumns;
 
-        using arithmetization_params =
-            plonk_arithmetization_params<witness_columns, public_input_columns, constant_columns, selector_columns>;
-
         constexpr static const std::size_t lambda = 40;
         constexpr static const std::size_t m = 2;
     };
 
     using transcript_type = typename transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
 
-    using circuit_params = placeholder_circuit_params<
-        field_type,
-        typename placeholder_test_params::arithmetization_params
-    >;
+    using circuit_params = placeholder_circuit_params<field_type>;
 
     using kzg_type = commitments::batched_kzg<curve_type, transcript_hash_type>;
     using kzg_scheme_type = typename commitments::kzg_commitment_scheme<kzg_type>;
@@ -1245,14 +1239,15 @@ struct placeholder_kzg_test_fixture : public test_initializer {
     using policy_type = zk::snark::detail::placeholder_policy<field_type, kzg_placeholder_params_type>;
 
     using circuit_type = 
-        circuit_description<field_type, 
-        placeholder_circuit_params<field_type, typename placeholder_test_params::arithmetization_params>,
+        circuit_description<field_type,
+        placeholder_circuit_params<field_type>,
         usable_rows_amount, permutation>;
 
     placeholder_kzg_test_fixture(
-            const circuit_type& circuit_in, 
+            const circuit_type& circuit_in,
             std::size_t usable_rows, std::size_t table_rows)
         : circuit(circuit_in)
+        , desc(WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns)
         , constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables)
         , assignments(circuit.table)
         , table_rows_log(std::log2(table_rows))
@@ -1290,14 +1285,14 @@ struct placeholder_kzg_test_fixture : public test_initializer {
                 );
 
         verifier_res = placeholder_verifier<field_type, kzg_placeholder_params_type>::process(
-                kzg_preprocessed_public_data, kzg_proof, constraint_system, kzg_scheme
+                kzg_preprocessed_public_data, kzg_proof, desc, constraint_system, kzg_scheme
                 );
         test_initializer::teardown();
         return verifier_res;
     }
 
     circuit_type circuit;
-    plonk_table_description<field_type, typename circuit_params::arithmetization_params> desc;
+    plonk_table_description<field_type> desc;
     typename policy_type::constraint_system_type constraint_system;
     typename policy_type::variable_assignment_type assignments;
     std::size_t table_rows_log;

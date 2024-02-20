@@ -806,7 +806,7 @@ namespace nil {
                                     commit_g2(set_difference_polynom(_merged_points, this->_points.at(k)[i]))
                                 );
 
-                                left_side_accum *= left_side_pairing;
+                                left_side_accum = left_side_accum * left_side_pairing;
                                 factor *= gamma;
                             }
                         }

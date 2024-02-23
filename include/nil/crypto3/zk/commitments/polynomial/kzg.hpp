@@ -131,6 +131,27 @@ namespace nil {
                     };
                 };
             } // namespace commitments
+            
+            void dump_vector(std::vector<uint8_t> const& x, std::string label = "") {
+                std::cout << label << "[" << std::dec << x.size() << "] [31;1m";
+                for(auto v: x) {
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << int(v);
+                }
+                std::cout << "[0m" << std::endl;
+            }
+
+            template<typename gt_value_type>
+            void dump_gt(gt_value_type& x, std::string label = "")
+            {
+                using endianness = nil::marshalling::option::big_endian;
+                nil::marshalling::status_type status;
+                std::vector<uint8_t> bytes =
+                    nil::marshalling::pack<endianness>(x, status);
+                BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                dump_vector(bytes, label);
+            }
+
+
 
             namespace algorithms {
                 template<typename KZG,
@@ -197,6 +218,19 @@ namespace nil {
 
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
+
+                    auto left = algebra::pair_reduced<typename KZG::curve_type>(
+                            proof,
+                            params.verification_key - public_key.z * KZG::curve_type::template g2_type<>::value_type::one());
+
+                    auto right = algebra::pair_reduced<typename KZG::curve_type>(
+                            public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() - public_key.commit,
+                            KZG::curve_type::template g2_type<>::value_type::one());
+
+                    dump_gt(left, "left");
+                    dump_gt(right, "right");
+
+                    std::cout << "left*right == 1?" << (left*right == KZG::gt_value_type::one()) << std::endl;
 
                     return gt_4 == KZG::gt_value_type::one();
                 }
@@ -552,6 +586,11 @@ namespace nil {
                         factor *= gamma;
                     }
 
+                    std::cout << "Gamma  : " << gamma << std::endl;
+                    std::cout << "Factor : " << factor << std::endl;
+
+                    std::cout << "accumulator: " << accum << std::endl;
+
                     //verify without pairing
                     {
                         typename math::polynomial<typename KZG::scalar_value_type> right_side({{0}});
@@ -593,9 +632,14 @@ namespace nil {
                         left_side_pairing = left_side_pairing * algebra::pair_reduced<typename KZG::curve_type>(left, right);
                         factor = factor * gamma;
                     }
+                    std::cout << "Gamma  : " << gamma << std::endl;
+                    std::cout << "Factor : " << factor << std::endl;
 
                     auto right = commit_g2<KZG>(params, create_polynom_by_zeros<KZG>(public_key.T));
                     auto right_side_pairing = algebra::pair_reduced<typename KZG::curve_type>(proof, right);
+
+                    dump_gt(left_side_pairing, "left");
+                    dump_gt(right_side_pairing, "right");
 
                     return left_side_pairing == right_side_pairing;
                 }
@@ -662,6 +706,7 @@ namespace nil {
                     void update_transcript(std::size_t batch_ind, typename KZGScheme::transcript_type &transcript) {
                         /* The procedure of updating the transcript is subject to review and change 
                          * #295 */
+                        std::cout << "[34;1mUpdating transcript for batch " << batch_ind << "[0m" << std::endl;
 
                         // Push commitments to transcript
                         transcript(_commitments[batch_ind]);
@@ -696,11 +741,14 @@ namespace nil {
 
                     kzg_commitment_scheme(params_type kzg_params) : _params(kzg_params) {}
 
+
                     // Differs from static, because we pack the result into byte blob.
                     commitment_type commit(std::size_t index){
+                        std::cout << "commiting to " << index << std::endl;
                         this->_ind_commitments[index] = {};
                         this->state_commited(index);
 
+                        std::cout << "array has " << this->_polys[index].size() << " elements" << std::endl;
                         std::vector<std::uint8_t> result = {};
                         for (std::size_t i = 0; i < this->_polys[index].size(); ++i) {
                             BOOST_ASSERT(this->_polys[index][i].degree() <= _params.commitment_key.size());
@@ -714,6 +762,7 @@ namespace nil {
                             result.insert(result.end(), single_commitment_bytes.begin(), single_commitment_bytes.end());
                         }
                         _commitments[index] = result;
+                        dump_vector(result, "result:");
 
 
                         return result;
@@ -730,13 +779,18 @@ namespace nil {
 
                     proof_type proof_eval(transcript_type &transcript){
 
+                        std::cout << "~~~~ proof_eval start ~~~~" << std::endl;
                         this->eval_polys();
+                        std::cout << "~~~~ eval_polys ~~~~" << std::endl;
                         this->merge_eval_points();
+                        std::cout << "~~~~ merge_eval_points ~~~~" << std::endl;
 
                         for( auto const &it: this->_commitments ){
                             auto k = it.first;
                             update_transcript(k, transcript);
                         }
+
+                        std::cout << "=== all commitments are in transcript ===" << std::endl;
 
                         auto gamma = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
                         auto factor = KZGScheme::scalar_value_type::one();
@@ -750,9 +804,15 @@ namespace nil {
                             }
                         }
 
+                        std::cout << "Gamma  : " << gamma << std::endl;
+                        std::cout << "Factor : " << factor << std::endl;
+
+                        std::cout << "Accumulated polynomial: " << std::endl;
+                        std::cout << accum << std::endl;
+
                         //verify without pairing. It's only for debug
                         //if something goes wrong, it may be useful to place here verification with pairings
-                        /*{
+                        {
                             typename math::polynomial<typename KZGScheme::scalar_value_type> right_side({{0}});
                             factor = KZGScheme::scalar_value_type::one();
                             for( auto const &it: this->_polys ){
@@ -764,8 +824,13 @@ namespace nil {
                                 }
                             }
                             assert(accum * this->get_V(this->_merged_points) == right_side);
-                        }*/
-                        return {this->_z, nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum)};
+                        }
+                        auto res_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum);
+                        nil::marshalling::status_type status;
+                        std::vector<std::uint8_t> res_bytes = 
+                            nil::marshalling::pack<endianness>(res_commit, status);
+                        dump_vector(res_bytes, "commitment to accumulated");
+                        return {this->_z, res_commit};
                     }
 
                     bool verify_eval(
@@ -811,10 +876,16 @@ namespace nil {
                             }
                         }
 
+                        std::cout << "Gamma  : " << gamma << std::endl;
+                        std::cout << "Factor : " << factor << std::endl;
+
                         auto right_side_pairing = algebra::pair_reduced<typename KZGScheme::curve_type>(
                             proof.kzg_proof,
                             commit_g2(this->get_V(this->_merged_points))
                         );
+
+                        dump_gt(left_side_accum, "left");
+                        dump_gt(right_side_pairing, "right");
 
                         return left_side_accum == right_side_pairing;
                     }

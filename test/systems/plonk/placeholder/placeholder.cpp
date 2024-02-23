@@ -27,7 +27,6 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
-#include "nil/crypto3/algebra/curves/alt_bn128.hpp"
 #define BOOST_TEST_MODULE placeholder_test
 
 #include <string>
@@ -213,6 +212,7 @@ struct test_initializer {
 
         for (std::size_t i = 0; i + 1 < std::size_t(boost::unit_test::framework::master_test_suite().argc); i++) {
             if (std::string(boost::unit_test::framework::master_test_suite().argv[i]) == "--seed") {
+                std::cout << "Setting up randomness" << std::endl;
                 if (std::string(boost::unit_test::framework::master_test_suite().argv[i + 1]) == "random") {
                     std::random_device rd;
                     test_global_seed = rd();
@@ -224,6 +224,7 @@ struct test_initializer {
                     test_global_seed = atoi(boost::unit_test::framework::master_test_suite().argv[i + 1]);
                     break;
                 }
+                std::cout << "Randomness is set up with seed: " << test_global_seed << std::endl;
             }
         }
 
@@ -1250,21 +1251,20 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         placeholder_circuit_params<field_type>,
         usable_rows_amount, permutation>;
 
-    placeholder_kzg_test_fixture(
-            const circuit_type& circuit_in,
-            std::size_t usable_rows, std::size_t table_rows)
-        : circuit(circuit_in)
-        , desc(WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns)
-        , constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables)
-        , assignments(circuit.table)
-        , table_rows_log(std::log2(table_rows))
+    placeholder_kzg_test_fixture()
+        : desc(WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns)
     {
-        desc.rows_amount = table_rows;
-        desc.usable_rows_amount = usable_rows;
     }
 
     bool run_test() {
         test_initializer::setup();
+        typename field_type::value_type pi0 = test_global_alg_rnd_engine<field_type>();
+        std::cout << "setting up circuit.. pi0 = " << pi0 << std::endl;
+        circuit_type circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
+        desc.rows_amount = circuit.table_rows;
+        desc.usable_rows_amount = circuit.usable_rows;
+        std::size_t table_rows_log = std::log2(circuit.table_rows);
+
         typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates);
         typename policy_type::variable_assignment_type assignments = circuit.table;
 
@@ -1273,24 +1273,34 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         bool verifier_res;
 
         // KZG commitment scheme
+        std::cout << "table_rows_log:" << table_rows_log << std::endl;
         auto kzg_params = create_kzg_params<kzg_type>(table_rows_log);
         kzg_scheme_type kzg_scheme(kzg_params);
 
+        std::cout << "[45mpublic preprocessor[0m" << std::endl;
         typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
             kzg_preprocessed_public_data =
             placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::process(
                     constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
                     );
 
+        std::cout << "[45mprivate preprocessor[0m" << std::endl;
         typename placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
             kzg_preprocessed_private_data = placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::process(
                     constraint_system, assignments.private_table(), desc
                     );
 
+        std::cout << "preprocessor data:" << std::endl;
+        for(std::size_t i = 0; i< kzg_preprocessed_private_data.private_polynomial_table._witnesses.size(); ++i) {
+            std::cout << "witness " << i << kzg_preprocessed_private_data.private_polynomial_table._witnesses[i] << std::endl;
+        }
+
+        std::cout << "[45mprover[0m" << std::endl;
         auto kzg_proof = placeholder_prover<field_type, kzg_placeholder_params_type>::process(
                 kzg_preprocessed_public_data, std::move(kzg_preprocessed_private_data), desc, constraint_system, kzg_scheme
                 );
 
+        std::cout << "[45mverifier[0m" << std::endl;
         verifier_res = placeholder_verifier<field_type, kzg_placeholder_params_type>::process(
                 kzg_preprocessed_public_data, kzg_proof, desc, constraint_system, kzg_scheme
                 );
@@ -1299,11 +1309,9 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         return verifier_res;
     }
 
-    circuit_type circuit;
     plonk_table_description<field_type> desc;
-    typename policy_type::constraint_system_type constraint_system;
-    typename policy_type::variable_assignment_type assignments;
-    std::size_t table_rows_log;
+//    typename policy_type::variable_assignment_type assignments;
+//    std::size_t table_rows_log;
 };
 
 
@@ -1367,9 +1375,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
     >;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(prover_test, F, TestFixtures) {
-    typename F::field_type::value_type pi0 = test_global_alg_rnd_engine<typename F::field_type>();
-    auto circuit = circuit_test_t<typename F::field_type>(pi0, test_global_alg_rnd_engine<typename F::field_type>);
-    F fixture(circuit, circuit.usable_rows, circuit.table_rows);
+    F fixture;
     BOOST_CHECK(fixture.run_test());
 }
 

@@ -41,6 +41,7 @@
 #include <nil/crypto3/hash/sha2.hpp>
 
 #include <nil/crypto3/math/polynomial/polynomial.hpp>
+#include <nil/crypto3/math/polynomial/polynomial_dfs.hpp>
 #include <nil/crypto3/math/algorithms/unity_root.hpp>
 #include <nil/crypto3/math/domains/evaluation_domain.hpp>
 #include <nil/crypto3/math/algorithms/make_evaluation_domain.hpp>
@@ -672,51 +673,201 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
     typedef typename kzg_type::transcript_type transcript_type;
 
     scalar_value_type alpha = 7;
-    typename kzg_type::batch_of_polynomials_type polys = {{
-        {{
-                 0x39ef702ef59ff1816e4f51f2ae7fe2d78108c006d5f3039cd1a474ba8c48c16a62518f86863_cppui298,
-                 0x17dadc1965bae6d9426ef1a2e6d3640ac4cd96089c55c7dc3800924668fcc450cbaa7de9f4c_cppui298,
-                 0x1202bd2e4122c826d8ba7cd66346c0df0326468fd6e7989c8eebe3dedfcbd9b0ecdc1fb41c2_cppui298,
-                 0x3b718dda0c9262c55640bd1e364df577ec246e46cb05109733008263282cc1a8959b4bf6fa7_cppui298,
-                 0x27b08d175547d973e48f341c081c3851eee512d6e73200bfa47b1e049e1d268409ad2ce21c9_cppui298,
-                 0x1872fd6e208095436bfcb92388e0d1c8509c3f8e89235d0430c61add0ab203ac30370518ce6_cppui298,
-                 0x304c1332568ebbe7347b598eef6cb41f198a574c4ff7cd151337211efea753ec6fc7d61330b_cppui298,
-                 0x1b41e76a1c5a4daa01029a0ec27b5f0b06ca7b480b600b8b573ae00feaab4ad9f1146a99459_cppui298,
+    std::vector<math::polynomial_dfs<scalar_value_type>> polys_dfs = {{
+        //~-~-~-~ commiting to batch: 0~-~-~-~
+        {8, {
+             0x1,
+             0x29ab55a4b34e699f13959ce2c174be01985b7a0c88268d41489977b2219cd8a8a4e33032230_cppui298,
+             0x00f73779fe09916dfdcc2fd1f968d534beb17daf7518cd9fae5c1f7bdcf94dd5d7def6980c4_cppui298,
+             0x0078fe16f00d3d46d50e74ed550e57c9dda4ca5bc69da7a1820913abb7f1f371dd044f1a9c9_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a71660000_cppui298,
+             0x1224262893ebbcc33644de228777f0eafdda5726867d8d5ced4b9a4ebf8fb824c0c3e62ddd1_cppui298,
+             0x3ad84453493094f44c0e4b334f83d9b7d7845383998b4cfe8788f285043342f78dc81fc7f3d_cppui298,
+             0x3b567db6572ce91b74cc0617f3de5722b89106d7480672fcb3dbfe55293a9d5b88a2c745638_cppui298,
         }},
-        {{
-                 0x11cccdf2e5ccc50aa597c4194181c1fe652f508e4aafb2a0137f878c4b3b9d09511285954a1_cppui298,
-                 0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
-                 0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
-                 0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
-                 0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
-                 0x011394bbd52cee496c395d41b68e0732c88572384d492e195f8f5b1c7a1c61f6ed67f94c950_cppui298,
-                 0x194e4123c5669a48341b2f6b127f0a8b109818666a3d2229f23414de9c5d23d2d63c05309be_cppui298,
-                 0x30641ec0f843aeb8202263821cac300d11b237ce42e2876763c8c16513494b993aaf5941f61_cppui298,
+
+        {8, { 
+             0x11,
+             0x32765e1dd8b55d57208c21d4b69519f0a9c31da369823c8981592cca8e802a5f94e83d34525_cppui298,
+             0x106aaf19dea2a84dda8f2cf18ff62880a9c958a6c6a5a79a941e1739ac8e2b3355ce6018d04_cppui298,
+             0x0808df85f0e111b425f5c3c2a5f3d467b7f17018307821b9a29a4e6737112a8fad4940c4659_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165fff0_cppui298,
+             0x09591daf6e84c90b294e5930925794fbec72b38fa521de14b48be53652ac666dd0bed92badc_cppui298,
+             0x2b64ccb368977e146f4b4e13b8f6866bec6c788c47fe7303a1c6fac7349e659a0fd8b6472fd_cppui298,
+             0x33c69c47565914ae23e4b742a2f8da84de44611ade2bf8e4934ac399aa1b663db85dd59b9a8_cppui298,
         }},
-        {{
-                 0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
-                 0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
-                 0x0c3d778f1a6196ab1c2ba05597c7b275b23cb23faf7b128228ae23ad2aac20cc2bb1cc68ae9_cppui298,
-                 0x1d871330c3db0fc34493247dc5f22570c08e3c4d3019e89ccadb340ddf48317d9dda6bf5cd9_cppui298,
-                 0x114ac4e3bcbc6bf412878efb87080a493920fdbdb54535e797af6c6f15cacfa5a93c46626f0_cppui298,
-                 0x0cfede4389503774cda3e57a7034cc1c54ad074f86f551b54a44118a30afd0fc06ad7393ee6_cppui298,
-                 0x3b079297527c765d71f9db51a85f47c081d4047080ad9352f6a325410e1e8490ddc59988939_cppui298,
-                 0x299eacd3439bb98b27f8cbaafb3983162a895d3de16cb29360ad4b12f5f114dee4f5a065b97_cppui298,
+
+        {8, { 
+             0x121,
+             0x14837ac17edd19691f5b84d622f5280b0f03870f34ac907aa464fd672612e51d5448d739767_cppui298,
+             0x27d7b182abe493a25c180ff56ba5f4d8ed879e46f66fb6cafe6b42d0f0be9b331c180825d40_cppui298,
+             0x10f7e04a707de031f19d09e27357bd0a0a9ccf351ab20817607510d8e5cab1efb68f204abe7_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165fee0_cppui298,
+             0x274c010bc85d0cf92a7ef62f25f786e187324a23d9f78a2391801499bb19abb0115e3f2689a_cppui298,
+             0x13f7ca4a9b5592bfedc26b0fdd46ba13a8ae32ec183463d33779cf2ff06df59a498f0e3a2c1_cppui298,
+             0x2ad79b82d6bc4630583d7122d594f1e28b9901fdf3f21286d5700127fb61deddaf17f61541a_cppui298,
         }},
-        {{
-                 0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
-                 0x0,
-                 0x1,
-                 0x0,
-                 0x0,
-                 0x0,
-                 0x0,
-                 0x0,
-        }}
+
+        {8, { 
+             0x1331,
+             0x31adbbd7088bf00fa3cf6b1de5a83e1d102ee2033641130ddd3b79d5216262ef9c92daf0dd2_cppui298,
+             0x136877db5aae278ef135c61203d9be3d51b18584bc5dfeae9447a9d64fbe15917f6a9463135_cppui298,
+             0x3137f5bc5b7349c7e403bbf48520d1f85b927dba8b421f149031d663bdc38db588e4cb76a53_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165ecd0_cppui298,
+             0x0a21bff63eae3652a60b0fe7634470cf8606ef2fd863079058a9982bbfca2dddc9143b6f22f_cppui298,
+             0x286703f1ec8bfed358a4b4f34512f0af44844bae52461befa19d682a916e7b3be63c81fcecc_cppui298,
+             0x0a978610ebc6dc9a65d6bf10c3cbdcf43aa353788361fb89a5b33b9d23690317dcc24ae95ae_cppui298,
+        }},
+
+        {8, { 
+             0x1,
+             0x29ab55a4b34e699f13959ce2c174be01985b7a0c88268d41489977b2219cd8a8a4e33032230_cppui298,
+             0x00f73779fe09916dfdcc2fd1f968d534beb17daf7518cd9fae5c1f7bdcf94dd5d7def6980c4_cppui298,
+             0x0078fe16f00d3d46d50e74ed550e57c9dda4ca5bc69da7a1820913abb7f1f371dd044f1a9c9_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a71660000_cppui298,
+             0x1224262893ebbcc33644de228777f0eafdda5726867d8d5ced4b9a4ebf8fb824c0c3e62ddd1_cppui298,
+             0x3ad84453493094f44c0e4b334f83d9b7d7845383998b4cfe8788f285043342f78dc81fc7f3d_cppui298,
+             0x3b567db6572ce91b74cc0617f3de5722b89106d7480672fcb3dbfe55293a9d5b88a2c745638_cppui298,
+        }},
+
+        {8, { 
+             0x11,
+             0x32765e1dd8b55d57208c21d4b69519f0a9c31da369823c8981592cca8e802a5f94e83d34525_cppui298,
+             0x106aaf19dea2a84dda8f2cf18ff62880a9c958a6c6a5a79a941e1739ac8e2b3355ce6018d04_cppui298,
+             0x0808df85f0e111b425f5c3c2a5f3d467b7f17018307821b9a29a4e6737112a8fad4940c4659_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165fff0_cppui298,
+             0x09591daf6e84c90b294e5930925794fbec72b38fa521de14b48be53652ac666dd0bed92badc_cppui298,
+             0x2b64ccb368977e146f4b4e13b8f6866bec6c788c47fe7303a1c6fac7349e659a0fd8b6472fd_cppui298,
+             0x33c69c47565914ae23e4b742a2f8da84de44611ade2bf8e4934ac399aa1b663db85dd59b9a8_cppui298,
+        }},
+
+        {8, { 
+             0x121,
+             0x14837ac17edd19691f5b84d622f5280b0f03870f34ac907aa464fd672612e51d5448d739767_cppui298,
+             0x27d7b182abe493a25c180ff56ba5f4d8ed879e46f66fb6cafe6b42d0f0be9b331c180825d40_cppui298,
+             0x10f7e04a707de031f19d09e27357bd0a0a9ccf351ab20817607510d8e5cab1efb68f204abe7_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165fee0_cppui298,
+             0x274c010bc85d0cf92a7ef62f25f786e187324a23d9f78a2391801499bb19abb0115e3f2689a_cppui298,
+             0x13f7ca4a9b5592bfedc26b0fdd46ba13a8ae32ec183463d33779cf2ff06df59a498f0e3a2c1_cppui298,
+             0x2ad79b82d6bc4630583d7122d594f1e28b9901fdf3f21286d5700127fb61deddaf17f61541a_cppui298,
+        }},
+
+        {8, { 
+             0x1331,
+             0x31adbbd7088bf00fa3cf6b1de5a83e1d102ee2033641130ddd3b79d5216262ef9c92daf0dd2_cppui298,
+             0x136877db5aae278ef135c61203d9be3d51b18584bc5dfeae9447a9d64fbe15917f6a9463135_cppui298,
+             0x3137f5bc5b7349c7e403bbf48520d1f85b927dba8b421f149031d663bdc38db588e4cb76a53_cppui298,
+             0x3bcf7bcd473a266249da7b0548ecaeec9635d1330ea41a9e35e51200e12c90cd65a7165ecd0_cppui298,
+             0x0a21bff63eae3652a60b0fe7634470cf8606ef2fd863079058a9982bbfca2dddc9143b6f22f_cppui298,
+             0x286703f1ec8bfed358a4b4f34512f0af44844bae52461befa19d682a916e7b3be63c81fcecc_cppui298,
+             0x0a978610ebc6dc9a65d6bf10c3cbdcf43aa353788361fb89a5b33b9d23690317dcc24ae95ae_cppui298,
+        }},
+
+        {8, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, }},
+
+        {8, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, }},
+
+        {8, { 
+             0x0,
+             0x1,
+             0x1,
+             0x0,
+             0x0,
+             0x1f8915cc2533543f2bc6164e6238fc23a81c0f463c4646f1d40c1d7dfd0ae08ab78492cbef1_cppui298,
+             0x39bef1b52e65b396fbac77780f097c34e4287e259355a4ea31e0dcfacd0677a359e136b2fdd_cppui298,
+             0x173564dab75ba19b463030c03996325d30e7829fc226518b459919e6d64278946b02141888b_cppui298,
+        }},
+
+        {8, { 
+             0x0,
+             0x0,
+             0x0,
+             0x1,
+             0x1,
+             0x0722a67f49f9ecfe9f0874df295dcd87a484fabc9ed6fa56696cb563b4ded702bbe2984c787_cppui298,
+             0x3b1bf86dcd7b7526048b0705c8287a3b97ca771ba445718a3614352160278d229349a1b7d08_cppui298,
+             0x1e127023ee88eeab382e9d07a328168599c3a9e3c0fe99eadb31575515db872426d7356b1bb_cppui298,
+        }},
+
+        //~-~-~-~ commiting to batch: 1~-~-~-~
+        {8, { 
+             0x39ef702ef59ff1816e4f51f2ae7fe2d78108c006d5f3039cd1a474ba8c48c16a62518f86863_cppui298,
+             0x17dadc1965bae6d9426ef1a2e6d3640ac4cd96089c55c7dc3800924668fcc450cbaa7de9f4c_cppui298,
+             0x1202bd2e4122c826d8ba7cd66346c0df0326468fd6e7989c8eebe3dedfcbd9b0ecdc1fb41c2_cppui298,
+             0x3b718dda0c9262c55640bd1e364df577ec246e46cb05109733008263282cc1a8959b4bf6fa7_cppui298,
+             0x27b08d175547d973e48f341c081c3851eee512d6e73200bfa47b1e049e1d268409ad2ce21c9_cppui298,
+             0x1872fd6e208095436bfcb92388e0d1c8509c3f8e89235d0430c61add0ab203ac30370518ce6_cppui298,
+             0x304c1332568ebbe7347b598eef6cb41f198a574c4ff7cd151337211efea753ec6fc7d61330b_cppui298,
+             0x1b41e76a1c5a4daa01029a0ec27b5f0b06ca7b480b600b8b573ae00feaab4ad9f1146a99459_cppui298,
+        }},
+
+        {8, { 
+             0x11cccdf2e5ccc50aa597c4194181c1fe652f508e4aafb2a0137f878c4b3b9d09511285954a1_cppui298,
+             0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
+             0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
+             0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
+             0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
+             0x011394bbd52cee496c395d41b68e0732c88572384d492e195f8f5b1c7a1c61f6ed67f94c950_cppui298,
+             0x194e4123c5669a48341b2f6b127f0a8b109818666a3d2229f23414de9c5d23d2d63c05309be_cppui298,
+             0x30641ec0f843aeb8202263821cac300d11b237ce42e2876763c8c16513494b993aaf5941f61_cppui298,
+        }},
+
+        {8, { 
+             0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
+             0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
+             0x0c3d778f1a6196ab1c2ba05597c7b275b23cb23faf7b128228ae23ad2aac20cc2bb1cc68ae9_cppui298,
+             0x1d871330c3db0fc34493247dc5f22570c08e3c4d3019e89ccadb340ddf48317d9dda6bf5cd9_cppui298,
+             0x114ac4e3bcbc6bf412878efb87080a493920fdbdb54535e797af6c6f15cacfa5a93c46626f0_cppui298,
+             0x0cfede4389503774cda3e57a7034cc1c54ad074f86f551b54a44118a30afd0fc06ad7393ee6_cppui298,
+             0x3b079297527c765d71f9db51a85f47c081d4047080ad9352f6a325410e1e8490ddc59988939_cppui298,
+             0x299eacd3439bb98b27f8cbaafb3983162a895d3de16cb29360ad4b12f5f114dee4f5a065b97_cppui298,
+        }},
+
+        {8, { 
+             0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
+             0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0,
+        }},
+
+        //~-~-~-~ commiting to batch: 2~-~-~-~
+        {8, { 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, }},
+
+        //~-~-~-~ commiting to batch: 3~-~-~-~
+        {8, {
+             0x2783a8a7c5cf7e94e4d1fdc4aa6eb807ea4eddbf81ea87939f040dc851e9212b9dca604ac9a_cppui298,
+             0x13230785fb96c79b65251354a51866632384c4dc7ceff4e48dc2fac8f09db1ce7367e20608b_cppui298,
+             0x2ccbbf5a905e4515c62fede907c2625d90bfda58027217f7e58155b67d5851fb4cf46f04364_cppui298,
+             0x17adaf6b5019e118bc7ac6213b0dc84cf1a9cada9cc620471384b7a191db27251337ec3d3b7_cppui298,
+             0x05b19c26a34901d91528679eeac2c7f311aa3f5f0fa669855b10522373949671df3f1e23c38_cppui298,
+             0x37421ad4e9cf2ccadc50246390593aa253e4ca3ba5767e931130a2f905a49443e0e02fc0ce8_cppui298,
+             0x2a2814a40ce271f86b0369793c4c79d31686212ad02a382f6288ef94cabe1e2cff80ce74bd5_cppui298,
+             0x383fcb086d115688ba77b1449bd46480f3bd7cbb070242833338005e60dcaa9ba238c801961_cppui298,
+        }},
+
+        {8, {
+             0x0710f09328ac0442d2d93a61f4eda9b265a27ea0570484e3a1cf1aaa249974ea1a99377a11c_cppui298,
+             0x2bb0eec490c8ac0bbe164c6ee7072a8989e33a7006d8f222b1476b15c2ef0386b49b7d6bc28_cppui298,
+             0x3552ef5f48bc3702e4e9f8fc7b236de25d1a78e256d8417ff106bbc75b7cbfc36c8977b2896_cppui298,
+             0x3871e84395a7af9c0fdd19321af6b742815a982bb5f59bcf7be6793caa98f4a919032d2969d_cppui298,
+             0x153bd600c1074537112d1df7afd22932c713cc84c08d3c197cbdd9d84b675ab9c62e78d36a0_cppui298,
+             0x12d86d35994854ef3606ae63e5114209bec8dbb0d3ebb1bb9a786fd27ced58870d3779d3d7a_cppui298,
+             0x2e0895904268862017c64e0a495813bf84b1d2137a53102097557bd90c2aac21c0802fc1787_cppui298,
+             0x0742ee092a59ae6b7169ac51e7339c52adc1dc74471e0d207a3d29dd37d60ea9bc9438e5c15_cppui298,
+        }},
+
+        {1, {0} },
+        {1, {0} },
+        {1, {0} },
+        {1, {0} },
     }};
 
-//    auto params = typename kzg_type::params_type(8, 8, alpha);
-    auto params = create_kzg_params<kzg_type>(3);
+    std::vector<math::polynomial<scalar_value_type>> polys;
+    for(auto const& p_dfs: polys_dfs) {
+        auto p = math::polynomial<scalar_value_type>(p_dfs.coefficients());
+        polys.push_back(p);
+    }
+
+    //    auto params = typename kzg_type::params_type(8, 8, alpha);
+    auto params = create_kzg_params<kzg_type>(3 /*degree_log*/);
     auto commits = zk::algorithms::commit<kzg_type>(params, polys);
     using endianness = nil::marshalling::option::big_endian;
     for(auto &c: commits) {

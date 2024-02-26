@@ -260,16 +260,16 @@ namespace nil {
 
                     // init values
                     typename FieldType::value_type one = FieldType::value_type::one();
-                    table[0][0] = algebra::random_element<FieldType>();
-                    table[1][0] = algebra::random_element<FieldType>();
-                    table[2][0] = algebra::random_element<FieldType>();
+                    table[0][0] = alg_rnd();
+                    table[1][0] = alg_rnd();
+                    table[2][0] = alg_rnd();
                     table[3][0] = pi0;
                     q_add[0] = FieldType::value_type::zero();
                     q_mul[0] = FieldType::value_type::zero();
 
                     // fill rows with ADD gate
                     for (std::size_t i = 1; i < 3; i++) {
-                        table[0][i] = algebra::random_element<FieldType>();
+                        table[0][i] = alg_rnd();
                         table[1][i] = table[2][i - 1];
                         table[2][i] = table[0][i] + table[1][i];
                         table[3][i] = FieldType::value_type::zero();
@@ -285,7 +285,7 @@ namespace nil {
 
                     // fill rows with MUL gate
                     for (std::size_t i = 3; i < 5; i++) {
-                        table[0][i] = algebra::random_element<FieldType>();
+                        table[0][i] = alg_rnd();
                         table[1][i] = table[3][0];
                         table[2][i] = table[0][i] * table[1][i] + table[0][i - 1];
                         table[3][i] = FieldType::value_type::zero();

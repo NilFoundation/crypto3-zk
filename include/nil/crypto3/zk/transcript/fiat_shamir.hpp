@@ -134,10 +134,26 @@ namespace nil {
                     typedef Hash hash_type;
 
                     fiat_shamir_heuristic_sequential() : state(hash<hash_type>({0})) {
+                        std::cout << "default transcript constructor " << this << std::endl;
                     }
 
                     template<typename InputRange>
                     fiat_shamir_heuristic_sequential(const InputRange &r) : state(hash<hash_type>(r)) {
+                        std::cout << "transcript " << this << "constructed with [[[[31;1m" << std::endl;
+                        for(auto x = r.begin(); x!= r.end(); ++x) {
+                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
+                        }
+                        std::cout << std::endl << "[0m]]]" << std::endl;
+                    }
+
+                    template<typename InputIterator>
+                        void dump_buffer(InputIterator first, InputIterator last)
+                    {
+                        std::cout << "updating transcript " << this << " with [[[[32;1m" << std::endl;
+                        for(auto x = first; x!= last; ++x) {
+                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
+                        }
+                        std::cout << std::endl << "[0m]]]" << std::endl;
                     }
 
                     template<typename InputIterator>
@@ -180,7 +196,7 @@ namespace nil {
                         nil::marshalling::status_type status;
                         nil::crypto3::multiprecision::cpp_int raw_result = nil::marshalling::pack(state, status);
 
-                        std::cout << "transcript challenged for: " << std::hex << raw_result << std::endl;
+                        std::cout << "transcript " << this << " challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 
@@ -191,7 +207,7 @@ namespace nil {
                         nil::marshalling::status_type status;
                         Integral raw_result = nil::marshalling::pack(state, status);
 
-                        std::cout << "transcript int_challenged for: " << std::hex << raw_result << std::endl;
+                        std::cout << "transcript " << this << " int_challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 

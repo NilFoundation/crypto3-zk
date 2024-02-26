@@ -58,6 +58,90 @@ using namespace nil::crypto3::math;
 
 using namespace nil::crypto3;
 
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp<FieldParams> &e) {
+    os << std::hex << std::setw((FieldParams::modulus_bits+7)/4) << std::setfill('0') << e.data;
+}
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp2<FieldParams> &e) {
+    os << "[";
+    print_field_element(os, e.data[0]);
+    os << ", ";
+    print_field_element(os, e.data[1]);
+    os << "]";
+}
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp3<FieldParams> &e) {
+    os << "[";
+    print_field_element(os, e.data[0]);
+    os << ", ";
+    print_field_element(os, e.data[1]);
+    os << ", ";
+    print_field_element(os, e.data[2]);
+    os << "]";
+}
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp4<FieldParams> &e) {
+    os << "[";
+    print_field_element(os, e.data[0]);
+    os << ", ";
+    print_field_element(os, e.data[1]);
+    os << "]";
+}
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp6_2over3<FieldParams> &e) {
+    os << "[";
+    print_field_element(os, e.data[0]);
+    os << ", ";
+    print_field_element(os, e.data[1]);
+    os << "]";
+}
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const typename fields::detail::element_fp6_3over2<FieldParams> &e) {
+    os << "[";
+    print_field_element(os, e.data[0]);
+    os << ", ";
+    print_field_element(os, e.data[1]);
+    os << ", ";
+    print_field_element(os, e.data[3]);
+    os << "]";
+}
+
+template<typename CurveGroupValue>
+void print_curve_group_element(std::ostream &os, const CurveGroupValue &e) {
+    auto a = e.to_affine();
+
+    os << "affine: (";
+    print_field_element(os, a.X);
+    os << ",";
+    print_field_element(os, a.Y);
+    os << ")";
+    os << " projective: (";
+    print_field_element(os, e.X);
+    os << ",";
+    print_field_element(os, e.Y);
+    os << ",";
+    print_field_element(os, e.Z);
+    os << ")";
+}
+
+
+template<typename FieldParams>
+void print_field_element(std::ostream &os, const fields::detail::element_fp12_2over3over2<FieldParams> &e) {
+    os << "[[[" << e.data[0].data[0].data[0].data << "," << e.data[0].data[0].data[1].data << "],["
+       << e.data[0].data[1].data[0].data << "," << e.data[0].data[1].data[1].data << "],["
+       << e.data[0].data[2].data[0].data << "," << e.data[0].data[2].data[1].data << "]],"
+       << "[[" << e.data[1].data[0].data[0].data << "," << e.data[1].data[0].data[1].data << "],["
+       << e.data[1].data[1].data[0].data << "," << e.data[1].data[1].data[1].data << "],["
+       << e.data[1].data[2].data[0].data << "," << e.data[1].data[2].data[1].data << "]]]";
+}
+
+
 namespace nil {
     namespace crypto3 {
         namespace zk {
@@ -131,6 +215,27 @@ namespace nil {
                     };
                 };
             } // namespace commitments
+            
+            void dump_vector(std::vector<uint8_t> const& x, std::string label = "") {
+                std::cout << label << "[" << std::dec << x.size() << "] [31;1m";
+                for(auto v: x) {
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << int(v) <<" ";
+                }
+                std::cout << "[0m" << std::endl;
+            }
+
+            template<typename gt_value_type>
+            void dump_gt(gt_value_type& x, std::string label = "")
+            {
+                using endianness = nil::marshalling::option::big_endian;
+                nil::marshalling::status_type status;
+                std::vector<uint8_t> bytes =
+                    nil::marshalling::pack<endianness>(x, status);
+                BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                dump_vector(bytes, label);
+            }
+
+
 
             namespace algorithms {
                 template<typename KZG,
@@ -197,6 +302,25 @@ namespace nil {
 
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
+
+                    auto left = algebra::pair_reduced<typename KZG::curve_type>(
+                            proof,
+                            params.verification_key - public_key.z * KZG::curve_type::template g2_type<>::value_type::one());
+
+                    auto right = algebra::pair_reduced<typename KZG::curve_type>(
+                            public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() - public_key.commit,
+                            KZG::curve_type::template g2_type<>::value_type::one());
+
+                    std::cout << "left:" << std::endl;
+                    print_field_element(std::cout, left);
+                    std::cout << "right:" << std::endl;
+                    print_field_element(std::cout, right);
+
+                    /*
+                    dump_gt(left, "left");
+                    dump_gt(right, "right");
+                    */
+                    std::cout << "left*right == 1?" << (left*right == KZG::gt_value_type::one()) << std::endl;
 
                     return gt_4 == KZG::gt_value_type::one();
                 }
@@ -552,7 +676,13 @@ namespace nil {
                         factor *= gamma;
                     }
 
+                    std::cout << "Gamma  : " << gamma << std::endl;
+                    std::cout << "Factor : " << factor << std::endl;
+
+                    std::cout << "accumulator: " << accum << std::endl;
+
                     //verify without pairing
+                    /*
                     {
                         typename math::polynomial<typename KZG::scalar_value_type> right_side({{0}});
                         factor = KZG::scalar_value_type::one();
@@ -561,7 +691,7 @@ namespace nil {
                             factor = factor * gamma;
                         }
                         assert(accum * create_polynom_by_zeros<KZG>(public_key.T) == right_side);
-                    }
+                    }*/
 
                     return commit_one<KZG>(params, accum);
                 }
@@ -593,9 +723,17 @@ namespace nil {
                         left_side_pairing = left_side_pairing * algebra::pair_reduced<typename KZG::curve_type>(left, right);
                         factor = factor * gamma;
                     }
+                    std::cout << "Gamma  : " << gamma << std::endl;
+                    std::cout << "Factor : " << factor << std::endl;
 
                     auto right = commit_g2<KZG>(params, create_polynom_by_zeros<KZG>(public_key.T));
                     auto right_side_pairing = algebra::pair_reduced<typename KZG::curve_type>(proof, right);
+
+                    std::cout << "left:" << std::endl;
+                    print_field_element(std::cout, left_side_pairing);
+                    std::cout << "right:" << std::endl;
+                    print_field_element(std::cout, right_side_pairing);
+
 
                     return left_side_pairing == right_side_pairing;
                 }
@@ -656,12 +794,14 @@ namespace nil {
                             return typename math::polynomial<typename KZGScheme::scalar_value_type>({{1}});
                         }
                         BOOST_ASSERT(this->get_V(result) * this->get_V(points) == this->get_V(merged_points));
+                        //return zk::algorithms::create_polynom_by_zeros<KZGScheme>(result);
                         return this->get_V(result);
                     }
 
                     void update_transcript(std::size_t batch_ind, typename KZGScheme::transcript_type &transcript) {
                         /* The procedure of updating the transcript is subject to review and change 
                          * #295 */
+                        std::cout << "[34;1mUpdating transcript for batch " << batch_ind << "[0m" << std::endl;
 
                         // Push commitments to transcript
                         transcript(_commitments[batch_ind]);
@@ -696,24 +836,33 @@ namespace nil {
 
                     kzg_commitment_scheme(params_type kzg_params) : _params(kzg_params) {}
 
+
                     // Differs from static, because we pack the result into byte blob.
                     commitment_type commit(std::size_t index){
+                        std::cout << "~-~-~-~ commiting to batch: " << index << "~-~-~-~" <<std::endl;
                         this->_ind_commitments[index] = {};
                         this->state_commited(index);
 
+                        std::cout << "batch has " << this->_polys[index].size() << " elements" << std::endl;
                         std::vector<std::uint8_t> result = {};
                         for (std::size_t i = 0; i < this->_polys[index].size(); ++i) {
                             BOOST_ASSERT(this->_polys[index][i].degree() <= _params.commitment_key.size());
+                            std::cout << "commiting to poly: " <<  this->_polys[index][i] << std::endl;
                             auto single_commitment = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->_polys[index][i]);
                             this->_ind_commitments[index].push_back(single_commitment);
+                            std::cout << "commitment value: ";
+                            print_curve_group_element(std::cout, single_commitment);
+                            std::cout << std::endl;
                             nil::marshalling::status_type status;
                             std::vector<uint8_t> single_commitment_bytes =
                                 nil::marshalling::pack<endianness>(single_commitment, status);
                             BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                            dump_vector(single_commitment_bytes, "single commitment marshalled:");
 
                             result.insert(result.end(), single_commitment_bytes.begin(), single_commitment_bytes.end());
                         }
                         _commitments[index] = result;
+                        dump_vector(result, "result:");
 
 
                         return result;
@@ -730,13 +879,18 @@ namespace nil {
 
                     proof_type proof_eval(transcript_type &transcript){
 
+                        std::cout << "~~~~ proof_eval start ~~~~" << std::endl;
                         this->eval_polys();
+                        std::cout << "~~~~ eval_polys ~~~~" << std::endl;
                         this->merge_eval_points();
+                        std::cout << "~~~~ merge_eval_points ~~~~" << std::endl;
 
                         for( auto const &it: this->_commitments ){
                             auto k = it.first;
                             update_transcript(k, transcript);
                         }
+
+                        std::cout << "=== all commitments are in transcript ===" << std::endl;
 
                         auto gamma = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
                         auto factor = KZGScheme::scalar_value_type::one();
@@ -745,14 +899,25 @@ namespace nil {
                         for( auto const &it: this->_polys ){
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
+                                auto polys_k_i=math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients());
+                                std::cout << "polys_k_i:" << polys_k_i << std::endl;
+                                std::cout << "U(k,i) (" << std::dec << k << "," <<i << "): " << this->get_U(k,i) << std::endl;
+
                                 accum += factor * (math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients()) - this->get_U(k, i))/this->get_V(this->_points[k][i]);
                                 factor *= gamma;
                             }
                         }
 
+                        std::cout << "Gamma  : " << gamma << std::endl;
+                        std::cout << "Factor : " << factor << std::endl;
+
+                        std::cout << "Accumulated polynomial: " << std::endl;
+                        std::cout << accum << std::endl;
+
                         //verify without pairing. It's only for debug
                         //if something goes wrong, it may be useful to place here verification with pairings
-                        /*{
+                        /*
+                        {
                             typename math::polynomial<typename KZGScheme::scalar_value_type> right_side({{0}});
                             factor = KZGScheme::scalar_value_type::one();
                             for( auto const &it: this->_polys ){
@@ -765,7 +930,12 @@ namespace nil {
                             }
                             assert(accum * this->get_V(this->_merged_points) == right_side);
                         }*/
-                        return {this->_z, nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum)};
+                        auto res_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum);
+                        nil::marshalling::status_type status;
+                        std::vector<std::uint8_t> res_bytes = 
+                            nil::marshalling::pack<endianness>(res_commit, status);
+                        dump_vector(res_bytes, "commitment to accumulated");
+                        return {this->_z, res_commit};
                     }
 
                     bool verify_eval(
@@ -788,6 +958,7 @@ namespace nil {
 
                         for (const auto &it: this->_commitments) {
                             auto k = it.first;
+                            std::cout << "~=~=~=~= batch "<<std::dec << k <<" (size: "<< this->_points.at(k).size() << " ) ~=~=~=~=" << std::endl;
                             for (std::size_t i = 0; i < this->_points.at(k).size(); ++i) {
                                 std::size_t blob_size = this->_commitments.at(k).size() / this->_points.at(k).size();
                                 std::vector<std::uint8_t> byteblob(blob_size);
@@ -796,25 +967,53 @@ namespace nil {
                                     byteblob[j] = this->_commitments.at(k)[i * blob_size + j];
                                 }
                                 nil::marshalling::status_type status;
+//                                dump_vector(byteblob, "demarshalling:");
                                 typename curve_type::template g1_type<>::value_type
                                     i_th_commitment = nil::marshalling::pack(byteblob, status);
+//                                std::cout << std::dec << i << " commitment unpacked: ";
+//                                print_curve_group_element(std::cout, i_th_commitment);
+//                                std::cout << std::endl;
                                 BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                                std::cout << "U(k,i) (" << std::dec << k << "," <<i << "): " << this->get_U(k,i) << std::endl;
                                 auto U_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->get_U(k,i));
+                                std::cout << "U_commit: ";
+                                print_curve_group_element(std::cout, U_commit);
+                                std::cout << std::endl;
+
+                                auto diffpoly = set_difference_polynom(_merged_points, this->_points.at(k)[i]);
+                                std::cout << "diffpoly: " << diffpoly << std::endl;
+                                auto cg2 = commit_g2(diffpoly);
+                                std::cout << "cg2:";
+                                print_curve_group_element(std::cout, cg2);
+                                std::cout << std::endl;
 
                                 auto left_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>(
                                     factor*(i_th_commitment - U_commit),
                                     commit_g2(set_difference_polynom(_merged_points, this->_points.at(k)[i]))
                                 );
+                                std::cout << "lsp:";
+                                print_field_element(std::cout, left_side_pairing);
+                                std::cout << std::endl;
 
                                 left_side_accum = left_side_accum * left_side_pairing;
                                 factor *= gamma;
                             }
                         }
 
+                        std::cout << "Gamma  : " << gamma << std::endl;
+                        std::cout << "Factor : " << factor << std::endl;
+
                         auto right_side_pairing = algebra::pair_reduced<typename KZGScheme::curve_type>(
                             proof.kzg_proof,
                             commit_g2(this->get_V(this->_merged_points))
                         );
+
+                        std::cout << "left:" << std::endl;
+                        print_field_element(std::cout, left_side_accum);
+                        std::cout << std::endl;
+                        std::cout << "right:" << std::endl;
+                        print_field_element(std::cout, right_side_pairing);
+                        std::cout << std::endl;
 
                         return left_side_accum == right_side_pairing;
                     }

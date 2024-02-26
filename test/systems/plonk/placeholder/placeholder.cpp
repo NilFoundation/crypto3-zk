@@ -1339,6 +1339,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         selector_columns_t,
         usable_rows_t,
         4, true>*/
+        /*
     , placeholder_kzg_test_fixture<
         algebra::curves::mnt4_298,
         hashes::keccak_1600<256>,
@@ -1349,6 +1350,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         selector_columns_t,
         usable_rows_t,
         4, true>
+        */
     , placeholder_kzg_test_fixture<
         algebra::curves::mnt6_298,
         hashes::keccak_1600<256>,

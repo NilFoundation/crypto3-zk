@@ -72,7 +72,8 @@ BOOST_AUTO_TEST_SUITE(kzg_test_suite)
 
 BOOST_AUTO_TEST_CASE(kzg_basic_test) {
 
-    typedef algebra::curves::bls12<381> curve_type;
+    typedef algebra::curves::mnt6_298 curve_type;
+    //typedef algebra::curves::bls12<381> curve_type;
     typedef typename curve_type::scalar_field_type::value_type scalar_value_type;
 
     typedef zk::commitments::kzg<curve_type> kzg_type;

@@ -157,16 +157,6 @@ namespace nil {
                     }
 
                     template<typename InputIterator>
-                        static void dump_buffer(InputIterator first, InputIterator last)
-                    {
-                        std::cout << "updating transcript with [[[" << std::endl;
-                        for(auto x = first; x!= last; ++x) {
-                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
-                        }
-                        std::cout << std::endl << "]]]" << std::endl;
-                    }
-
-                    template<typename InputIterator>
                     fiat_shamir_heuristic_sequential(InputIterator first, InputIterator last) :
                         state(hash<hash_type>(first, last)) {
                     }

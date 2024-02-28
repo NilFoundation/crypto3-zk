@@ -666,6 +666,7 @@ typename kzg_type::params_type create_kzg_params(std::size_t degree_log) {
 
 BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
     typedef algebra::curves::mnt6_298 curve_type;
+//    typedef algebra::curves::bls12_381 curve_type;
     typedef typename curve_type::scalar_field_type::value_type scalar_value_type;
 
     typedef hashes::keccak_1600<256> transcript_hash_type;
@@ -686,7 +687,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x3b567db6572ce91b74cc0617f3de5722b89106d7480672fcb3dbfe55293a9d5b88a2c745638_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x11,
              0x32765e1dd8b55d57208c21d4b69519f0a9c31da369823c8981592cca8e802a5f94e83d34525_cppui298,
              0x106aaf19dea2a84dda8f2cf18ff62880a9c958a6c6a5a79a941e1739ac8e2b3355ce6018d04_cppui298,
@@ -696,8 +697,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x2b64ccb368977e146f4b4e13b8f6866bec6c788c47fe7303a1c6fac7349e659a0fd8b6472fd_cppui298,
              0x33c69c47565914ae23e4b742a2f8da84de44611ade2bf8e4934ac399aa1b663db85dd59b9a8_cppui298,
         }},
-
-        {8, { 
+        {8, {
              0x121,
              0x14837ac17edd19691f5b84d622f5280b0f03870f34ac907aa464fd672612e51d5448d739767_cppui298,
              0x27d7b182abe493a25c180ff56ba5f4d8ed879e46f66fb6cafe6b42d0f0be9b331c180825d40_cppui298,
@@ -708,7 +708,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x2ad79b82d6bc4630583d7122d594f1e28b9901fdf3f21286d5700127fb61deddaf17f61541a_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x1331,
              0x31adbbd7088bf00fa3cf6b1de5a83e1d102ee2033641130ddd3b79d5216262ef9c92daf0dd2_cppui298,
              0x136877db5aae278ef135c61203d9be3d51b18584bc5dfeae9447a9d64fbe15917f6a9463135_cppui298,
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x0a978610ebc6dc9a65d6bf10c3cbdcf43aa353788361fb89a5b33b9d23690317dcc24ae95ae_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x1,
              0x29ab55a4b34e699f13959ce2c174be01985b7a0c88268d41489977b2219cd8a8a4e33032230_cppui298,
              0x00f73779fe09916dfdcc2fd1f968d534beb17daf7518cd9fae5c1f7bdcf94dd5d7def6980c4_cppui298,
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x3b567db6572ce91b74cc0617f3de5722b89106d7480672fcb3dbfe55293a9d5b88a2c745638_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x11,
              0x32765e1dd8b55d57208c21d4b69519f0a9c31da369823c8981592cca8e802a5f94e83d34525_cppui298,
              0x106aaf19dea2a84dda8f2cf18ff62880a9c958a6c6a5a79a941e1739ac8e2b3355ce6018d04_cppui298,
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x33c69c47565914ae23e4b742a2f8da84de44611ade2bf8e4934ac399aa1b663db85dd59b9a8_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x121,
              0x14837ac17edd19691f5b84d622f5280b0f03870f34ac907aa464fd672612e51d5448d739767_cppui298,
              0x27d7b182abe493a25c180ff56ba5f4d8ed879e46f66fb6cafe6b42d0f0be9b331c180825d40_cppui298,
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x2ad79b82d6bc4630583d7122d594f1e28b9901fdf3f21286d5700127fb61deddaf17f61541a_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x1331,
              0x31adbbd7088bf00fa3cf6b1de5a83e1d102ee2033641130ddd3b79d5216262ef9c92daf0dd2_cppui298,
              0x136877db5aae278ef135c61203d9be3d51b18584bc5dfeae9447a9d64fbe15917f6a9463135_cppui298,
@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
 
         {8, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1, }},
 
-        {8, { 
+        {8, {
              0x0,
              0x1,
              0x1,
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x173564dab75ba19b463030c03996325d30e7829fc226518b459919e6d64278946b02141888b_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x0,
              0x0,
              0x0,
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
         }},
 
         //~-~-~-~ commiting to batch: 1~-~-~-~
-        {8, { 
+        {8, {
              0x39ef702ef59ff1816e4f51f2ae7fe2d78108c006d5f3039cd1a474ba8c48c16a62518f86863_cppui298,
              0x17dadc1965bae6d9426ef1a2e6d3640ac4cd96089c55c7dc3800924668fcc450cbaa7de9f4c_cppui298,
              0x1202bd2e4122c826d8ba7cd66346c0df0326468fd6e7989c8eebe3dedfcbd9b0ecdc1fb41c2_cppui298,
@@ -801,7 +801,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x1b41e76a1c5a4daa01029a0ec27b5f0b06ca7b480b600b8b573ae00feaab4ad9f1146a99459_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x11cccdf2e5ccc50aa597c4194181c1fe652f508e4aafb2a0137f878c4b3b9d09511285954a1_cppui298,
              0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
              0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x30641ec0f843aeb8202263821cac300d11b237ce42e2876763c8c16513494b993aaf5941f61_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x1e2f5a14babe0e0d4adcace1969a3c78807ea6da4ae1cca797a6bf88c3101397d8d2452a9dc_cppui298,
              0x360a362e2078f4e68d4b9e847d6da083454c3ce2e7379483cfa751cf2c0cd7e8a47cc314928_cppui298,
              0x0c3d778f1a6196ab1c2ba05597c7b275b23cb23faf7b128228ae23ad2aac20cc2bb1cc68ae9_cppui298,
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x299eacd3439bb98b27f8cbaafb3983162a895d3de16cb29360ad4b12f5f114dee4f5a065b97_cppui298,
         }},
 
-        {8, { 
+        {8, {
              0x126a1e24bba3895afe1e9d30005f807b7df2082352cd5c31f79e7e1faee22ae9ef6d091bb5c_cppui298,
              0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0,
         }},
@@ -853,11 +853,10 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
              0x2e0895904268862017c64e0a495813bf84b1d2137a53102097557bd90c2aac21c0802fc1787_cppui298,
              0x0742ee092a59ae6b7169ac51e7339c52adc1dc74471e0d207a3d29dd37d60ea9bc9438e5c15_cppui298,
         }},
-
-        {1, {0} },
-        {1, {0} },
-        {1, {0} },
-        {1, {0} },
+        math::polynomial_dfs<scalar_value_type>::zero(),
+        math::polynomial_dfs<scalar_value_type>::zero(),
+        math::polynomial_dfs<scalar_value_type>::zero(),
+        math::polynomial_dfs<scalar_value_type>::zero(),
     }};
 
     std::vector<math::polynomial<scalar_value_type>> polys;
@@ -877,17 +876,48 @@ BOOST_AUTO_TEST_CASE(batched_kzg_placeholder_repr) {
         dump_vector(single_commitment_bytes, "commitment");
     }
 
-    std::vector<std::vector<scalar_value_type>> S = {{{101, 2, 3}, {102, 2, 3}, {1, 3}, {101, 4}}};
+    std::vector<std::vector<scalar_value_type>> S = {
+        /* points_k_i:0,0: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,1: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,2: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,3: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,4: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,5: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,6: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,7: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,8: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298,
+                    0x3afff0e9becdc8be161a77a403b466aa7d696ebe365418763ba1157a5aa27fd000e04d44b99_cppui298, },
+        /* points_k_i:0,9: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298,
+                    0x3afff0e9becdc8be161a77a403b466aa7d696ebe365418763ba1157a5aa27fd000e04d44b99_cppui298, },
+        /* points_k_i:0,10:*/ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:0,11:*/ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:1,0: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:1,1: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:1,2: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:1,3: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:2,0: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298,
+                    0x3afff0e9becdc8be161a77a403b466aa7d696ebe365418763ba1157a5aa27fd000e04d44b99_cppui298, },
+        /* points_k_i:3,0: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:3,1: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:3,2: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:3,3: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:3,4: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+        /* points_k_i:3,5: */ {0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298, },
+    };
+
     std::vector<scalar_value_type> T = zk::algorithms::merge_eval_points<kzg_type>(S);
     {
-        std::vector<scalar_value_type> T_check = {1, 2, 3, 4, 101, 102};
+        std::vector<scalar_value_type> T_check = {
+            0x3a3eeb9eda157d043c7a56f0bb263b4d1bc21dc74cfb1b5e9a80f65a461c3916_cppui298,
+            0x3afff0e9becdc8be161a77a403b466aa7d696ebe365418763ba1157a5aa27fd000e04d44b99_cppui298,
+        };
         std::sort(T.begin(), T.end());
         BOOST_CHECK(T == T_check);
     }
     auto rs = zk::algorithms::create_evals_polys<kzg_type>(polys, S);
     BOOST_CHECK(rs.size() == polys.size());
     for (std::size_t i = 0; i < polys.size(); ++i) {
-        BOOST_CHECK(rs[i].degree() < polys[i].degree());
+        BOOST_CHECK(polys[i].degree() == 0 || rs[i].degree() < polys[i].degree());
         for (auto s : S[i]) {
             BOOST_CHECK(polys[i].evaluate(s) == rs[i].evaluate(s));
         }

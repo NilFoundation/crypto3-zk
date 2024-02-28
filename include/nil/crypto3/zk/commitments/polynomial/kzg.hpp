@@ -415,12 +415,12 @@ namespace nil {
                         std::vector<single_commitment_type> commits;
                         std::vector<scalar_value_type> T;  // merged eval points
                         std::vector<std::vector<scalar_value_type>> S; // eval points
-                        std::vector<math::polynomial<scalar_value_type>> r; // U polynomials
+                        std::vector<poly_type> r; // U polynomials
                         public_key_type() {};
                         public_key_type(std::vector<single_commitment_type> commits,
                                                 std::vector<scalar_value_type> T,
                                                 std::vector<std::vector<scalar_value_type>> S,
-                                                std::vector<math::polynomial<scalar_value_type>> r) :
+                                                std::vector<poly_type> r) :
                                                 commits(commits), T(T), S(S), r(r) {};
                         public_key_type operator=(const public_key_type &other) {
                             commits = other.commits;
@@ -479,12 +479,12 @@ namespace nil {
                         bool
                     >::type = true
                 >
-                static std::vector<math::polynomial<typename KZG::scalar_value_type>> create_evals_polys(
+                static std::vector<typename KZG::poly_type> create_evals_polys(
                     const typename KZG::batch_of_polynomials_type &polys,
                     const std::vector<std::vector<typename KZG::scalar_value_type>> S
                 ) {
                     BOOST_ASSERT(polys.size() == S.size());
-                    std::vector<math::polynomial<typename KZG::scalar_value_type>> rs(polys.size());
+                    std::vector<typename KZG::poly_type> rs(polys.size());
                     for (std::size_t i = 0; i < polys.size(); ++i) {
                         typename std::vector<std::pair<typename KZG::scalar_value_type, typename KZG::scalar_value_type>> evals;
                         for (auto s : S[i]) {
@@ -549,7 +549,11 @@ namespace nil {
                     commitments.resize(polys.size());
                     for (std::size_t i = 0; i < polys.size(); ++i) {
                         BOOST_ASSERT(polys[i].size() <= params.commitment_key.size());
+                        std::cout << "Commiting to: " << polys[i] << std::endl;
                         commitments[i] = commit_one<KZG>(params, polys[i]);
+                        std::cout << "Commitment: ";
+                        print_curve_group_element(std::cout, commitments[i]);
+                        std::cout << std::endl;
                     }
                     return commitments;
                 }
@@ -661,7 +665,7 @@ namespace nil {
 
                     auto gamma = transcript.template challenge<typename KZG::curve_type::scalar_field_type>();
                     auto factor = KZG::scalar_value_type::one();
-                    typename math::polynomial<typename KZG::scalar_value_type> accum;
+                    typename KZG::poly_type accum;
 
                     for (std::size_t i = 0; i < polys.size(); ++i) {
                         auto spare_poly = polys[i] - public_key.r[i];
@@ -900,8 +904,13 @@ namespace nil {
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
                                 auto polys_k_i=math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients());
-                                std::cout << "polys_k_i:" << polys_k_i << std::endl;
+                                std::cout << "polys_k_i:" << std::dec << k << "," << i <<":"<< polys_k_i << std::endl;
                                 std::cout << "U(k,i) (" << std::dec << k << "," <<i << "): " << this->get_U(k,i) << std::endl;
+                                std::cout << " /* points_k_i:" << std::dec << k << "," << i <<": */ {";
+                                for (auto const& p :this->_points[k][i]) {
+                                    std::cout << std::hex << std::showbase << p << ",";
+                                }
+                                std::cout << " }, // === points end ===" << std::endl;
 
                                 accum += factor * (math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients()) - this->get_U(k, i))/this->get_V(this->_points[k][i]);
                                 factor *= gamma;
@@ -967,12 +976,12 @@ namespace nil {
                                     byteblob[j] = this->_commitments.at(k)[i * blob_size + j];
                                 }
                                 nil::marshalling::status_type status;
-//                                dump_vector(byteblob, "demarshalling:");
+                                dump_vector(byteblob, "demarshalling:");
                                 typename curve_type::template g1_type<>::value_type
                                     i_th_commitment = nil::marshalling::pack(byteblob, status);
-//                                std::cout << std::dec << i << " commitment unpacked: ";
-//                                print_curve_group_element(std::cout, i_th_commitment);
-//                                std::cout << std::endl;
+                                std::cout << std::dec << i << " commitment unpacked: ";
+                                print_curve_group_element(std::cout, i_th_commitment);
+                                std::cout << std::endl;
                                 BOOST_ASSERT(status == nil::marshalling::status_type::success);
                                 std::cout << "U(k,i) (" << std::dec << k << "," <<i << "): " << this->get_U(k,i) << std::endl;
                                 auto U_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, this->get_U(k,i));

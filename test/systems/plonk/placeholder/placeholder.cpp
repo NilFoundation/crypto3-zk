@@ -27,7 +27,6 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------//
 
-#include "nil/crypto3/algebra/curves/alt_bn128.hpp"
 #define BOOST_TEST_MODULE placeholder_test
 
 #include <string>
@@ -1221,12 +1220,13 @@ template<
     std::size_t ConstantColumns,
     std::size_t SelectorColumns,
     std::size_t usable_rows_amount,
-    std::size_t permutation, bool UseGrinding = false>
+    std::size_t permutation, 
+    bool UseGrinding = false>
 struct placeholder_kzg_test_fixture : public test_initializer {
     using field_type = typename curve_type::scalar_field_type;
 
     struct placeholder_test_params {
-        constexpr static const std::size_t usable_rows = 13;
+        constexpr static const std::size_t usable_rows = usable_rows_amount;
 
         constexpr static const std::size_t witness_columns = WitnessColumns;
         constexpr static const std::size_t public_input_columns = PublicInputColumns;
@@ -1328,7 +1328,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         constant_columns_t,
         selector_columns_t,
         usable_rows_t,
-        4, true>
+        permutation_t, true>
         /*
     , placeholder_kzg_test_fixture<
         algebra::curves::alt_bn128_254,
@@ -1340,7 +1340,6 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         selector_columns_t,
         usable_rows_t,
         4, true>*/
-        /*
     , placeholder_kzg_test_fixture<
         algebra::curves::mnt4_298,
         hashes::keccak_1600<256>,
@@ -1350,8 +1349,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         constant_columns_t,
         selector_columns_t,
         usable_rows_t,
-        4, true>
-        */
+        permutation_t, true>
     , placeholder_kzg_test_fixture<
         algebra::curves::mnt6_298,
         hashes::keccak_1600<256>,
@@ -1361,12 +1359,12 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg)
         constant_columns_t,
         selector_columns_t,
         usable_rows_t,
-        4, true>
+        permutation_t, true>
         /*, -- Not yet implemented
     placeholder_kzg_test_fixture<
         algebra::curves::mnt6_298,
-        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::bls12<381>>>,
-        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::bls12<381>>>,
+        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
+        hashes::poseidon<nil::crypto3::hashes::detail::mina_poseidon_policy<algebra::curves::mnt6_298>>,
         witness_columns_t,
         public_columns_t,
         constant_columns_t,

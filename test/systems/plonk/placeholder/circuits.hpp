@@ -102,7 +102,7 @@ namespace nil {
                 ) {
                     using assignment_type  = typename FieldType::value_type;
 
-                    constexpr static const std::size_t usable_rows = 13;
+                    constexpr static const std::size_t usable_rows = rows_amount_1;
                     constexpr static const std::size_t permutation = 4;
 
                     constexpr static const std::size_t witness_columns = witness_columns_1;
@@ -228,9 +228,10 @@ namespace nil {
                 constexpr static const std::size_t constant_columns_t = 0;
                 constexpr static const std::size_t selector_columns_t = 2;
                 constexpr static const std::size_t usable_rows_t = 5;
+                constexpr static const std::size_t permutation_t = 4;
 
                 template<typename FieldType>
-                circuit_description<FieldType, placeholder_circuit_params<FieldType>, 5, 4>
+                circuit_description<FieldType, placeholder_circuit_params<FieldType>, usable_rows_t, permutation_t>
                 circuit_test_t(
                     typename FieldType::value_type pi0 = 0,
                     typename nil::crypto3::random::algebraic_engine<FieldType> alg_rnd = nil::crypto3::random::algebraic_engine<FieldType>(),
@@ -238,7 +239,8 @@ namespace nil {
                 ) {
                     using assignment_type = typename FieldType::value_type;
 
-                    constexpr static const std::size_t permutation = 4;
+                    constexpr static const std::size_t permutation = permutation_t;
+                    constexpr static const std::size_t usable_rows = usable_rows_t;
                     constexpr static const std::size_t witness_columns = witness_columns_t;
                     constexpr static const std::size_t public_columns = public_columns_t;
                     constexpr static const std::size_t constant_columns = constant_columns_t;
@@ -248,7 +250,7 @@ namespace nil {
 
                     typedef placeholder_circuit_params<FieldType> circuit_params;
 
-                    circuit_description<FieldType, circuit_params, 5, permutation> test_circuit;
+                    circuit_description<FieldType, circuit_params, usable_rows, permutation> test_circuit;
 
                     std::vector<std::vector<typename FieldType::value_type>> table(table_columns);
 

@@ -56,7 +56,7 @@ namespace nil {
                 public:
                     using witnesses_container_type = std::vector<ColumnType>;
 
-//               protected:
+                protected:
 
                     witnesses_container_type _witnesses;
 

@@ -134,15 +134,6 @@ namespace nil {
                     placeholder_proof<FieldType, ParamsType> process() {
                         PROFILE_PLACEHOLDER_SCOPE("Placeholder prover, total time");
 
-                        std::cout << "[41;30mproove_processor::preprocess[0m" << std::endl;
-                        std::cout << "appending to batch witnesses: " << std::endl;
-                        for (auto &w: _polynomial_table->witnesses()) {
-                            std::cout << w << std::endl;
-                        }
-                        std::cout << "appending to batch public inputs: " << std::endl;
-                        for(auto &pi: _polynomial_table->public_inputs()) {
-                            std::cout << pi << std::endl;
-                        }
                         // 2. Commit witness columns and public_input columns
                         _commitment_scheme.append_to_batch(VARIABLE_VALUES_BATCH, _polynomial_table->witnesses());
                         _commitment_scheme.append_to_batch(VARIABLE_VALUES_BATCH, _polynomial_table->public_inputs());
@@ -151,7 +142,6 @@ namespace nil {
                             _proof.commitments[VARIABLE_VALUES_BATCH] = _commitment_scheme.commit(VARIABLE_VALUES_BATCH);
                         }
                         transcript(_proof.commitments[VARIABLE_VALUES_BATCH]);
-                        std::cout << "[41;30mvars commited and transcripted[0m" << std::endl;
 
                         // 4. permutation_argument
                         {
@@ -167,7 +157,6 @@ namespace nil {
                             _F_dfs[1] = std::move(permutation_argument.F_dfs[1]);
                             _F_dfs[2] = std::move(permutation_argument.F_dfs[2]);
                         }
-                        std::cout << "[41;30mpermutation argument prove_eval'ed[0m" << std::endl;
 
                         // 5. lookup_argument
                         {
@@ -180,7 +169,6 @@ namespace nil {
 
                         _proof.commitments[PERMUTATION_BATCH] = _commitment_scheme.commit(PERMUTATION_BATCH);
                         transcript(_proof.commitments[PERMUTATION_BATCH]);
-                        std::cout << "[41;30mlookup argument evaluated, perm commited and transcripted[0m" << std::endl;
 
                         // 6. circuit-satisfability
 
@@ -197,7 +185,6 @@ namespace nil {
                             mask_polynomial,
                             transcript
                         )[0];
-                        std::cout << "[41;30mgates prove_eval'ed[0m" << std::endl;
 
                         /////TEST
 #ifdef ZK_PLACEHOLDER_DEBUG_ENABLED
@@ -215,21 +202,16 @@ namespace nil {
                             _proof.commitments[QUOTIENT_BATCH] = T_commit(T_splitted_dfs);
                         }
                         transcript(_proof.commitments[QUOTIENT_BATCH]);
-                        std::cout << "[41;30mquotient batch commited and transcripted[0m" << std::endl;
-
-                        std::cout << "challenging for eval points" << std::endl;
 
                         // 8. Run evaluation proofs
                         _proof.eval_proof.challenge = transcript.template challenge<FieldType>();
 
-                        std::cout << "proving with commitment scheme" << std::endl;
                         generate_evaluation_points();
 
                         {
                             PROFILE_PLACEHOLDER_SCOPE("commitment scheme proof eval time");
                             _proof.eval_proof.eval_proof = _commitment_scheme.proof_eval(transcript);
                         }
-                        std::cout << "[41;30mend[0m" << std::endl;
 
                         return _proof;
                     }

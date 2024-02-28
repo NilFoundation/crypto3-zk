@@ -134,26 +134,10 @@ namespace nil {
                     typedef Hash hash_type;
 
                     fiat_shamir_heuristic_sequential() : state(hash<hash_type>({0})) {
-                        std::cout << "default transcript constructor " << this << std::endl;
                     }
 
                     template<typename InputRange>
                     fiat_shamir_heuristic_sequential(const InputRange &r) : state(hash<hash_type>(r)) {
-                        std::cout << "transcript " << this << "constructed with [[[[31;1m" << std::endl;
-                        for(auto x = r.begin(); x!= r.end(); ++x) {
-                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
-                        }
-                        std::cout << std::endl << "[0m]]]" << std::endl;
-                    }
-
-                    template<typename InputIterator>
-                        void dump_buffer(InputIterator first, InputIterator last)
-                    {
-                        std::cout << "updating transcript " << this << " with [[[[32;1m" << std::endl;
-                        for(auto x = first; x!= last; ++x) {
-                            std::cout << std::hex << std::setw(2) << std::setfill('0') << int(*x);
-                        }
-                        std::cout << std::endl << "[0m]]]" << std::endl;
                     }
 
                     template<typename InputIterator>
@@ -164,7 +148,6 @@ namespace nil {
                     template<typename InputRange>
                     void operator()(const InputRange &r) {
                         auto acc_convertible = hash<hash_type>(state);
-                        dump_buffer(r.begin(), r.end());
                         state = accumulators::extract::hash<hash_type>(
                             hash<hash_type>(r, static_cast<accumulator_set<hash_type> &>(acc_convertible)));
                     }
@@ -172,7 +155,6 @@ namespace nil {
                     template<typename InputIterator>
                     void operator()(InputIterator first, InputIterator last) {
                         auto acc_convertible = hash<hash_type>(state);
-                        dump_buffer(first, last);
                         state = accumulators::extract::hash<hash_type>(
                             hash<hash_type>(first, last, static_cast<accumulator_set<hash_type> &>(acc_convertible)));
                     }
@@ -185,8 +167,6 @@ namespace nil {
                         state = hash<hash_type>(state);
                         nil::marshalling::status_type status;
                         nil::crypto3::multiprecision::cpp_int raw_result = nil::marshalling::pack(state, status);
-
-                        std::cout << "transcript " << this << " challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 
@@ -196,8 +176,6 @@ namespace nil {
                         state = hash<hash_type>(state);
                         nil::marshalling::status_type status;
                         Integral raw_result = nil::marshalling::pack(state, status);
-
-                        std::cout << "transcript " << this << " int_challenged for: " << std::hex << raw_result << std::endl;
                         return raw_result;
                     }
 

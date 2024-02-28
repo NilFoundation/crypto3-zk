@@ -198,14 +198,6 @@ namespace nil {
                     typename KZG::gt_value_type gt3 = algebra::double_miller_loop<typename KZG::curve_type>(A_1, A_2, B_1, B_2);
                     typename KZG::gt_value_type gt_4 = algebra::final_exponentiation<typename KZG::curve_type>(gt3);
 
-                    auto left = algebra::pair_reduced<typename KZG::curve_type>(
-                            proof,
-                            params.verification_key - public_key.z * KZG::curve_type::template g2_type<>::value_type::one());
-
-                    auto right = algebra::pair_reduced<typename KZG::curve_type>(
-                            public_key.eval * KZG::curve_type::template g1_type<>::value_type::one() - public_key.commit,
-                            KZG::curve_type::template g2_type<>::value_type::one());
-
                     return gt_4 == KZG::gt_value_type::one();
                 }
             } // namespace algorithms
@@ -665,7 +657,6 @@ namespace nil {
                             return typename math::polynomial<typename KZGScheme::scalar_value_type>({{1}});
                         }
                         BOOST_ASSERT(this->get_V(result) * this->get_V(points) == this->get_V(merged_points));
-                        //return zk::algorithms::create_polynom_by_zeros<KZGScheme>(result);
                         return this->get_V(result);
                     }
 
@@ -751,9 +742,7 @@ namespace nil {
                         for( auto const &it: this->_polys ){
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
-                                accum += factor * (
-                                        math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients()) -
-                                        this->get_U(k, i))/this->get_V(this->_points[k][i]);
+                                accum += factor * ( math::polynomial<typename KZGScheme::scalar_value_type>( this->_polys[k][i].coefficients()) - this->get_U(k, i)) / this->get_V(this->_points[k][i]);
                                 factor *= gamma;
                             }
                         }
@@ -774,8 +763,7 @@ namespace nil {
                             }
                             assert(accum * this->get_V(this->_merged_points) == right_side);
                         }*/
-                        auto res_commit = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum);
-                        return {this->_z, res_commit};
+                        return {this->_z, nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, accum)};
                     }
 
                     bool verify_eval(

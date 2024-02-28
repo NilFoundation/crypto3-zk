@@ -175,8 +175,6 @@ namespace nil {
                         const std::size_t constant_columns = table_description.constant_columns;
                         const std::size_t selector_columns = table_description.selector_columns;
 
-                        std::cout << "=========== VERIFIER::PROCESS START ================" << std::endl;
-
                         transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(std::vector<std::uint8_t>({}));
 
                         transcript(preprocessed_public_data.common_data.vk.constraint_system_with_params_hash);
@@ -318,8 +316,7 @@ namespace nil {
                         std::map<std::size_t, typename commitment_scheme_type::commitment_type> commitments = proof.commitments;
                         commitments[FIXED_VALUES_BATCH] = preprocessed_public_data.common_data.commitments.fixed_values;
                         if (!commitment_scheme.verify_eval( proof.eval_proof.eval_proof, commitments, transcript )) {
-                            std::cout << "commitment verify failed, [31;1mSKIPPING[0m" << std::endl;
-//                            return false;
+                            return false;
                         }
 
                         // 10. final check
@@ -347,7 +344,6 @@ namespace nil {
                         // Z is polynomial -1, 0 ...., 0, 1
                         typename FieldType::value_type Z_at_challenge = preprocessed_public_data.common_data.Z.evaluate(challenge);
                         if (F_consolidated != Z_at_challenge * T_consolidated) {
-                            std::cout << "Final evaluation failed" << std::endl;
                             return false;
                         }
                         return true;

@@ -1260,7 +1260,6 @@ struct placeholder_kzg_test_fixture : public test_initializer {
     bool run_test() {
         test_initializer::setup();
         typename field_type::value_type pi0 = test_global_alg_rnd_engine<field_type>();
-        std::cout << "setting up circuit.. pi0 = " << pi0 << std::endl;
         circuit_type circuit = circuit_test_t<field_type>(pi0, test_global_alg_rnd_engine<field_type>);
         desc.rows_amount = circuit.table_rows;
         desc.usable_rows_amount = circuit.usable_rows;
@@ -1274,45 +1273,32 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         bool verifier_res;
 
         // KZG commitment scheme
-        std::cout << "table_rows_log:" << table_rows_log << std::endl;
         auto kzg_params = create_kzg_params<kzg_type>(table_rows_log);
         kzg_scheme_type kzg_scheme(kzg_params);
 
-        std::cout << "[45mpublic preprocessor[0m" << std::endl;
         typename placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
             kzg_preprocessed_public_data =
             placeholder_public_preprocessor<field_type, kzg_placeholder_params_type>::process(
                     constraint_system, assignments.public_table(), desc, kzg_scheme, columns_with_copy_constraints.size()
                     );
 
-        std::cout << "[45mprivate preprocessor[0m" << std::endl;
         typename placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::preprocessed_data_type
             kzg_preprocessed_private_data = placeholder_private_preprocessor<field_type, kzg_placeholder_params_type>::process(
                     constraint_system, assignments.private_table(), desc
                     );
 
-        std::cout << "preprocessor data:" << std::endl;
-        for(std::size_t i = 0; i< kzg_preprocessed_private_data.private_polynomial_table._witnesses.size(); ++i) {
-            std::cout << "witness " << i << kzg_preprocessed_private_data.private_polynomial_table._witnesses[i] << std::endl;
-        }
-
-        std::cout << "[45mprover[0m" << std::endl;
         auto kzg_proof = placeholder_prover<field_type, kzg_placeholder_params_type>::process(
                 kzg_preprocessed_public_data, std::move(kzg_preprocessed_private_data), desc, constraint_system, kzg_scheme
                 );
 
-        std::cout << "[45mverifier[0m" << std::endl;
         verifier_res = placeholder_verifier<field_type, kzg_placeholder_params_type>::process(
                 kzg_preprocessed_public_data, kzg_proof, desc, constraint_system, kzg_scheme
                 );
         test_initializer::teardown();
-        std::cout << "verifier_res: " << verifier_res << std::endl;
         return verifier_res;
     }
 
     plonk_table_description<field_type> desc;
-//    typename policy_type::variable_assignment_type assignments;
-//    std::size_t table_rows_log;
 };
 
 

@@ -66,12 +66,15 @@ namespace nil {
                     typedef math::term<variable_type> term_type;
                     typedef math::binary_arithmetic_operation<variable_type> binary_operation_type;
                     typedef math::pow_operation<variable_type> pow_operation_type;
+                    typedef std::vector<std::size_t> public_input_sizes_type;
 
                 protected:
                     gates_container_type _gates;
                     copy_constraints_container_type _copy_constraints;
                     lookup_gates_container_type _lookup_gates;
                     lookup_tables_type _lookup_tables;
+                    // If empty, then check full column
+                    public_input_sizes_type _public_input_sizes;
                 public:
                     typedef FieldType field_type;
 
@@ -83,13 +86,34 @@ namespace nil {
                     plonk_constraint_system(const gates_container_type &gates,
                                             const copy_constraints_container_type &copy_constraints,
                                             const lookup_gates_container_type &lookup_gates = {},
-                                            const lookup_tables_type &lookup_tables = {}
+                                            const lookup_tables_type &lookup_tables = {},
+                                            const public_input_sizes_type public_input_sizes = {}
                     ) :
                         _gates(gates),
                         _copy_constraints(copy_constraints),
                         _lookup_gates(lookup_gates),
-                        _lookup_tables(lookup_tables)
+                        _lookup_tables(lookup_tables),
+                        _public_input_sizes(public_input_sizes)
                     {
+                    }
+
+                    std::size_t full_public_input_size() const {
+                        std::size_t sum = 0;
+                        for(std::size_t i = 0; i < _public_input_sizes.size(); ++i) {
+                            sum += _public_input_sizes[i];
+                        }
+                        return sum;
+                    }
+
+                    std::size_t public_input_size(std::size_t i) const {
+                        if(i >= _public_input_sizes.size()){
+                            return 0;
+                        }
+                        return _public_input_sizes[i];
+                    }
+
+                    std::size_t public_input_sizes_num() const {
+                        return _public_input_sizes.size();
                     }
 
                     std::size_t num_gates() const {

@@ -241,7 +241,8 @@ namespace nil {
 
                     bool operator==(const plonk_constraint_system<FieldType> &other) const {
                         return (this->_gates == other._gates) && (this->_copy_constraints == other._copy_constraints) &&
-                               (this->_lookup_gates == other._lookup_gates) && (this->_lookup_tables == other._lookup_tables);
+                               (this->_lookup_gates == other._lookup_gates) && (this->_lookup_tables == other._lookup_tables) &&
+                               (this->_public_input_sizes == other._public_input_sizes);
                     }
                 };
             }    // namespace snark

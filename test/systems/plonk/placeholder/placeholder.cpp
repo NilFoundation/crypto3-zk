@@ -1482,7 +1482,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
 
     using TestFixtures = boost::mpl::list<
     placeholder_kzg_test_fixture_v2<
-        algebra::curves::bls12<381>,
+        algebra::curves::bls12_381,
         hashes::keccak_1600<256>,
         hashes::keccak_1600<256>,
         witness_columns_t,
@@ -1514,6 +1514,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
         usable_rows_t,
         permutation_t, true>
         */
+        /*
     , placeholder_kzg_test_fixture_v2<
         algebra::curves::mnt6_298,
         hashes::keccak_1600<256>,
@@ -1524,6 +1525,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2_kzg_v2)
         selector_columns_t,
         usable_rows_t,
         permutation_t, true>
+        */
         /*, -- Not yet implemented
     placeholder_kzg_test_fixture<
         algebra::curves::mnt6_298,

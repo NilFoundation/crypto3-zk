@@ -838,7 +838,10 @@ namespace nil {
                     using transcript_type = typename KZGScheme::transcript_type;
                     using transcript_hash_type = typename KZGScheme::transcript_hash_type;
                     using poly_type = PolynomialType;
-                    using proof_type = std::pair<typename KZGScheme::proof_type, typename KZGScheme::proof_type>;
+                    struct proof_type {
+                        eval_storage<field_type> z;
+                        typename KZGScheme::single_commitment_type pi_1, pi_2;
+                    };
                     using endianness = nil::marshalling::option::big_endian;
                 private:
                     params_type _params;
@@ -950,32 +953,29 @@ namespace nil {
                             update_transcript(k, transcript);
                         }
 
-                        auto theta = transcript.template challenge<typename curve_type::scalar_field_type>();
-
+                        auto theta = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
                         auto theta_i = KZGScheme::scalar_value_type::one();
-
-                        auto f = math::polynomial<typename curve_type::scalar_field_type>::zero();
+                        auto f = math::polynomial<typename KZGScheme::scalar_value_type>::zero();
 
                         for( auto const &it: this->_polys ){
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
-
                                 /* diffpoly = Z_{T\without S_i} */
                                 auto diffpoly = set_difference_polynom(_merged_points, this->_points.at(k)[i]);
-
                                 f += theta_i * (math::polynomial<typename KZGScheme::scalar_value_type>( this->_polys[k][i].coefficients()) - this->get_U(k, i)) * diffpoly;
                                 theta_i *= theta;
                             }
                         }
-                        typename KZGScheme::proof_type pi_1 = {this->_z, nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, f)};
+                        typename KZGScheme::single_commitment_type pi_1 = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, f);
 
-                        transcript(pi_1.kzg_proof);
+                        transcript(pi_1);
 
                         auto theta_2 = transcript.template challenge<typename curve_type::scalar_field_type>();
-                        math::polynomial<typename curve_type::scalar_field_type> theta_2_vanish = { -theta_2, 1 };
-                        theta_i = curve_type::scalar_field_type::one();
+                        math::polynomial<typename KZGScheme::scalar_value_type> theta_2_vanish = { -theta_2, 1 };
 
-                        auto L = math::polynomial<typename curve_type::scalar_field_type>::zero();
+                        theta_i = KZGScheme::scalar_value_type::one();
+
+                        auto L = math::polynomial<typename KZGScheme::scalar_value_type>::zero();
 
                         for( auto const &it: this->_polys ) {
                             auto k = it.first;
@@ -984,7 +984,7 @@ namespace nil {
                                 /* diffpoly = Z_{T\without S_i} */
                                 auto diffpoly = set_difference_polynom(_merged_points, this->_points.at(k)[i]);
                                 auto Z_T_S_i = diffpoly.evaluate(theta_2);
-                                L += theta_i * (math::polynomial<typename curve_type::scalar_field_type>(this->_polys[k][i].coefficients()) - this->get_U(k, i).evaluate(theta_2));
+                                L += theta_i * (math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients()) - this->get_U(k, i).evaluate(theta_2));
                                 theta_i *= theta;
                             }
                         }
@@ -992,11 +992,11 @@ namespace nil {
                         L -= this->get_V(_merged_points).evaluate(theta_2) * ( f / this->get_V(_merged_points) );
                         L /= theta_2_vanish;
 
-                        typename KZGScheme::proof_type pi_2 = {this->_z, nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, L)};
+                        typename KZGScheme::single_commitment_type pi_2 = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, L);
 
-                        transcript(pi_2.kzg_proof);
+                        transcript(pi_2);
 
-                        return {pi_1, pi_2};
+                        return {this->_z, pi_1, pi_2};
                     }
 
                     bool verify_eval(
@@ -1013,13 +1013,13 @@ namespace nil {
                             update_transcript(k, transcript);
                         }
 
-                        auto theta = transcript.template challenge<typename curve_type::scalar_field_type>();
-                        transcript(proof.first.kzg_proof);
-                        auto theta_2 = transcript.template challenge<typename curve_type::scalar_field_type>();
-                        auto theta_i = curve_type::scalar_field_type::one();
+                        auto theta = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
+                        transcript(proof.pi_1);
+                        auto theta_2 = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
+                        auto theta_i = KZGScheme::scalar_value_type::one();
 
                         auto F = KZGScheme::single_commitment_type::zero();
-                        auto rsum = curve_type::scalar_field_Type::zero();
+                        auto rsum = KZGScheme::scalar_value_type::zero();
 
                         for (const auto &it: this->_commitments) {
                             auto k = it.first;
@@ -1042,15 +1042,14 @@ namespace nil {
                             }
                         }
 
-                        F -= rsum * commitment_type::one();
-
-                        F -= this->get_V(_merged_points).evaluate(theta_2) * proof.first.kzg_proof;
+                        F -= rsum * KZGScheme::single_commitment_type::one();
+                        F -= this->get_V(_merged_points).evaluate(theta_2) * proof.pi_1;
 
                         auto left_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>
-                            ( F + theta_2 * proof.second.kzg_proof, verification_key_type::one);
+                            ( F + theta_2 * proof.pi_2, verification_key_type::one );
 
                         auto right_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>
-                            ( proof.second.kzg_proof, _params.verification_key[1]);
+                            ( proof.pi_2, _params.verification_key[1] );
 
                         return left_side_pairing == right_side_pairing;
                     }
@@ -1058,7 +1057,6 @@ namespace nil {
                     const params_type& get_commitment_params() const {
                         return _params;
                     }
-
                 };
             }     // namespace commitments
         }         // namespace zk

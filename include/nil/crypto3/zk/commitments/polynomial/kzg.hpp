@@ -960,15 +960,23 @@ namespace nil {
                         for( auto const &it: this->_polys ){
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
-                                /* diffpoly = Z_{T\without S_i} */
                                 auto diffpoly = set_difference_polynom(_merged_points, this->_points.at(k)[i]);
-                                f += theta_i * (math::polynomial<typename KZGScheme::scalar_value_type>( this->_polys[k][i].coefficients()) - this->get_U(k, i)) * diffpoly;
+                                auto f_i = math::polynomial<typename KZGScheme::scalar_value_type>( this->_polys[k][i].coefficients());
+                                f += theta_i * (f_i - this->get_U(k, i)) * diffpoly;
                                 theta_i *= theta;
                             }
                         }
+
+                        BOOST_ASSERT( f % this->get_V(_merged_points) == math::polynomial<typename KZGScheme::scalar_value_type>::zero());
+                        f /= this->get_V(_merged_points);
+
                         typename KZGScheme::single_commitment_type pi_1 = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, f);
 
-                        transcript(pi_1);
+                        nil::marshalling::status_type status;
+                        std::vector<std::uint8_t> pi1_byteblob = nil::marshalling::pack<endianness>(pi_1, status);
+                        BOOST_ASSERT(status == nil::marshalling::status_type::success);
+
+                        transcript(pi1_byteblob);
 
                         auto theta_2 = transcript.template challenge<typename curve_type::scalar_field_type>();
                         math::polynomial<typename KZGScheme::scalar_value_type> theta_2_vanish = { -theta_2, 1 };
@@ -980,21 +988,24 @@ namespace nil {
                         for( auto const &it: this->_polys ) {
                             auto k = it.first;
                             for (std::size_t i = 0; i < this->_z.get_batch_size(k); ++i) {
-
-                                /* diffpoly = Z_{T\without S_i} */
                                 auto diffpoly = set_difference_polynom(_merged_points, this->_points.at(k)[i]);
                                 auto Z_T_S_i = diffpoly.evaluate(theta_2);
-                                L += theta_i * (math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients()) - this->get_U(k, i).evaluate(theta_2));
+                                auto f_i = math::polynomial<typename KZGScheme::scalar_value_type>(this->_polys[k][i].coefficients());
+                                L += theta_i * Z_T_S_i * (f_i - this->get_U(k, i).evaluate(theta_2));
                                 theta_i *= theta;
                             }
                         }
 
-                        L -= this->get_V(_merged_points).evaluate(theta_2) * ( f / this->get_V(_merged_points) );
+                        L -= this->get_V(_merged_points).evaluate(theta_2) * f;
+                        BOOST_ASSERT( L.evaluate(theta_2) == KZGScheme::scalar_value_type::zero() );
                         L /= theta_2_vanish;
 
                         typename KZGScheme::single_commitment_type pi_2 = nil::crypto3::zk::algorithms::commit_one<KZGScheme>(_params, L);
 
-                        transcript(pi_2);
+                        /* TODO: Review the necessity of sending pi_2 to transcript */
+                        std::vector<uint8_t> pi2_byteblob = nil::marshalling::pack<endianness>(pi_2, status);
+                        BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                        transcript(pi2_byteblob);
 
                         return {this->_z, pi_1, pi_2};
                     }
@@ -1014,7 +1025,10 @@ namespace nil {
                         }
 
                         auto theta = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
-                        transcript(proof.pi_1);
+                        nil::marshalling::status_type status;
+                        std::vector<std::uint8_t> byteblob = nil::marshalling::pack<endianness>(proof.pi_1, status);
+                        BOOST_ASSERT(status == nil::marshalling::status_type::success);
+                        transcript(byteblob);
                         auto theta_2 = transcript.template challenge<typename KZGScheme::curve_type::scalar_field_type>();
                         auto theta_i = KZGScheme::scalar_value_type::one();
 
@@ -1045,10 +1059,10 @@ namespace nil {
                         F -= rsum * KZGScheme::single_commitment_type::one();
                         F -= this->get_V(_merged_points).evaluate(theta_2) * proof.pi_1;
 
-                        auto left_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>
-                            ( F + theta_2 * proof.pi_2, verification_key_type::one );
+                        auto left_side_pairing = nil::crypto3::algebra::pair_reduced<typename KZGScheme::curve_type>
+                            ( F + theta_2 * proof.pi_2, verification_key_type::one() );
 
-                        auto right_side_pairing = nil::crypto3::algebra::pair_reduced<curve_type>
+                        auto right_side_pairing = nil::crypto3::algebra::pair_reduced<typename KZGScheme::curve_type>
                             ( proof.pi_2, _params.verification_key[1] );
 
                         return left_side_pairing == right_side_pairing;

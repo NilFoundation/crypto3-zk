@@ -111,6 +111,7 @@ namespace nil {
                             using commitment_scheme_type = typename ParamsType::commitment_scheme_type;
                             using commitments_type = public_commitments_type;
                             using verification_key_type = verification_key;
+                            using transcript_hash_type = typename ParamsType::transcript_hash_type;
 
                             // marshalled
                             public_commitments_type commitments;

@@ -702,8 +702,14 @@ namespace nil {
 
                     for (std::size_t query_id = 0; query_id < FRI::lambda; query_id++) {
                         std::size_t domain_size = fri_params.D[0]->size();
-                        std::uint64_t x_index = (transcript.template int_challenge<std::uint64_t>()) % domain_size;
-                        typename FRI::field_type::value_type x = fri_params.D[0]->get_domain_element(x_index);
+                        typename FRI::field_type::value_type x = transcript.template challenge<typename FRI::field_type>();
+                        x = x.pow((FRI::field_type::modulus - 1)/domain_size);
+                        std::uint64_t x_index = 0;
+                        for( x_index = 0; x_index < domain_size; x_index++ ){
+                            if( fri_params.D[0]->get_domain_element(x_index) == x ){
+                                break;
+                            }
+                        }
                         t = 0;
 
                         std::vector<std::array<typename FRI::field_type::value_type, FRI::m>> s;
@@ -854,8 +860,14 @@ namespace nil {
 
                         std::size_t domain_size = fri_params.D[0]->size();
                         std::size_t coset_size = 1 << fri_params.step_list[0];
-                        std::uint64_t x_index = (transcript.template int_challenge<std::uint64_t>()) % domain_size;
-                        typename FRI::field_type::value_type x = fri_params.D[0]->get_domain_element(x_index);
+                        typename FRI::field_type::value_type x_challenge = transcript.template challenge<typename FRI::field_type>();
+                        typename FRI::field_type::value_type x = x_challenge.pow((FRI::field_type::modulus - 1)/domain_size);
+                        std::uint64_t x_index = 0;
+                        for( x_index = 0; x_index < domain_size; x_index++ ){
+                            if( fri_params.D[0]->get_domain_element(x_index) == x ){
+                                break;
+                            }
+                        }
 
                         std::vector<std::array<typename FRI::field_type::value_type, FRI::m>> s;
                         std::vector<std::array<std::size_t, FRI::m>> s_indices;

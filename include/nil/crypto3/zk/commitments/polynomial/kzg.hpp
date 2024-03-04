@@ -824,7 +824,14 @@ namespace nil {
 
                 };
 
-                // Placeholder-friendly class
+                // Placeholder-friendly class, KZGv2
+                /**
+                 * References:
+                 * "Efficient polynomial commitment schemes for
+                 * multiple points and polynomials",
+                 * Dan Boneh, Justin Drake, Ben Fisch,
+                 * <https://eprint.iacr.org/2020/081.pdf>
+                 */
                 template<typename KZGScheme, typename PolynomialType = typename math::polynomial_dfs<typename KZGScheme::field_type::value_type>>
                 class kzg_commitment_scheme_v2 : public polys_evaluator<typename KZGScheme::params_type, typename KZGScheme::commitment_type, PolynomialType>{
                 public:

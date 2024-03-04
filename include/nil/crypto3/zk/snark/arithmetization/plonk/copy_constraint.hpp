@@ -27,6 +27,8 @@
 #ifndef CRYPTO3_ZK_PLONK_COPY_CONSTRAINT_HPP
 #define CRYPTO3_ZK_PLONK_COPY_CONSTRAINT_HPP
 
+#include <utility>
+
 #include <nil/crypto3/zk/snark/arithmetization/plonk/variable.hpp>
 
 namespace nil {
@@ -36,6 +38,12 @@ namespace nil {
 
                 template<typename FieldType>
                 using plonk_copy_constraint = std::pair<plonk_variable<typename FieldType::value_type>, plonk_variable<typename FieldType::value_type>>;
+
+                template<typename FieldType>
+                bool operator==(const plonk_copy_constraint<FieldType> &lhs, const plonk_copy_constraint<FieldType> &rhs) {
+                    return ((lhs.first == rhs.first ) && (lhs.second == rhs.second)) ||
+                           ((lhs.first == rhs.second) && (lhs.second == rhs.first ));
+                }
 
             }    // namespace snark
         }        // namespace zk

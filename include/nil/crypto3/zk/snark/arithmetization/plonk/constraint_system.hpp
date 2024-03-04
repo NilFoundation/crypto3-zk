@@ -108,6 +108,10 @@ namespace nil {
                         return _copy_constraints;
                     }
 
+                    copy_constraints_container_type &mutable_copy_constraints() {
+                        return _copy_constraints;
+                    }
+
                     const lookup_gates_container_type &lookup_gates() const {
                         return _lookup_gates;
                     }

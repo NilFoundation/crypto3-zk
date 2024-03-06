@@ -154,8 +154,9 @@ namespace nil {
 
                         for( std::size_t i = 0; i < public_input.size(); ++i ){
                             typename FieldType::value_type value = FieldType::value_type::zero();
-                            std::size_t max_size = constraint_system.public_input_sizes_num() == 0 ? public_input[i].size() : constraint_system.public_input_size(i);
-                            max_size = std::min(max_size, public_input[i].size());
+                            std::size_t max_size = public_input[i].size();
+                            if (constraint_system.public_input_sizes_num() != 0)
+                                max_size = std::min(max_size, constraint_system.public_input_size(i));
                             auto omega_pow = FieldType::value_type::one();
                             for( std::size_t j = 0; j < max_size; ++j ){
                                 value += (public_input[i][j] * omega_pow) / (challenge - omega_pow);

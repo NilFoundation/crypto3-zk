@@ -87,7 +87,7 @@ namespace nil {
                                             const copy_constraints_container_type &copy_constraints,
                                             const lookup_gates_container_type &lookup_gates = {},
                                             const lookup_tables_type &lookup_tables = {},
-                                            const public_input_sizes_type public_input_sizes = {}
+                                            const public_input_sizes_type &public_input_sizes = {}
                     ) :
                         _gates(gates),
                         _copy_constraints(copy_constraints),
@@ -97,18 +97,12 @@ namespace nil {
                     {
                     }
 
-                    std::size_t full_public_input_size() const {
-                        std::size_t sum = 0;
-                        for(std::size_t i = 0; i < _public_input_sizes.size(); ++i) {
-                            sum += _public_input_sizes[i];
-                        }
-                        return sum;
+                    std::size_t public_input_total_size() const {
+                        return std::accumulate(_public_input_sizes.begin(), _public_input_sizes.end(), 0);
                     }
 
                     std::size_t public_input_size(std::size_t i) const {
-                        if(i >= _public_input_sizes.size()){
-                            return 0;
-                        }
+                        assert(i < _public_input_sizes.size());
                         return _public_input_sizes[i];
                     }
 

@@ -738,22 +738,43 @@ namespace nil {
                                     ) {
                                     if (g_k[polynomial_index].size() == fri_params.D[0]->size()) {
                                         for (std::size_t j = 0; j < coset_size / FRI::m; j++) {
-                                            initial_proof[k].values[polynomial_index][j][0] = g_k[polynomial_index][s_indices[j][0]];
-                                            initial_proof[k].values[polynomial_index][j][1] = g_k[polynomial_index][s_indices[j][1]];
+                                            std::size_t ind0 = std::min(s_indices[j][0], s_indices[j][1]);
+                                            std::size_t ind1 = std::max(s_indices[j][0], s_indices[j][1]);
+                                            initial_proof[k].values[polynomial_index][j][0] = g_k[polynomial_index][ind0];
+                                            initial_proof[k].values[polynomial_index][j][1] = g_k[polynomial_index][ind1];
                                         }
                                     } else {
                                         // Convert to coefficients form and evaluate. coset_size / FRI::m is usually just 1,
                                         // It makes no sense to resize in dfs form to then use just 2 values in 2 points.
                                         for (std::size_t j = 0; j < coset_size / FRI::m; j++) {
-                                            initial_proof[k].values[polynomial_index][j][0] = g_coeffs[k][polynomial_index].evaluate(s[j][0]);
-                                            initial_proof[k].values[polynomial_index][j][1] = g_coeffs[k][polynomial_index].evaluate(s[j][1]);
+                                            typename FRI::field_type::value_type s0;
+                                            typename FRI::field_type::value_type s1;
+                                            if( s_indices[j][0] < s_indices[j][1]){
+                                                s0 = s[j][0];
+                                                s1 = s[j][1];
+                                            } else {
+                                                s0 = s[j][1];
+                                                s1 = s[j][0];
+                                            }
+                                            initial_proof[k].values[polynomial_index][j][0] = g_coeffs[k][polynomial_index].evaluate(s0);
+                                            initial_proof[k].values[polynomial_index][j][1] = g_coeffs[k][polynomial_index].evaluate(s1);
                                         }
                                     }
                                 } else {
                                     // Same for poly in coefficients form.
                                     for (std::size_t j = 0; j < coset_size / FRI::m; j++) {
-                                        initial_proof[k].values[polynomial_index][j][0] = g_k[polynomial_index].evaluate(s[j][0]);
-                                        initial_proof[k].values[polynomial_index][j][1] = g_k[polynomial_index].evaluate(s[j][1]);
+                                        typename FRI::field_type::value_type s0;
+                                        typename FRI::field_type::value_type s1;
+
+                                        if( s_indices[j][0] < s_indices[j][1]){
+                                            s0 = s[j][0];
+                                            s1 = s[j][1];
+                                        } else {
+                                            s0 = s[j][1];
+                                            s1 = s[j][0];
+                                        }
+                                        initial_proof[k].values[polynomial_index][j][0] = g_k[polynomial_index].evaluate(s0);
+                                        initial_proof[k].values[polynomial_index][j][1] = g_k[polynomial_index].evaluate(s1);
                                     }
                                 }
                             }
@@ -765,7 +786,7 @@ namespace nil {
                             );
                         }
 
-                        // Fill query proofs
+                        // Fill round proofs
                         std::vector<typename FRI::round_proof_type> round_proofs;
                         t = 0;
                         round_proofs.resize(fri_params.step_list.size());
@@ -782,8 +803,9 @@ namespace nil {
                             if (i < fri_params.step_list.size() - 1) {
                                 x_index %= fri_params.D[t]->size();
                                 x = fri_params.D[t]->get_domain_element(x_index);
-                                std::tie(s, s_indices) = calculate_s<FRI>(x, x_index, fri_params.step_list[i + 1],
-                                                                          fri_params.D[t]);
+                                std::tie(s, s_indices) = calculate_s<FRI>(
+                                    x, x_index, fri_params.step_list[i + 1], fri_params.D[t]
+                                );
 
                                 std::size_t coset_size = 1 << fri_params.step_list[i + 1];
                                 BOOST_ASSERT(coset_size / FRI::m == s.size());
@@ -793,20 +815,25 @@ namespace nil {
                                 for (std::size_t j = 0; j < coset_size / FRI::m; j++) {
                                     if constexpr (std::is_same<math::polynomial_dfs<typename FRI::field_type::value_type>,
                                             PolynomialType>::value) {
-                                        round_proofs[i].y[j][0] = fs[i + 1][s_indices[j][0]];
-                                        round_proofs[i].y[j][1] = fs[i + 1][s_indices[j][1]];
+                                        std::size_t ind0 = std::min(s_indices[j][0], s_indices[j][1]);
+                                        std::size_t ind1 = std::max(s_indices[j][0], s_indices[j][1]);
+                                        round_proofs[i].y[j][0] = fs[i + 1][ind0];
+                                        round_proofs[i].y[j][1] = fs[i + 1][ind1];
                                     } else {
-                                        round_proofs[i].y[j][0] = fs[i + 1].evaluate(s[j][0]);
-                                        round_proofs[i].y[j][1] = fs[i + 1].evaluate(s[j][1]);
+                                        typename FRI::field_type::value_type s0 = (s_indices[j][0] < s_indices[j][1] ? s[j][0] : s[j][1]);
+                                        typename FRI::field_type::value_type s1 = (s_indices[j][0] > s_indices[j][1] ? s[j][0] : s[j][1]);
+                                        round_proofs[i].y[j][0] = fs[i + 1].evaluate(s0);
+                                        round_proofs[i].y[j][1] = fs[i + 1].evaluate(s1);
                                     }
                                 }
                             } else {
                                 x_index %= fri_params.D[t - 1]->size();
                                 x = fri_params.D[t - 1]->get_domain_element(x_index);
                                 x = x * x;
+                                std::size_t ind = (x_index %(fri_params.D[t-1]->size()/2) < fri_params.D[t-1]->size()/4)? 0: 1;
                                 round_proofs[i].y.resize(1);
-                                round_proofs[i].y[0][0] = final_polynomial.evaluate(x);
-                                round_proofs[i].y[0][1] = final_polynomial.evaluate(-x);
+                                round_proofs[i].y[0][ind] = final_polynomial.evaluate(x);
+                                round_proofs[i].y[0][1-ind] = final_polynomial.evaluate(-x);
                             }
                         }
                         typename FRI::query_proof_type query_proof = {std::move(initial_proof), std::move(round_proofs)};
@@ -888,11 +915,11 @@ namespace nil {
                             for (std::size_t i = 0; i < query_proof.initial_proof.at(k).values.size(); i++) {
                                 for (auto [idx, pair_idx] : correct_order_idx) {
                                     typename FRI::field_element_type leaf_val0(
-                                        query_proof.initial_proof.at(k).values[i][idx][pair_idx]
+                                        query_proof.initial_proof.at(k).values[i][idx][0]
                                     );
                                     leaf_val0.write(write_iter, FRI::field_element_type::length());
                                     typename FRI::field_element_type leaf_val1(
-                                        query_proof.initial_proof.at(k).values[i][idx][1-pair_idx]
+                                        query_proof.initial_proof.at(k).values[i][idx][1]
                                     );
                                     leaf_val1.write(write_iter, FRI::field_element_type::length());
                                 }
@@ -924,15 +951,16 @@ namespace nil {
                                 theta_acc *= theta;
                             }
                             for (size_t j = 0; j < coset_size / FRI::m; j++) {
+                                std::size_t id0 = s_indices[j][0] < s_indices[j][1] ? 0 : 1;
+                                std::size_t id1 = s_indices[j][0] < s_indices[j][1] ? 1 : 0;
                                 Q[j][0] -= combined_U[p];
                                 Q[j][1] -= combined_U[p];
-                                Q[j][0] /= denominators[p].evaluate(s[j][0]);
-                                Q[j][1] /= denominators[p].evaluate(s[j][1]);
+                                Q[j][0] /= denominators[p].evaluate(s[j][id0]);
+                                Q[j][1] /= denominators[p].evaluate(s[j][id1]);
                                 y[j][0] += Q[j][0];
                                 y[j][1] += Q[j][1];
                             }
                         }
-
                         // Check round proofs
                         std::size_t t = 0;
                         typename FRI::polynomial_values_type y_next;
@@ -947,9 +975,9 @@ namespace nil {
                             auto correct_order_idx =
                                     get_correct_order<FRI>(x_index, domain_size, fri_params.step_list[i], s_indices);
                             for (auto [idx, pair_idx]: correct_order_idx) {
-                                typename FRI::field_element_type leaf_val0(y[idx][pair_idx]);
+                                typename FRI::field_element_type leaf_val0(y[idx][0]);
                                 leaf_val0.write(write_iter, FRI::field_element_type::length());
-                                typename FRI::field_element_type leaf_val1(y[idx][1 - pair_idx]);
+                                typename FRI::field_element_type leaf_val1(y[idx][1]);
                                 leaf_val1.write(write_iter, FRI::field_element_type::length());
                             }
                             if (!query_proof.round_proofs[i].p.validate(leaf_data)) {
@@ -964,57 +992,89 @@ namespace nil {
                                 domain_size = fri_params.D[t]->size();
                                 x_index %= domain_size;
                                 x = fri_params.D[t]->get_domain_element(x_index);
+                                auto [s_next, s_indices_next] = calculate_s<FRI>(
+                                    x *x , x_index% fri_params.D[t+1]->size(),
+                                    fri_params.step_list[i], fri_params.D[t+1]
+                                );
                                 std::tie(s, s_indices) = calculate_s<FRI>(x, x_index, fri_params.step_list[i],
                                                                           fri_params.D[t]);
+                                std::size_t new_domain_size = domain_size;
                                 for (std::size_t y_ind = 0; y_ind < y_next.size(); y_ind++) {
+                                    std::size_t ind0 = s_indices[2 * y_ind][0] < s_indices[2 * y_ind][1] ? 0 : 1;
+                                    std::size_t ind1 = s_indices[2 * y_ind][0] < s_indices[2 * y_ind][1] ? 1 : 0;
+
                                     std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points_l{
-                                            std::make_pair(s[2 * y_ind][0], y[2 * y_ind][0]),
-                                            std::make_pair(s[2 * y_ind][1], y[2 * y_ind][1]),
+                                            std::make_pair(s[2 * y_ind][0], y[2 * y_ind][ind0]),
+                                            std::make_pair(s[2 * y_ind][1], y[2 * y_ind][ind1]),
                                     };
                                     math::polynomial<typename FRI::field_type::value_type> interpolant_l =
                                             math::lagrange_interpolation(interpolation_points_l);
-                                    y_next[y_ind][0] = interpolant_l.evaluate(alphas[t]);
 
+                                    ind0 = s_indices[2 * y_ind + 1][0] < s_indices[2 * y_ind + 1][1] ? 0 : 1;
+                                    ind1 = s_indices[2 * y_ind + 1][0] < s_indices[2 * y_ind + 1][1] ? 1 : 0;
                                     std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points_r{
-                                            std::make_pair(s[2 * y_ind + 1][0], y[2 * y_ind + 1][0]),
-                                            std::make_pair(s[2 * y_ind + 1][1], y[2 * y_ind + 1][1]),
+                                            std::make_pair(s[2 * y_ind + 1][0], y[2 * y_ind + 1][ind0]),
+                                            std::make_pair(s[2 * y_ind + 1][1], y[2 * y_ind + 1][ind1]),
                                     };
                                     math::polynomial<typename FRI::field_type::value_type> interpolant_r =
                                             math::lagrange_interpolation(interpolation_points_r);
-                                    y_next[y_ind][1] = interpolant_r.evaluate(alphas[t]);
+
+                                    new_domain_size /= FRI::m;
+
+                                    std::size_t interpolant_index_l = s_indices_next[y_ind][0];
+                                    std::size_t interpolant_index_r = s_indices_next[y_ind][1];
+
+                                    if( interpolant_index_l < interpolant_index_r){
+                                        y_next[y_ind][0] = interpolant_l.evaluate(alphas[t]);
+                                        y_next[y_ind][1] = interpolant_r.evaluate(alphas[t]);
+                                    } else {
+                                        y_next[y_ind][0] = interpolant_r.evaluate(alphas[t]);
+                                        y_next[y_ind][1] = interpolant_l.evaluate(alphas[t]);
+                                    }
                                 }
                                 x = x * x;
                                 y = y_next;
                             }
+                            domain_size = fri_params.D[t]->size();
+                            x_index %= domain_size;
+                            x = fri_params.D[t]->get_domain_element(x_index);
                             std::tie(s, s_indices) = calculate_s<FRI>(x, x_index, fri_params.step_list[i],
                                                                       fri_params.D[t]);
 
+                            std::size_t ind0 = s_indices[0][0] < s_indices[0][1] ? 0 : 1;
+                            std::size_t ind1 = s_indices[0][0] < s_indices[0][1] ? 1 : 0;
                             std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points{
-                                    std::make_pair(s[0][0], y[0][0]),
-                                    std::make_pair(s[0][1], y[0][1]),
+                                    std::make_pair(s[0][ind0], y[0][0]),
+                                    std::make_pair(s[0][ind1], y[0][1]),
                             };
                             math::polynomial<typename FRI::field_type::value_type> interpolant_poly =
                                     math::lagrange_interpolation(interpolation_points);
                             auto interpolant = interpolant_poly.evaluate(alphas[t]);
-                            if (interpolant != query_proof.round_proofs[i].y[0][0]) {
+
+                            std::size_t ind = s_indices[0][ind0] % (fri_params.D[t]->size()/2) < fri_params.D[t]->size() / 4 ? 0 : 1;
+                            if (interpolant != query_proof.round_proofs[i].y[0][ind]) {
                                 return false;
                             }
 
                             // For the last round we check final polynomial nor colinear_check
-                            t++;
                             y = query_proof.round_proofs[i].y;
                             if (i < fri_params.step_list.size() - 1) {
+                                t++;
                                 domain_size = fri_params.D[t]->size();
                                 x_index %= domain_size;
                                 x = fri_params.D[t]->get_domain_element(x_index);
                             }
                         }
+
                         // Final polynomial check
+                        x_index %= fri_params.D[t]->size();
+                        x = fri_params.D[t]->get_domain_element(x_index);
                         x = x * x;
-                        if (y[0][0] != proof.final_polynomial.evaluate(x)) {
+                        std::size_t ind = x_index % (fri_params.D[t]->size() / 2) < fri_params.D[t]->size() / 4 ? 0 : 1;
+                        if (y[0][ind] != proof.final_polynomial.evaluate(x)) {
                             return false;
                         }
-                        if (y[0][1] != proof.final_polynomial.evaluate(-x)) {
+                        if (y[0][1-ind] != proof.final_polynomial.evaluate(-x)) {
                             return false;
                         }
                     }

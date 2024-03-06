@@ -78,6 +78,8 @@ namespace nil {
                     struct basic_batched_fri {
                         BOOST_STATIC_ASSERT_MSG(M == 2, "unsupported m value!");
 
+                        constexpr static const bool is_fri = true;
+
                         constexpr static const std::size_t m = M;
                         constexpr static const std::size_t lambda = Lambda;
 

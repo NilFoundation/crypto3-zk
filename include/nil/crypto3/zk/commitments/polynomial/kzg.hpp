@@ -3,6 +3,7 @@
 // Copyright (c) 2020-2021 Nikita Kaskov <nbering@nil.foundation>
 // Copyright (c) 2020-2021 Ilias Khairullin <ilias@nil.foundation>
 // Copyright (c) 2022 Ekaterina Chukavina <kate@nil.foundation>
+// Copyright (c) 2024 Vasiliy Olekhov <vasiliy.olekhov@nil.foundation>
 //
 // MIT License
 //
@@ -217,6 +218,9 @@ namespace nil {
                     typename PolynomialType = math::polynomial_dfs<typename CurveType::scalar_field_type::value_type>
                 >
                 struct batched_kzg {
+
+                    constexpr static bool is_kzg = true;
+
                     typedef CurveType curve_type;
                     typedef TranscriptHashType transcript_hash_type;
                     typedef typename curve_type::gt_type::value_type gt_value_type;
@@ -235,8 +239,10 @@ namespace nil {
 
                     using commitment_type = std::vector<std::uint8_t>; // Used in placeholder because it's easy to push it into transcript
 
+                    using eval_storage_type = eval_storage<field_type>;
+
                     struct proof_type {
-                        eval_storage<field_type> z;
+                        eval_storage_type z;
                         single_commitment_type   kzg_proof;
                     };
 
@@ -605,8 +611,12 @@ namespace nil {
 
             namespace commitments{
                 // Placeholder-friendly class
-                template<typename KZGScheme, typename PolynomialType = typename math::polynomial_dfs<typename KZGScheme::field_type::value_type>>
-                class kzg_commitment_scheme : public polys_evaluator<typename KZGScheme::params_type, typename KZGScheme::commitment_type, PolynomialType>{
+                template<typename KZGScheme>
+                class kzg_commitment_scheme :
+                    public polys_evaluator<
+                        typename KZGScheme::params_type,
+                        typename KZGScheme::commitment_type,
+                        typename KZGScheme::poly_type> {
                 public:
                     using curve_type = typename KZGScheme::curve_type;
                     using field_type = typename KZGScheme::field_type;
@@ -616,7 +626,7 @@ namespace nil {
                     using commitment_type = typename KZGScheme::commitment_type;
                     using transcript_type = typename KZGScheme::transcript_type;
                     using transcript_hash_type = typename KZGScheme::transcript_hash_type;
-                    using poly_type = PolynomialType;
+                    using poly_type = typename KZGScheme::poly_type;
                     using proof_type = typename KZGScheme::proof_type;
                     using endianness = nil::marshalling::option::big_endian;
                 private:
@@ -832,9 +842,15 @@ namespace nil {
                  * Dan Boneh, Justin Drake, Ben Fisch,
                  * <https://eprint.iacr.org/2020/081.pdf>
                  */
-                template<typename KZGScheme, typename PolynomialType = typename math::polynomial_dfs<typename KZGScheme::field_type::value_type>>
-                class kzg_commitment_scheme_v2 : public polys_evaluator<typename KZGScheme::params_type, typename KZGScheme::commitment_type, PolynomialType>{
+                template<typename KZGScheme>
+                class kzg_commitment_scheme_v2 :
+                    public polys_evaluator<
+                        typename KZGScheme::params_type,
+                        typename KZGScheme::commitment_type,
+                        typename KZGScheme::poly_type> {
                 public:
+                    constexpr static bool is_kzg_commitment_scheme_v2 = true;
+
                     using curve_type = typename KZGScheme::curve_type;
                     using field_type = typename KZGScheme::field_type;
                     using params_type = typename KZGScheme::params_type;
@@ -844,10 +860,20 @@ namespace nil {
                     using verification_key_type = typename curve_type::template g2_type<>::value_type;
                     using transcript_type = typename KZGScheme::transcript_type;
                     using transcript_hash_type = typename KZGScheme::transcript_hash_type;
-                    using poly_type = PolynomialType;
+                    using poly_type = typename KZGScheme::poly_type;
+
+                    using eval_storage_type = eval_storage<field_type>;
+                    using single_commitment_type = typename KZGScheme::single_commitment_type;
+
                     struct proof_type {
-                        eval_storage<field_type> z;
-                        typename KZGScheme::single_commitment_type pi_1, pi_2;
+                        eval_storage_type z;
+                        single_commitment_type pi_1, pi_2;
+                        bool operator==(proof_type const& other) const {
+                            return (z == other.z) && (pi_1 == other.pi_1) && (pi_2 == other.pi_2);
+                        }
+                        bool operator!=(proof_type const& other) const {
+                            return !(*this == other);
+                        }
                     };
                     using endianness = nil::marshalling::option::big_endian;
                 private:
@@ -920,7 +946,13 @@ namespace nil {
                     void mark_batch_as_fixed(std::size_t index) {
                     }
 
-                    kzg_commitment_scheme_v2(params_type kzg_params) : _params(kzg_params) {}
+                    static params_type create_params(std::size_t d, typename KZGScheme::scalar_value_type alpha) {
+                        return params_type(d, 1, alpha);
+                    }
+
+                    kzg_commitment_scheme_v2(params_type kzg_params) : _params(kzg_params) {
+                        BOOST_ASSERT( kzg_params.verification_key.size() == 2);
+                    }
 
                     // Differs from static, because we pack the result into byte blob.
                     commitment_type commit(std::size_t index){

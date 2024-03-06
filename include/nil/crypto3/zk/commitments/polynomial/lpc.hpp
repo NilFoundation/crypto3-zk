@@ -67,6 +67,8 @@ namespace nil {
                     using eval_storage_type = typename LPCScheme::eval_storage_type;
                     using preprocessed_data_type = std::map<std::size_t, std::vector<value_type>>;
 
+                    constexpr static bool is_lpc = true;
+
                 private:
                     std::map<std::size_t, precommitment_type> _trees;
                     typename fri_type::params_type _fri_params;
@@ -331,6 +333,7 @@ namespace nil {
                     constexpr static const std::size_t lambda = LPCParams::lambda;
                     constexpr static const std::size_t m = LPCParams::m;
                     constexpr static const bool is_const_size = LPCParams::is_const_size;
+                    constexpr static const bool is_batched_list_polynomial_commitment = true;
 
                     typedef LPCParams lpc_params;
 

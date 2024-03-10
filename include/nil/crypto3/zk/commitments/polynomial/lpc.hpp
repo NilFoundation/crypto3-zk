@@ -52,6 +52,8 @@ namespace nil {
                     typename LPCScheme::commitment_type, PolynomialType>{
 
                 public:
+                    static constexpr bool is_lpc(){return true;}
+
                     using field_type = typename LPCScheme::field_type;
                     using value_type = typename field_type::value_type;
                     using params_type = typename LPCScheme::params_type;
@@ -66,8 +68,6 @@ namespace nil {
                     using lpc = LPCScheme;
                     using eval_storage_type = typename LPCScheme::eval_storage_type;
                     using preprocessed_data_type = std::map<std::size_t, std::vector<value_type>>;
-
-                    constexpr static bool is_lpc = true;
 
                 private:
                     std::map<std::size_t, precommitment_type> _trees;

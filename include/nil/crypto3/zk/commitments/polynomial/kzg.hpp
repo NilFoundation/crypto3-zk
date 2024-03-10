@@ -325,7 +325,7 @@ namespace nil {
                 static void update_transcript(const typename KZG::public_key_type &public_key,
                                             typename KZG::transcript_type &transcript) {
 
-                    /* The procedure of updating the transcript is subject to review and change 
+                    /* The procedure of updating the transcript is subject to review and change
                      * #295 */
 
                     nil::marshalling::status_type status;
@@ -671,7 +671,7 @@ namespace nil {
                     }
 
                     void update_transcript(std::size_t batch_ind, typename KZGScheme::transcript_type &transcript) {
-                        /* The procedure of updating the transcript is subject to review and change 
+                        /* The procedure of updating the transcript is subject to review and change
                          * #295 */
 
                         // Push commitments to transcript
@@ -849,7 +849,7 @@ namespace nil {
                         typename KZGScheme::commitment_type,
                         typename KZGScheme::poly_type> {
                 public:
-                    constexpr static bool is_kzg_commitment_scheme_v2 = true;
+                    static constexpr bool is_kzg(){ return true; }
 
                     using curve_type = typename KZGScheme::curve_type;
                     using field_type = typename KZGScheme::field_type;
@@ -912,7 +912,7 @@ namespace nil {
                     }
 
                     void update_transcript(std::size_t batch_ind, typename KZGScheme::transcript_type &transcript) {
-                        /* The procedure of updating the transcript is subject to review and change 
+                        /* The procedure of updating the transcript is subject to review and change
                          * #295 */
 
                         // Push commitments to transcript

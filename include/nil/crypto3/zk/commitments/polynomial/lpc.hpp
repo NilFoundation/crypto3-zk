@@ -36,7 +36,6 @@
 #include <nil/crypto3/container/merkle/tree.hpp>
 #include <nil/crypto3/container/merkle/proof.hpp>
 
-#include <nil/crypto3/zk/transcript/fiat_shamir.hpp>
 #include <nil/crypto3/zk/commitments/batched_commitment.hpp>
 #include <nil/crypto3/zk/commitments/detail/polynomial/basic_fri.hpp>
 
@@ -50,8 +49,8 @@ namespace nil {
                     typename LPCScheme::params_type::field_type::value_type>>
                 class lpc_commitment_scheme : public polys_evaluator<typename LPCScheme::params_type,
                     typename LPCScheme::commitment_type, PolynomialType>{
-
                 public:
+                    static constexpr bool is_lpc(){return true;}
                     using field_type = typename LPCScheme::field_type;
                     using value_type = typename field_type::value_type;
                     using params_type = typename LPCScheme::params_type;

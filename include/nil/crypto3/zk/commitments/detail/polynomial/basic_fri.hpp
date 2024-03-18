@@ -1001,20 +1001,20 @@ namespace nil {
                                 std::size_t new_domain_size = domain_size;
                                 for (std::size_t y_ind = 0; y_ind < y_next.size(); y_ind++) {
                                     std::size_t ind0 = s_indices[2 * y_ind][0] < s_indices[2 * y_ind][1] ? 0 : 1;
-                                    std::size_t ind1 = s_indices[2 * y_ind][0] < s_indices[2 * y_ind][1] ? 1 : 0;
+                                    auto s_ch = s[2*y_ind][ind0];
 
                                     std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points_l{
-                                            std::make_pair(s[2 * y_ind][0], y[2 * y_ind][ind0]),
-                                            std::make_pair(s[2 * y_ind][1], y[2 * y_ind][ind1]),
+                                        std::make_pair(s_ch, y[2 * y_ind][0]),
+                                        std::make_pair(-s_ch, y[2 * y_ind][1]),
                                     };
                                     math::polynomial<typename FRI::field_type::value_type> interpolant_l =
                                             math::lagrange_interpolation(interpolation_points_l);
 
                                     ind0 = s_indices[2 * y_ind + 1][0] < s_indices[2 * y_ind + 1][1] ? 0 : 1;
-                                    ind1 = s_indices[2 * y_ind + 1][0] < s_indices[2 * y_ind + 1][1] ? 1 : 0;
+                                    s_ch = s[2*y_ind + 1][ind0];
                                     std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points_r{
-                                            std::make_pair(s[2 * y_ind + 1][0], y[2 * y_ind + 1][ind0]),
-                                            std::make_pair(s[2 * y_ind + 1][1], y[2 * y_ind + 1][ind1]),
+                                        std::make_pair(s_ch, y[2 * y_ind + 1][0]),
+                                        std::make_pair(-s_ch, y[2 * y_ind + 1][1]),
                                     };
                                     math::polynomial<typename FRI::field_type::value_type> interpolant_r =
                                             math::lagrange_interpolation(interpolation_points_r);
@@ -1042,10 +1042,10 @@ namespace nil {
                                                                       fri_params.D[t]);
 
                             std::size_t ind0 = s_indices[0][0] < s_indices[0][1] ? 0 : 1;
-                            std::size_t ind1 = s_indices[0][0] < s_indices[0][1] ? 1 : 0;
+                            auto s_ch = s[0][ind0];
                             std::vector<std::pair<typename FRI::field_type::value_type, typename FRI::field_type::value_type>> interpolation_points{
-                                    std::make_pair(s[0][ind0], y[0][0]),
-                                    std::make_pair(s[0][ind1], y[0][1]),
+                                std::make_pair(s_ch, y[0][0]),
+                                std::make_pair(-s_ch, y[0][1]),
                             };
                             math::polynomial<typename FRI::field_type::value_type> interpolant_poly =
                                     math::lagrange_interpolation(interpolation_points);

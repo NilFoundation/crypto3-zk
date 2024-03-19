@@ -110,11 +110,6 @@ namespace nil {
                     }
 
                     proof_type proof_eval(transcript_type &transcript) {
-                        for (auto const& it: _batch_fixed) {
-                            if (it.second) {
-                                this->append_eval_point(it.first, _etha);
-                            }
-                        }
 
                         this->eval_polys();
 
@@ -157,6 +152,27 @@ namespace nil {
                             combined_Q_normal += Q_normal;
                         }
 
+                        for(std::size_t i: this->_z.get_batches()){
+                            if( !_batch_fixed[i] )continue;
+                            math::polynomial<value_type> Q_normal;
+                            auto point = _etha;
+                            V = {-point, 1};
+                            for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
+                                math::polynomial<value_type> g_normal;
+                                if constexpr(std::is_same<math::polynomial_dfs<value_type>, PolynomialType>::value ) {
+                                    g_normal = math::polynomial<value_type>(this->_polys[i][j].coefficients());
+                                } else {
+                                    g_normal = this->_polys[i][j];
+                                }
+                                g_normal *= theta_acc;
+                                Q_normal += g_normal;
+                                Q_normal -= _fixed_polys_values[i][j] * theta_acc;
+                                theta_acc *= theta;
+                            }
+                            Q_normal = Q_normal / V;
+                            combined_Q_normal += Q_normal;
+                        }
+
                         if constexpr (std::is_same<math::polynomial_dfs<value_type>, PolynomialType>::value ) {
                             combined_Q.from_coefficients(combined_Q_normal);
                         } else {
@@ -187,28 +203,23 @@ namespace nil {
                         const std::map<std::size_t, commitment_type> &commitments,
                         transcript_type &transcript
                     ) {
-                        for (auto const&[b_ind, fixed]: _batch_fixed) {
-                            if(!fixed) continue;
-                            this->append_eval_point(b_ind, _etha);
-                            for( std::size_t i = 0; i < proof.z.get_batch_size(b_ind); i++) {
-                                if(this->_fixed_polys_values[b_ind][i] != proof.z.get(b_ind, i, proof.z.get_poly_points_number(b_ind, i) - 1)) {
-                                    return false;
-                                }
-                            }
-                        }
-
                         this->_z = proof.z;
                         for (auto const &it: commitments) {
                             transcript(commitments.at(it.first));
                         }
 
                         auto points = this->get_unique_points();
+
                         // List of unique eval points set. [id=>points]
-                        typename std::vector<typename field_type::value_type> U(points.size());
+                        std::size_t total_points = points.size();
+                        for( std::size_t i = 0; i < _batch_fixed.size(); i++){
+                            if( _batch_fixed[i]){ total_points++; break; }
+                        }
+                        typename std::vector<typename field_type::value_type> U(total_points);
                         // V is product of (x - eval_point) polynomial for each eval_point
-                        typename std::vector<math::polynomial<value_type>> V(points.size());
+                        typename std::vector<math::polynomial<value_type>> V(total_points);
                         // List of involved polynomials for each eval point [batch_id, poly_id, point_id]
-                        typename std::vector<std::vector<std::tuple<std::size_t, std::size_t>>> poly_map(points.size());
+                        typename std::vector<std::vector<std::tuple<std::size_t, std::size_t>>> poly_map(total_points);
 
                         value_type theta = transcript.template challenge<field_type>();
                         value_type theta_acc(1);
@@ -224,6 +235,18 @@ namespace nil {
                                     poly_map[p].push_back(std::make_tuple(i, j));
                                     theta_acc *= theta;
                                 }
+                            }
+                        }
+
+                        auto &point = _etha;
+                        std::size_t p = points.size();
+                        V[p] = {-_etha, 1};
+                        for(std::size_t i:this->_z.get_batches()){
+                            if( !_batch_fixed[i] )continue;
+                            for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
+                                U[p] += _fixed_polys_values[i][j] * theta_acc;
+                                poly_map[p].push_back(std::make_tuple(i, j));
+                                theta_acc *= theta;
                             }
                         }
 

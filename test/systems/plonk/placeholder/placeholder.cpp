@@ -921,6 +921,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     lpc_scheme.append_eval_point(PERMUTATION_BATCH, y * omega);
 
     transcript_type transcript;
+    lpc_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
     auto lpc_proof = lpc_scheme.proof_eval(transcript);
     // Prepare sorted and V_L values
 /*
@@ -1027,6 +1028,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     typename placeholder_private_preprocessor<field_type, lpc_placeholder_params_type>::preprocessed_data_type
         preprocessed_private_data = placeholder_private_preprocessor<field_type, lpc_placeholder_params_type>::process(
             constraint_system, assignments.private_table(), desc);
+    lpc_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
 
     auto polynomial_table =
         plonk_polynomial_dfs_table<field_type>(
@@ -1239,7 +1241,7 @@ template<
     std::size_t ConstantColumns,
     std::size_t SelectorColumns,
     std::size_t usable_rows_amount,
-    std::size_t permutation, 
+    std::size_t permutation,
     bool UseGrinding = false>
 struct placeholder_kzg_test_fixture : public test_initializer {
     using field_type = typename curve_type::scalar_field_type;
@@ -1423,7 +1425,7 @@ struct placeholder_kzg_test_fixture_v2 : public test_initializer {
 
     using policy_type = zk::snark::detail::placeholder_policy<field_type, kzg_placeholder_params_type>;
 
-    using circuit_type = 
+    using circuit_type =
         circuit_description<field_type,
         placeholder_circuit_params<field_type>,
         usable_rows_amount, permutation>;

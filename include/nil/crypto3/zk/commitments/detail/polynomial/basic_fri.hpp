@@ -78,6 +78,8 @@ namespace nil {
                     struct basic_batched_fri {
                         BOOST_STATIC_ASSERT_MSG(M == 2, "unsupported m value!");
 
+                        constexpr static const bool is_fri = true;
+
                         constexpr static const std::size_t m = M;
                         constexpr static const std::size_t lambda = Lambda;
 
@@ -124,8 +126,9 @@ namespace nil {
                             constexpr static std::size_t m = M;
                             constexpr static bool use_grinding = UseGrinding;
 
-                            params_type(const params_type &other) = default;
-                            params_type() = default;
+                            //params_type(const params_type &other){}
+                            // TODO when marshalling will be fine
+                            params_type():max_degree(0), r(0), expand_factor(0){}
                             params_type(
                                 std::size_t max_degree,
                                 std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D,
@@ -139,7 +142,18 @@ namespace nil {
                             {}
 
                             bool operator==(const params_type &rhs) const {
-                                return r == rhs.r && max_degree == rhs.max_degree && D == rhs.D && step_list == rhs.step_list;
+                                if( D.size() != rhs.D.size() ){
+                                    return false;
+                                }
+                                for( std::size_t i = 0; i < D.size(); i++){
+                                    if( D[i]->get_domain_element(1) != rhs.D[i]->get_domain_element(1)){
+                                        return false;
+                                    }
+                                }
+                                return r == rhs.r
+                                    && max_degree == rhs.max_degree
+                                    && step_list == rhs.step_list
+                                ;
                             }
 
                             bool operator!=(const params_type &rhs) const {

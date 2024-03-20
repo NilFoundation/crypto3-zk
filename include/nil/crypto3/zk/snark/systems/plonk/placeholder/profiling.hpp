@@ -77,16 +77,16 @@ namespace nil {
                     res.batches_sizes[2] = res.use_lookups ? 2 : 1;
                     // TODO: place it to one single place to prevent code duplication
                     std::size_t split_polynomial_size = std::max(
-                        (res.permutation_size + 2) * (common_data.rows_amount -1 ),
-                        (constraint_system.lookup_poly_degree_bound() + 1) * (common_data.rows_amount -1 )//,
+                        (res.permutation_size + 2) * (common_data.desc.rows_amount -1 ),
+                        (constraint_system.lookup_poly_degree_bound() + 1) * (common_data.desc.rows_amount -1 )//,
                     );
                     split_polynomial_size = std::max(
                         split_polynomial_size,
-                        (common_data.max_gates_degree + 1) * (common_data.rows_amount -1)
+                        (common_data.max_gates_degree + 1) * (common_data.desc.rows_amount -1)
                     );
-                    split_polynomial_size = (split_polynomial_size % common_data.rows_amount != 0)?
-                        (split_polynomial_size / common_data.rows_amount + 1):
-                        (split_polynomial_size / common_data.rows_amount);
+                    split_polynomial_size = (split_polynomial_size % common_data.desc.rows_amount != 0)?
+                        (split_polynomial_size / common_data.desc.rows_amount + 1):
+                        (split_polynomial_size / common_data.desc.rows_amount);
                     res.quotient_size = res.batches_sizes[3] = split_polynomial_size;
                     if(res.use_lookups) res.batches_sizes[4] = constraint_system.sorted_lookup_columns_number();
                     res.poly_num = std::accumulate(res.batches_sizes.begin(), res.batches_sizes.end(), 0);
@@ -114,8 +114,8 @@ namespace nil {
                     boost::property_tree::ptree root;
                     root.put("test_name", circuit_name);
                     root.put("modulus", PlaceholderParams::field_type::modulus);
-                    root.put("rows_amount", preprocessed_data.common_data.rows_amount);
-                    root.put("usable_rows_amount", preprocessed_data.common_data.usable_rows_amount);
+                    root.put("rows_amount", preprocessed_data.common_data.desc.rows_amount);
+                    root.put("usable_rows_amount", preprocessed_data.common_data.desc.usable_rows_amount);
                     root.put("omega", preprocessed_data.common_data.basic_domain->get_domain_element(1));
                     root.put("verification_key", preprocessed_data.common_data.vk.to_string());
 

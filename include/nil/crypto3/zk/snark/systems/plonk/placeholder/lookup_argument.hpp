@@ -131,7 +131,7 @@ namespace nil {
                         }
                         //    Sort
                         auto sorted = sort_polynomials(reduced_input, reduced_value, basic_domain->m,
-                            preprocessed_data.common_data.usable_rows_amount);
+                            preprocessed_data.common_data.desc.usable_rows_amount);
 
                         // 4. Commit sorted polys
                         for( std::size_t i = 0; i < sorted.size(); i++){
@@ -153,7 +153,7 @@ namespace nil {
 
                         commitment_scheme.append_to_batch(PERMUTATION_BATCH, V_L);
 
-                        BOOST_CHECK(V_L[preprocessed_data.common_data.usable_rows_amount] ==  FieldType::value_type::one());
+                        BOOST_CHECK(V_L[preprocessed_data.common_data.desc.usable_rows_amount] ==  FieldType::value_type::one());
 
                         // After this call of compute_g lookup_input_ptr and lookup_value_ptr are deleted.
                         math::polynomial_dfs<typename FieldType::value_type> g = compute_g(
@@ -182,7 +182,7 @@ namespace nil {
 
                         for (std::size_t i = 1; i < sorted.size(); i++) {
                             typename FieldType::value_type alpha =  transcript.template challenge<FieldType>();
-                            math::polynomial_dfs sorted_shifted = math::polynomial_shift(sorted[i-1], preprocessed_data.common_data.usable_rows_amount , basic_domain->m);
+                            math::polynomial_dfs sorted_shifted = math::polynomial_shift(sorted[i-1], preprocessed_data.common_data.desc.usable_rows_amount , basic_domain->m);
                             F_dfs[3] += alpha * preprocessed_data.common_data.lagrange_0 * (sorted[i] - sorted_shifted);
                         }
 
@@ -260,7 +260,7 @@ namespace nil {
                         V_L[0] = FieldType::value_type::one();
                         auto one = FieldType::value_type::one();
 
-                        for (std::size_t k = 1; k <= preprocessed_data.common_data.usable_rows_amount; k++) {
+                        for (std::size_t k = 1; k <= preprocessed_data.common_data.desc.usable_rows_amount; k++) {
                             V_L[k] = V_L[k-1];
 
                             typename FieldType::value_type g_tmp = (one + beta).pow(reduced_input.size());

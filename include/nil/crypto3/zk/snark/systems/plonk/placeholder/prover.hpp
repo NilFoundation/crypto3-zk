@@ -226,16 +226,16 @@ namespace nil {
                         PROFILE_PLACEHOLDER_SCOPE("split_polynomial_dfs_conversion_time");
 
                         std::size_t split_polynomial_size = std::max(
-                            (preprocessed_public_data.identity_polynomials.size() + 2) * (preprocessed_public_data.common_data.rows_amount -1 ),
-                            (constraint_system.lookup_poly_degree_bound() + 1) * (preprocessed_public_data.common_data.rows_amount -1 )//,
+                            (preprocessed_public_data.identity_polynomials.size() + 2) * (preprocessed_public_data.common_data.desc.rows_amount -1 ),
+                            (constraint_system.lookup_poly_degree_bound() + 1) * (preprocessed_public_data.common_data.desc.rows_amount -1 )//,
                         );
                         split_polynomial_size = std::max(
                             split_polynomial_size,
-                            (preprocessed_public_data.common_data.max_gates_degree + 1) * (preprocessed_public_data.common_data.rows_amount -1)
+                            (preprocessed_public_data.common_data.max_gates_degree + 1) * (preprocessed_public_data.common_data.desc.rows_amount -1)
                         );
-                        split_polynomial_size = (split_polynomial_size % preprocessed_public_data.common_data.rows_amount != 0)?
-                            (split_polynomial_size / preprocessed_public_data.common_data.rows_amount + 1):
-                            (split_polynomial_size / preprocessed_public_data.common_data.rows_amount);
+                        split_polynomial_size = (split_polynomial_size % preprocessed_public_data.common_data.desc.rows_amount != 0)?
+                            (split_polynomial_size / preprocessed_public_data.common_data.desc.rows_amount + 1):
+                            (split_polynomial_size / preprocessed_public_data.common_data.desc.rows_amount);
 
                         // We need split_polynomial_size computation because proof size shouldn't depend on public input size.
                         // we set this size as maximum of
@@ -372,7 +372,7 @@ namespace nil {
                             _commitment_scheme.append_eval_point(LOOKUP_BATCH, _proof.eval_proof.challenge);
                             _commitment_scheme.append_eval_point(LOOKUP_BATCH, _proof.eval_proof.challenge * _omega);
                             _commitment_scheme.append_eval_point(LOOKUP_BATCH, _proof.eval_proof.challenge *
-                                _omega.pow(preprocessed_public_data.common_data.usable_rows_amount));
+                                _omega.pow(preprocessed_public_data.common_data.desc.usable_rows_amount));
                         }
 
                         _commitment_scheme.append_eval_point(QUOTIENT_BATCH, _proof.eval_proof.challenge);

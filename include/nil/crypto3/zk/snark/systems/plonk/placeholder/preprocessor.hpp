@@ -95,10 +95,13 @@ namespace nil {
                                 return !(rhs == *this);
                             }
 
+
                             std::string to_string() const{
                                 std::stringstream ss;
 
-                                ss << constraint_system_with_params_hash << " " << fixed_values_commitment;
+                                // TODO: KZG fixed_values_commitments are vector<uint8_t>
+                                // need operator<<(ostream,vector<uint8_t>)?
+                                ss << constraint_system_with_params_hash /*<< " " << fixed_values_commitment*/;
                                 return ss.str();
                             }
                         };
@@ -113,17 +116,14 @@ namespace nil {
                             using verification_key_type = verification_key;
                             using transcript_hash_type = typename ParamsType::transcript_hash_type;
                             using table_description_type = plonk_table_description<FieldType>;
+                            using commitment_scheme_data_type = typename commitment_scheme_type::preprocessed_data_type;
+                            using commitment_params_type = typename commitment_scheme_type::params_type;
 
                             // marshalled
                             public_commitments_type commitments;
                             columns_rotations_type columns_rotations;
 
-                            std::size_t rows_amount;
-                            std::size_t usable_rows_amount;
-                            std::size_t witness_columns;
-                            std::size_t public_input_columns;
-                            std::size_t constant_columns;
-                            std::size_t selector_columns;
+                            table_description_type desc;
 
                             // not marshalled. They can be derived from other fields.
                             polynomial_dfs_type lagrange_0;
@@ -131,29 +131,28 @@ namespace nil {
                             std::shared_ptr<math::evaluation_domain<FieldType>> basic_domain;
                             std::uint32_t max_gates_degree;
                             verification_key vk;
-                            typename commitment_scheme_type::preprocessed_data_type commitment_scheme_data;
+                            commitment_scheme_data_type commitment_scheme_data;
+                            commitment_params_type commitment_params;
 
                             // Constructor with pregenerated domain
                             common_data_type(
                                 std::shared_ptr<math::evaluation_domain<FieldType>> D,
                                 public_commitments_type commts,
                                 std::vector<std::set<int>> col_rotations,
-                                std::size_t rows,
-                                std::size_t usable_rows,
-                                std::size_t witness_columns,
-                                std::size_t public_input_columns,
-                                std::size_t constant_columns,
-                                std::size_t selector_columns,
+                                const table_description_type &table_description,
                                 std::uint32_t max_gates_degree,
-                                verification_key vk
+                                verification_key vk,
+                                const commitment_params_type &_commitment_params,
+                                const commitment_scheme_data_type &_commitment_scheme_data
                             ):  commitments(commts),
-                                columns_rotations(col_rotations), rows_amount(rows), usable_rows_amount(usable_rows),
+                                desc(table_description),
+                                columns_rotations(col_rotations),
                                 lagrange_0(D->size() - 1, D->size(), FieldType::value_type::zero()),
-                                Z(std::vector<typename FieldType::value_type>(rows + 1, FieldType::value_type::zero())),
+                                Z(std::vector<typename FieldType::value_type>(table_description.rows_amount + 1, FieldType::value_type::zero())),
                                 basic_domain(D),
                                 max_gates_degree(max_gates_degree), vk(vk),
-                                witness_columns(witness_columns), public_input_columns(public_input_columns),
-                                constant_columns(constant_columns), selector_columns(selector_columns)
+                                commitment_scheme_data(_commitment_scheme_data),
+                                commitment_params(_commitment_params)
                             {
                                 // Z is polynomial -1, 0,..., 0, 1
                                 Z[0] = -FieldType::value_type::one();
@@ -167,21 +166,19 @@ namespace nil {
                             common_data_type(
                                 public_commitments_type commts,
                                 std::vector<std::set<int>> col_rotations,
-                                std::size_t rows,
-                                std::size_t usable_rows,
-                                std::size_t witness_columns,
-                                std::size_t public_input_columns,
-                                std::size_t constant_columns,
-                                std::size_t selector_columns,
+                                const table_description_type &table_description,
                                 std::uint32_t max_gates_degree,
-                                verification_key vk
+                                verification_key vk,
+                                const commitment_params_type &_commitment_params,
+                                const commitment_scheme_data_type &_commitment_scheme_data
                             ):  commitments(commts),
-                                columns_rotations(col_rotations), rows_amount(rows), usable_rows_amount(usable_rows),
-                                lagrange_0(rows - 1, rows, FieldType::value_type::zero()),
-                                Z(std::vector<typename FieldType::value_type>(rows + 1, FieldType::value_type::zero())),
+                                columns_rotations(col_rotations),
+                                lagrange_0(table_description.rows_amount - 1, table_description.rows_amount, FieldType::value_type::zero()),
+                                Z(std::vector<typename FieldType::value_type>(table_description.rows_amount + 1, FieldType::value_type::zero())),
                                 max_gates_degree(max_gates_degree), vk(vk),
-                                witness_columns(witness_columns), public_input_columns(public_input_columns),
-                                constant_columns(constant_columns), selector_columns(selector_columns)
+                                desc(table_description),
+                                commitment_params(_commitment_params),
+                                commitment_scheme_data(_commitment_scheme_data)
                             {
                                 // Z is polynomial -1, 0,..., 0, 1
                                 Z[0] = -FieldType::value_type::one();
@@ -190,25 +187,23 @@ namespace nil {
                                 // lagrange_0:  1, 0,...,0
                                 lagrange_0[0] = FieldType::value_type::one();
 
-                                basic_domain = math::make_evaluation_domain<FieldType>(rows);
+                                basic_domain = math::make_evaluation_domain<FieldType>(table_description.rows_amount);
                             }
 
                             // These operators are useful for marshalling
                             // They will be implemented with marshalling procedures implementation
                             bool operator==(const common_data_type &rhs) const {
-                                return rows_amount == rhs.rows_amount &&
-                                usable_rows_amount == rhs.usable_rows_amount &&
+                                return desc == rhs.desc &&
                                 columns_rotations == rhs.columns_rotations &&
-                                witness_columns == rhs.witness_columns &&
-                                public_input_columns == rhs.public_input_columns &&
-                                constant_columns == rhs.constant_columns &&
-                                selector_columns == rhs.selector_columns &&
                                 commitments == rhs.commitments &&
                                 basic_domain->size() == rhs.basic_domain->size() &&
                                 lagrange_0 == rhs.lagrange_0 &&
                                 Z == rhs.Z &&
-                                max_gates_degree == rhs.max_gates_degree &&
-                                vk == rhs.vk;
+                                max_gates_degree == rhs.max_gates_degree
+                                && vk == rhs.vk
+                                && commitment_params == rhs.commitment_params
+                                && commitment_scheme_data == rhs.commitment_scheme_data
+                                ;
                             }
                             bool operator!=(const common_data_type &rhs) const {
                                 return !(rhs == *this);
@@ -528,22 +523,18 @@ namespace nil {
                                 delta);
 
                         typename preprocessed_data_type::verification_key vk = {constraint_system_with_params_hash, public_commitments.fixed_values};
-                        typename preprocessed_data_type::common_data_type common_data (
-                            std::move(public_commitments), std::move(c_rotations),
-                            table_description.rows_amount,
-                            table_description.usable_rows_amount,
-                            table_description.witness_columns,
-                            table_description.public_input_columns,
-                            table_description.constant_columns,
-                            table_description.selector_columns,
-                            max_gates_degree, vk
-                        );
 
                         transcript_type transcript(std::vector<std::uint8_t>({}));
                         transcript(vk.constraint_system_with_params_hash);
                         transcript(vk.fixed_values_commitment);
 
-                        common_data.commitment_scheme_data = commitment_scheme.preprocess(transcript);
+                        typename preprocessed_data_type::common_data_type common_data (
+                            std::move(public_commitments), std::move(c_rotations),
+                            table_description,
+                            max_gates_degree, vk,
+                            commitment_scheme.get_commitment_params(),
+                            commitment_scheme.preprocess(transcript)
+                        );
 
                         // Push circuit description to transcript
                         preprocessed_data_type preprocessed_data({

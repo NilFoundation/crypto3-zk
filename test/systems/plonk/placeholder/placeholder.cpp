@@ -173,19 +173,6 @@ inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, c
     return step_list;
 }
 
-template<typename fri_type, typename FieldType>
-typename fri_type::params_type create_fri_params(
-        std::size_t degree_log, const int max_step = 1, std::size_t expand_factor = 4) {
-    std::size_t r = degree_log - 1;
-
-    return typename fri_type::params_type(
-        (1 << degree_log) - 1, // max_degree
-        math::calculate_domain_set<FieldType>(degree_log + expand_factor, r),
-        generate_random_step_list(r, max_step),
-        expand_factor
-    );
-}
-
 template<typename kzg_type>
 typename kzg_type::params_type create_kzg_params(std::size_t degree_log) {
     // TODO: what cases t != d?
@@ -269,9 +256,7 @@ struct placeholder_test_fixture : public test_initializer {
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         merkle_hash_type,
         transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        UseGrinding
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -286,7 +271,7 @@ struct placeholder_test_fixture : public test_initializer {
         , constraint_system(circuit.gates, circuit.copy_constraints, circuit.lookup_gates, circuit.lookup_tables)
         , assignments(circuit.table)
         , table_rows_log(std::log2(table_rows))
-        , fri_params(create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log))
+        , fri_params(1,table_rows_log, placeholder_test_params::lambda, 4)
     {
         desc.rows_amount = table_rows;
         desc.usable_rows_amount = usable_rows;
@@ -342,7 +327,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
         constexpr static const std::size_t constant_columns = 0;
         constexpr static const std::size_t selector_columns = 2;
 
-        constexpr static const std::size_t lambda = 1;
+        constexpr static const std::size_t lambda = 10;
         constexpr static const std::size_t m = 2;
     };
     using circuit_t_params = placeholder_circuit_params<field_type>;
@@ -357,7 +342,6 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit2)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
         placeholder_test_params::m
     >;
 
@@ -440,7 +424,9 @@ BOOST_FIXTURE_TEST_CASE(prover_test, test_initializer){
     BOOST_CHECK(!verifier_res);
 
     // LPC commitment scheme
-    typename lpc_type::fri_type::params_type fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(
+        1, table_rows_log, placeholder_test_params::lambda, 4
+    );
     lpc_scheme_type lpc_scheme(fri_params);
     transcript_type lpc_transcript;
 
@@ -509,7 +495,7 @@ BOOST_AUTO_TEST_CASE(permutation_polynomials_test) {
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
 
-    typename lpc_type::fri_type::params_type fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(1,table_rows_log, placeholder_test_params::lambda, 4);
     lpc_scheme_type lpc_scheme(fri_params);
     transcript_type lpc_transcript;
 
@@ -603,7 +589,7 @@ BOOST_AUTO_TEST_CASE(permutation_argument_test) {
     const std::size_t argument_size = 3;
     const std::size_t permutation_size = 4;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(1, table_rows_log, placeholder_test_params::lambda, 4);
     lpc_scheme_type lpc_scheme(fri_params);
 
     typename policy_type::constraint_system_type constraint_system(circuit.gates, circuit.copy_constraints,
@@ -690,7 +676,7 @@ BOOST_AUTO_TEST_CASE(placeholder_gate_argument_test) {
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(1, table_rows_log, placeholder_test_params::lambda, 4);
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::uint8_t> init_blob {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -815,9 +801,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit3_lookup_test)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -847,7 +831,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(1, table_rows_log, placeholder_test_params::lambda, 4, true);
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -921,6 +905,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     lpc_scheme.append_eval_point(PERMUTATION_BATCH, y * omega);
 
     transcript_type transcript;
+    lpc_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
     auto lpc_proof = lpc_scheme.proof_eval(transcript);
     // Prepare sorted and V_L values
 /*
@@ -982,9 +967,7 @@ BOOST_AUTO_TEST_SUITE(placeholder_circuit4_lookup_test)
     using lpc_params_type = commitments::list_polynomial_commitment_params<
         typename placeholder_test_params::merkle_hash_type,
         typename placeholder_test_params::transcript_hash_type,
-        placeholder_test_params::lambda,
-        placeholder_test_params::m,
-        true
+        placeholder_test_params::m
     >;
 
     using lpc_type = commitments::list_polynomial_commitment<field_type, lpc_params_type>;
@@ -1014,7 +997,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     );
     typename policy_type::variable_assignment_type assignments = circuit.table;
 
-    auto fri_params = create_fri_params<typename lpc_type::fri_type, field_type>(table_rows_log);
+    typename lpc_type::fri_type::params_type fri_params(1, table_rows_log, placeholder_test_params::lambda, 4);
     lpc_scheme_type lpc_scheme(fri_params);
 
     std::vector<std::size_t> columns_with_copy_constraints = {0, 1, 2, 3};
@@ -1027,6 +1010,7 @@ BOOST_AUTO_TEST_CASE(lookup_test) {
     typename placeholder_private_preprocessor<field_type, lpc_placeholder_params_type>::preprocessed_data_type
         preprocessed_private_data = placeholder_private_preprocessor<field_type, lpc_placeholder_params_type>::process(
             constraint_system, assignments.private_table(), desc);
+    lpc_scheme.setup(transcript, preprocessed_public_data.common_data.commitment_scheme_data);
 
     auto polynomial_table =
         plonk_polynomial_dfs_table<field_type>(
@@ -1239,7 +1223,7 @@ template<
     std::size_t ConstantColumns,
     std::size_t SelectorColumns,
     std::size_t usable_rows_amount,
-    std::size_t permutation, 
+    std::size_t permutation,
     bool UseGrinding = false>
 struct placeholder_kzg_test_fixture : public test_initializer {
     using field_type = typename curve_type::scalar_field_type;
@@ -1251,9 +1235,6 @@ struct placeholder_kzg_test_fixture : public test_initializer {
         constexpr static const std::size_t public_input_columns = PublicInputColumns;
         constexpr static const std::size_t constant_columns = ConstantColumns;
         constexpr static const std::size_t selector_columns = SelectorColumns;
-
-        constexpr static const std::size_t lambda = 40;
-        constexpr static const std::size_t m = 2;
     };
 
     using transcript_type = typename transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
@@ -1408,9 +1389,6 @@ struct placeholder_kzg_test_fixture_v2 : public test_initializer {
         constexpr static const std::size_t public_input_columns = PublicInputColumns;
         constexpr static const std::size_t constant_columns = ConstantColumns;
         constexpr static const std::size_t selector_columns = SelectorColumns;
-
-        constexpr static const std::size_t lambda = 40;
-        constexpr static const std::size_t m = 2;
     };
 
     using transcript_type = typename transcript::fiat_shamir_heuristic_sequential<transcript_hash_type>;
@@ -1423,7 +1401,7 @@ struct placeholder_kzg_test_fixture_v2 : public test_initializer {
 
     using policy_type = zk::snark::detail::placeholder_policy<field_type, kzg_placeholder_params_type>;
 
-    using circuit_type = 
+    using circuit_type =
         circuit_description<field_type,
         placeholder_circuit_params<field_type>,
         usable_rows_amount, permutation>;

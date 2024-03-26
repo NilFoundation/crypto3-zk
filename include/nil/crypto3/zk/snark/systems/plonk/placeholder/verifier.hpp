@@ -98,7 +98,7 @@ namespace nil {
                         if (_is_lookup_enabled) {
                             _commitment_scheme.append_eval_point(LOOKUP_BATCH, challenge);
                             _commitment_scheme.append_eval_point(LOOKUP_BATCH, challenge * _omega);
-                            _commitment_scheme.append_eval_point(LOOKUP_BATCH, challenge * _omega.pow(preprocessed_public_data.common_data.usable_rows_amount));
+                            _commitment_scheme.append_eval_point(LOOKUP_BATCH, challenge * _omega.pow(preprocessed_public_data.common_data.desc.usable_rows_amount));
                         }
 
                         _commitment_scheme.append_eval_point(QUOTIENT_BATCH, challenge);
@@ -144,8 +144,8 @@ namespace nil {
                         // TODO: process rotations for public input.
                         auto omega = preprocessed_public_data.common_data.basic_domain->get_domain_element(1);
                         auto challenge = proof.eval_proof.challenge;
-                        auto numerator = challenge.pow(preprocessed_public_data.common_data.rows_amount) - FieldType::value_type::one();
-                        numerator /= typename FieldType::value_type(preprocessed_public_data.common_data.rows_amount);
+                        auto numerator = challenge.pow(table_description.rows_amount) - FieldType::value_type::one();
+                        numerator /= typename FieldType::value_type(table_description.rows_amount);
 
                         // If public input sizes are set, all of them should be set.
                         if(constraint_system.public_input_sizes_num() != 0 && constraint_system.public_input_sizes_num() != table_description.public_input_columns){
@@ -346,7 +346,7 @@ namespace nil {
                         typename FieldType::value_type T_consolidated = FieldType::value_type::zero();
                         for (std::size_t i = 0; i < proof.eval_proof.eval_proof.z.get_batch_size(QUOTIENT_BATCH); i++) {
                             T_consolidated += proof.eval_proof.eval_proof.z.get(QUOTIENT_BATCH, i, 0) *
-                                challenge.pow((preprocessed_public_data.common_data.rows_amount) * i);
+                                challenge.pow((preprocessed_public_data.common_data.desc.rows_amount) * i);
                         }
 
                         // Z is polynomial -1, 0 ...., 0, 1

@@ -28,6 +28,9 @@
 #ifndef CRYPTO3_ZK_PLONK_PLACEHOLDER_PROOF_HPP
 #define CRYPTO3_ZK_PLONK_PLACEHOLDER_PROOF_HPP
 
+#include <cstddef>
+#include <map>
+
 namespace nil {
     namespace crypto3 {
         namespace zk {
@@ -67,7 +70,7 @@ namespace nil {
                         typename commitment_scheme_type::proof_type eval_proof;
 
                         bool operator==(const evaluation_proof &rhs) const {
-                            return challenge == rhs.challenge && eval_proof == rhs.eval_proof;
+                            return challenge == rhs.challenge &&  eval_proof == rhs.eval_proof;
                         }
                         bool operator!=(const evaluation_proof &rhs) const {
                             return !(rhs == *this);

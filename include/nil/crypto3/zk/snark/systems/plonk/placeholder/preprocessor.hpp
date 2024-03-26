@@ -95,10 +95,13 @@ namespace nil {
                                 return !(rhs == *this);
                             }
 
+
                             std::string to_string() const{
                                 std::stringstream ss;
 
-                                ss << constraint_system_with_params_hash << " " << fixed_values_commitment;
+                                // TODO: KZG fixed_values_commitments are vector<uint8_t>
+                                // need operator<<(ostream,vector<uint8_t>)?
+                                ss << constraint_system_with_params_hash /*<< " " << fixed_values_commitment*/;
                                 return ss.str();
                             }
                         };

@@ -52,6 +52,8 @@ namespace nil {
                     typename LPCScheme::commitment_type, PolynomialType>{
 
                 public:
+                    static constexpr bool is_lpc(){return true;}
+
                     using field_type = typename LPCScheme::field_type;
                     using value_type = typename field_type::value_type;
                     using params_type = typename LPCScheme::params_type;
@@ -331,6 +333,7 @@ namespace nil {
                     constexpr static const std::size_t lambda = LPCParams::lambda;
                     constexpr static const std::size_t m = LPCParams::m;
                     constexpr static const bool is_const_size = LPCParams::is_const_size;
+                    constexpr static const bool is_batched_list_polynomial_commitment = true;
 
                     typedef LPCParams lpc_params;
 

@@ -239,15 +239,17 @@ namespace nil {
                             }
                         }
 
-                        auto &point = _etha;
-                        std::size_t p = points.size();
-                        V[p] = {-_etha, 1};
-                        for(std::size_t i:this->_z.get_batches()){
-                            if( !_batch_fixed[i] )continue;
-                            for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
-                                U[p] += _fixed_polys_values[i][j] * theta_acc;
-                                poly_map[p].push_back(std::make_tuple(i, j));
-                                theta_acc *= theta;
+                        if( total_points > points.size()){
+                            auto &point = _etha;
+                            std::size_t p = points.size();
+                            V[p] = {-_etha, 1};
+                            for(std::size_t i:this->_z.get_batches()){
+                                if( !_batch_fixed[i] )continue;
+                                for(std::size_t j = 0; j < this->_z.get_batch_size(i); j++){
+                                    U[p] += _fixed_polys_values[i][j] * theta_acc;
+                                    poly_map[p].push_back(std::make_tuple(i, j));
+                                    theta_acc *= theta;
+                                }
                             }
                         }
 
@@ -277,7 +279,6 @@ namespace nil {
                         params.put("type", "LPC");
                         params.put("r", _fri_params.r);
                         params.put("m", fri_type::m);
-                        params.put("lambda", fri_type::lambda);
                         params.put("max_degree", _fri_params.max_degree);
 
                         boost::property_tree::ptree step_list_node;
@@ -295,23 +296,17 @@ namespace nil {
                             D_omegas_node.push_back(std::make_pair("", D_omega_node));
                         }
                         params.add_child("D_omegas", D_omegas_node);
-
-                        if( fri_type::use_grinding ){
-                            params.add_child("grinding_params", fri_type::grinding_type::get_params());
-                        }
                         return params;
                     }
                 };
 
-                template<typename MerkleTreeHashType, typename TranscriptHashType, std::size_t Lambda,
-                        std::size_t M, bool UseGrinding = false, typename GrindingType = proof_of_work<TranscriptHashType>>
+                template<typename MerkleTreeHashType, typename TranscriptHashType,
+                        std::size_t M, typename GrindingType = proof_of_work<TranscriptHashType>>
                 struct list_polynomial_commitment_params {
                     typedef MerkleTreeHashType merkle_hash_type;
                     typedef TranscriptHashType transcript_hash_type;
 
-                    constexpr static const std::size_t lambda = Lambda;
                     constexpr static const std::size_t m = M;
-                    constexpr static const bool use_grinding = UseGrinding;
                     typedef GrindingType grinding_type;
                 };
                 /**
@@ -335,23 +330,18 @@ namespace nil {
                     FieldType,
                     typename LPCParams::merkle_hash_type,
                     typename LPCParams::transcript_hash_type,
-                    LPCParams::lambda,
                     LPCParams::m,
-                    LPCParams::use_grinding,
                     typename LPCParams::grinding_type
                 > {
                     using fri_type = typename detail::basic_batched_fri<
                         FieldType,
                         typename LPCParams::merkle_hash_type,
                         typename LPCParams::transcript_hash_type,
-                        LPCParams::lambda,
                         LPCParams::m,
-                        LPCParams::use_grinding,
                         typename LPCParams::grinding_type
                     >;
                     using merkle_hash_type = typename LPCParams::merkle_hash_type;
 
-                    constexpr static const std::size_t lambda = LPCParams::lambda;
                     constexpr static const std::size_t m = LPCParams::m;
                     constexpr static const bool is_const_size = LPCParams::is_const_size;
                     constexpr static const bool is_batched_list_polynomial_commitment = true;
@@ -362,8 +352,8 @@ namespace nil {
 
                     using basic_fri = detail::basic_batched_fri<FieldType, typename LPCParams::merkle_hash_type,
                             typename LPCParams::transcript_hash_type,
-                            LPCParams::lambda, LPCParams::m,
-                            LPCParams::use_grinding, typename LPCParams::grinding_type>;
+                            LPCParams::m,
+                            typename LPCParams::grinding_type>;
 
                     using precommitment_type = typename basic_fri::precommitment_type;
                     using commitment_type = typename basic_fri::commitment_type;
@@ -391,16 +381,16 @@ namespace nil {
                 template<typename FieldType, typename LPCParams>
                 using batched_lpc = batched_list_polynomial_commitment<
                         FieldType, commitments::list_polynomial_commitment_params<
-                                typename LPCParams::merkle_hash_type, typename LPCParams::transcript_hash_type,
-                                LPCParams::lambda, LPCParams::m,
-                                LPCParams::use_grinding, typename LPCParams::grinding_type
+                            typename LPCParams::merkle_hash_type, typename LPCParams::transcript_hash_type,
+                            LPCParams::m,
+                            typename LPCParams::grinding_type
                         >>;
                 template<typename FieldType, typename LPCParams>
                 using lpc = batched_list_polynomial_commitment<
                         FieldType, list_polynomial_commitment_params<
-                                typename LPCParams::merkle_hash_type, typename LPCParams::transcript_hash_type,
-                                LPCParams::lambda, LPCParams::m,
-                                LPCParams::use_grinding, typename LPCParams::grinding_type
+                            typename LPCParams::merkle_hash_type, typename LPCParams::transcript_hash_type,
+                            LPCParams::m,
+                            typename LPCParams::grinding_type
                         >>;
 
                 template<typename FieldType, typename LPCParams>

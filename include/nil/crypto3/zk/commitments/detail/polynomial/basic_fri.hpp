@@ -41,6 +41,7 @@
 #include <nil/crypto3/math/polynomial/lagrange_interpolation.hpp>
 #include <nil/crypto3/math/domains/evaluation_domain.hpp>
 #include <nil/crypto3/math/algorithms/make_evaluation_domain.hpp>
+#include <nil/crypto3/math/algorithms/calculate_domain_set.hpp>
 
 #include <nil/crypto3/container/merkle/tree.hpp>
 #include <nil/crypto3/container/merkle/proof.hpp>
@@ -73,17 +74,13 @@ namespace nil {
                      * <https://eprint.iacr.org/2019/1400.pdf>
                      */
                     template<typename FieldType, typename MerkleTreeHashType, typename TranscriptHashType,
-                            std::size_t Lambda, std::size_t M, bool UseGrinding = false,
-                            typename GrindingType = nil::crypto3::zk::commitments::proof_of_work<TranscriptHashType>>
+                        std::size_t M, typename GrindingType = nil::crypto3::zk::commitments::proof_of_work<TranscriptHashType>>
                     struct basic_batched_fri {
                         BOOST_STATIC_ASSERT_MSG(M == 2, "unsupported m value!");
 
                         constexpr static const bool is_fri = true;
 
                         constexpr static const std::size_t m = M;
-                        constexpr static const std::size_t lambda = Lambda;
-
-                        constexpr static const bool use_grinding = UseGrinding;
                         using grinding_type = GrindingType;
 
                         typedef FieldType field_type;
@@ -122,23 +119,85 @@ namespace nil {
                             // needs to be marshalled is a part of params_type.
                             using grinding_type = GrindingType;
 
-                            constexpr static std::size_t lambda = Lambda;
+                            std::size_t lambda;
+                            bool use_grinding;
+                            std::size_t grinding_parameter;
                             constexpr static std::size_t m = M;
-                            constexpr static bool use_grinding = UseGrinding;
+
+                            static std::vector<std::size_t> generate_random_step_list(const std::size_t r, const int max_step) {
+                                using dist_type = std::uniform_int_distribution<int>;
+                                static std::random_device random_engine;
+
+                                std::vector<std::size_t> step_list;
+                                std::size_t steps_sum = 0;
+                                while (steps_sum != r) {
+                                    if (r - steps_sum <= max_step) {
+                                        while (r - steps_sum != 1) {
+                                            step_list.emplace_back(r - steps_sum - 1);
+                                            steps_sum += step_list.back();
+                                        }
+                                        step_list.emplace_back(1);
+                                        steps_sum += step_list.back();
+                                    } else {
+                                        step_list.emplace_back(dist_type(1, max_step)(random_engine));
+                                        steps_sum += step_list.back();
+                                    }
+                                }
+                                return step_list;
+                            }
 
                             //params_type(const params_type &other){}
                             // TODO when marshalling will be fine
-                            params_type():max_degree(0), r(0), expand_factor(0){}
+                            params_type(
+                                std::size_t max_step,
+                                std::size_t degree_log,
+                                std::size_t lambda,
+                                std::size_t expand_factor,
+                                bool use_grinding = false,
+                                std::size_t grinding_parameter = 0xFFFF
+                            ): r( degree_log - 1 )
+                              , step_list(generate_random_step_list(r, max_step))
+                              , expand_factor(expand_factor)
+                              , lambda(lambda)
+                              , use_grinding(use_grinding)
+                              , grinding_parameter(grinding_parameter)
+                              , max_degree((1 << degree_log) - 1)
+                              , D(math::calculate_domain_set<FieldType>(degree_log + expand_factor, degree_log - 1))
+                            { }
+
+                            params_type(
+                                std::vector<std::size_t> step_list_in,
+                                std::size_t degree_log,
+                                std::size_t lambda,
+                                std::size_t expand_factor,
+                                bool use_grinding = false,
+                                std::size_t grinding_parameter = 0xFFFF
+                            ): r(std::accumulate(step_list_in.begin(), step_list_in.end(), 0))
+                              , step_list(step_list_in)
+                              , expand_factor(expand_factor)
+                              , lambda(lambda)
+                              , use_grinding(use_grinding)
+                              , grinding_parameter(grinding_parameter)
+                              , max_degree((1 << degree_log) - 1)
+                              , D(math::calculate_domain_set<FieldType>(degree_log + expand_factor, std::accumulate(step_list_in.begin(), step_list_in.end(), 0)))
+                            { }
+
                             params_type(
                                 std::size_t max_degree,
                                 std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> D,
                                 std::vector<std::size_t> step_list_in,
-                                std::size_t expand_factor
+                                std::size_t expand_factor,
+                                std::size_t lambda,
+                                bool use_grinding = false,
+                                std::size_t grinding_parameter = 0xFFFF
                             ) : max_degree(max_degree)
                               , D(D)
                               , r(std::accumulate(step_list_in.begin(), step_list_in.end(), 0))
                               , step_list(step_list_in)
                               , expand_factor(expand_factor)
+                              , lambda(lambda)
+                              , use_grinding(use_grinding)
+                              , grinding_parameter(grinding_parameter)
                             {}
 
                             bool operator==(const params_type &rhs) const {
@@ -146,13 +205,19 @@ namespace nil {
                                     return false;
                                 }
                                 for( std::size_t i = 0; i < D.size(); i++){
-                                    if( D[i]->get_domain_element(1) != rhs.D[i]->get_domain_element(1)){
+                                    if( D[i]->get_domain_element(1) != rhs.D[i]->get_domain_element(1) ){
                                         return false;
                                     }
+                                }
+                                if(use_grinding && rhs.use_grinding && grinding_parameter != rhs.grinding_parameter){
+                                    return false;
                                 }
                                 return r == rhs.r
                                     && max_degree == rhs.max_degree
                                     && step_list == rhs.step_list
+                                    && expand_factor == rhs.expand_factor
+                                    && lambda == rhs.lambda
+                                    && use_grinding == rhs.use_grinding
                                 ;
                             }
 
@@ -227,15 +292,10 @@ namespace nil {
 
                             std::vector<commitment_type>                        fri_roots;        // 0,..step_list.size()
                             math::polynomial<typename field_type::value_type>   final_polynomial;
-                            std::array<query_proof_type, lambda>                query_proofs;     // 0...lambda - 1
+                            std::vector<query_proof_type>                       query_proofs;     // 0...lambda - 1
                             typename GrindingType::output_type                  proof_of_work;
                         };
                     };
-                    template <typename FRI>
-                    constexpr bool use_grinding()
-                    {
-                        return FRI::use_grinding;
-                    }
                 }    // namespace detail
             }        // namespace commitments
 
@@ -245,8 +305,8 @@ namespace nil {
                         std::is_base_of<
                             commitments::detail::basic_batched_fri<
                                 typename FRI::field_type, typename FRI::merkle_tree_hash_type,
-                                typename FRI::transcript_hash_type, FRI::lambda, FRI::m,
-                                FRI::use_grinding, typename FRI::grinding_type
+                                typename FRI::transcript_hash_type, FRI::m,
+                                typename FRI::grinding_type
                             >,
                             FRI
                         >::value,
@@ -261,8 +321,8 @@ namespace nil {
                         std::is_base_of<
                             commitments::detail::basic_batched_fri<
                                 typename FRI::field_type, typename FRI::merkle_tree_hash_type,
-                                typename FRI::transcript_hash_type, FRI::lambda, FRI::m,
-                                FRI::use_grinding, typename FRI::grinding_type
+                                typename FRI::transcript_hash_type, FRI::m,
+                                typename FRI::grinding_type
                             >,
                             FRI>::value,
                         bool>::type = true>
@@ -288,8 +348,7 @@ namespace nil {
                                 typename FRI::field_type,
                                 typename FRI::merkle_tree_hash_type,
                                 typename FRI::transcript_hash_type,
-                                FRI::lambda, FRI::m,
-                                FRI::use_grinding, typename FRI::grinding_type
+                                FRI::m, typename FRI::grinding_type
                             >,
                             FRI>::value,
                         bool>::type = true>
@@ -348,8 +407,7 @@ namespace nil {
                                         commitments::detail::basic_batched_fri<
                                                 typename FRI::field_type, typename FRI::merkle_tree_hash_type,
                                                 typename FRI::transcript_hash_type,
-                                                FRI::lambda, FRI::m,
-                                                FRI::use_grinding, typename FRI::grinding_type
+                                                FRI::m, typename FRI::grinding_type
                                         >,
                                         FRI>::value,
                                 bool>::type = true>
@@ -370,8 +428,8 @@ namespace nil {
                                 std::is_base_of<
                                         commitments::detail::basic_batched_fri<
                                                 typename FRI::field_type, typename FRI::merkle_tree_hash_type,
-                                                typename FRI::transcript_hash_type, FRI::lambda, FRI::m,
-                                                FRI::use_grinding, typename FRI::grinding_type>,
+                                                typename FRI::transcript_hash_type,
+                                                FRI::m, typename FRI::grinding_type>,
                                         FRI>::value,
                                 bool>::type = true>
                 static typename std::enable_if<
@@ -439,8 +497,7 @@ namespace nil {
                                         commitments::detail::basic_batched_fri<
                                                 typename FRI::field_type, typename FRI::merkle_tree_hash_type,
                                                 typename FRI::transcript_hash_type,
-                                                FRI::lambda, FRI::m,
-                                                FRI::use_grinding, typename FRI::grinding_type>,
+                                                FRI::m, typename FRI::grinding_type>,
                                         FRI>::value,
                                 bool>::type = true>
                 static typename std::enable_if<
@@ -608,8 +665,7 @@ namespace nil {
                                     commitments::detail::basic_batched_fri<
                                             typename FRI::field_type, typename FRI::merkle_tree_hash_type,
                                             typename FRI::transcript_hash_type,
-                                            FRI::lambda, FRI::m,
-                                            FRI::use_grinding, typename FRI::grinding_type>,
+                                            FRI::m, typename FRI::grinding_type>,
                                     FRI>::value,
                             bool>::type = true>
                 static typename FRI::proof_type proof_eval(
@@ -680,12 +736,12 @@ namespace nil {
                     }
 
                     // Grinding
-                    if( FRI::use_grinding ){
-                        proof.proof_of_work = FRI::grinding_type::generate(transcript);
+                    if( fri_params.use_grinding ){
+                        proof.proof_of_work = FRI::grinding_type::generate(transcript, fri_params.grinding_parameter);
                     }
 
                     // Query phase
-                    std::array<typename FRI::query_proof_type, FRI::lambda> query_proofs;
+                    std::vector<typename FRI::query_proof_type> query_proofs(fri_params.lambda);
 
                     // If we have DFS polynomials, and we are going to resize them, better convert them to coefficients form,
                     // and compute their values in those 2 * FRI::lambda points each, which is normally 2 * 20.
@@ -714,7 +770,7 @@ namespace nil {
                         }
                     }
 
-                    for (std::size_t query_id = 0; query_id < FRI::lambda; query_id++) {
+                    for (std::size_t query_id = 0; query_id < fri_params.lambda; query_id++) {
                         std::size_t domain_size = fri_params.D[0]->size();
                         typename FRI::field_type::value_type x = transcript.template challenge<typename FRI::field_type>();
                         x = x.pow((FRI::field_type::modulus - 1)/domain_size);
@@ -893,10 +949,10 @@ namespace nil {
                         }
                     }
 
-                    if(FRI::use_grinding && !FRI::grinding_type::verify(transcript, proof.proof_of_work)){
+                    if(fri_params.use_grinding && !FRI::grinding_type::verify(transcript, proof.proof_of_work, fri_params.grinding_parameter)){
                         return false;
                     }
-                    for (std::size_t query_id = 0; query_id < FRI::lambda; query_id++) {
+                    for (std::size_t query_id = 0; query_id < fri_params.lambda; query_id++) {
                         const typename FRI::query_proof_type &query_proof = proof.query_proofs[query_id];
 
                         std::size_t domain_size = fri_params.D[0]->size();

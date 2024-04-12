@@ -80,6 +80,42 @@ namespace nil {
                     bool relative;
                     column_type type;
 
+                    boost::json::value to_json() const {
+                        if (index != std::numeric_limits<std::size_t>::max()) {
+                            return boost::json::object{
+                                {"index", index},
+                                {"rotation", rotation},
+                                {"relative", relative},
+                                {"type", static_cast<std::uint8_t>(type)}
+                            };
+                        } else {
+                            return boost::json::object{
+                                {"index", "max_int"},
+                                {"rotation", rotation},
+                                {"relative", relative},
+                                {"type", static_cast<std::uint8_t>(type)}
+                            };
+                        }
+                    }
+
+                    plonk_variable(const boost::json::object& obj) {
+
+                        // index = obj.at("index").as_uint64();
+                        // std::cout << boost::json::serialize(obj) << "\n";
+                        if (obj.at("index").is_int64()) {
+                            index = static_cast<column_type>(obj.at("index").as_int64());
+                        } else if (obj.at("index").is_string()) {
+                            std::string indexStr = obj.at("index").as_string().c_str();
+                            if (indexStr == "max_int") {
+                                index = std::numeric_limits<std::size_t>::max();
+                            } else {
+                                std::abort();
+                            }
+                        }
+                        rotation = obj.at("rotation").as_int64();
+                        relative = obj.at("relative").as_bool();
+                    }
+
                     constexpr plonk_variable() : index(0), rotation(0), relative(false), type(column_type::uninitialized) {};
 
                     constexpr plonk_variable(const std::size_t index,

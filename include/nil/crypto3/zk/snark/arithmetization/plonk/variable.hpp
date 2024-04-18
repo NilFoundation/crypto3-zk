@@ -114,6 +114,21 @@ namespace nil {
                         }
                         rotation = obj.at("rotation").as_int64();
                         relative = obj.at("relative").as_bool();
+                        int type_from_json = obj.at("type").as_int64();
+                        switch(type_from_json) {
+                            case(0):
+                                type = column_type::witness;
+                                break;
+                            case(1):
+                                type = column_type::public_input;
+                                break;
+                            case(2):
+                                type = column_type::constant;
+                                break;
+                            case(3):
+                                type = column_type::selector;
+                                break;
+                        }
                     }
 
                     constexpr plonk_variable() : index(0), rotation(0), relative(false), type(column_type::uninitialized) {};

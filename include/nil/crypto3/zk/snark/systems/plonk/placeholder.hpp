@@ -44,26 +44,24 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace snark {
-                namespace detail {
-                    template<typename FieldType, typename PlaceholderParams>
-                    struct placeholder_policy {
-                        /******************************** Params ********************************/
+                template<typename FieldType, typename PlaceholderParams>
+                struct placeholder {
+                    /******************************** Params ********************************/
 
-                        /**
-                         * Below are various template aliases (used for convenience).
-                         */
+                    /**
+                     * Below are various template aliases (used for convenience).
+                     */
 
-                        typedef plonk_constraint_system<FieldType> constraint_system_type;
+                    typedef plonk_constraint_system<FieldType> constraint_system_type;
 
-                        typedef FieldType field_type;
-                        typedef PlaceholderParams placeholder_params_type;
+                    typedef FieldType field_type;
+                    typedef PlaceholderParams placeholder_params_type;
 
-                        typedef plonk_assignment_table<FieldType> variable_assignment_type;
+                    typedef plonk_assignment_table<FieldType> variable_assignment_type;
 
-                        typedef detail::plonk_evaluation_map<plonk_variable<typename FieldType::value_type>> evaluation_map;
+                    typedef detail::plonk_evaluation_map<plonk_variable<typename FieldType::value_type>> evaluation_map;
 
-                    };
-                }    // namespace detail
+                };
             }        // namespace snark
         }            // namespace zk
     }                // namespace crypto3

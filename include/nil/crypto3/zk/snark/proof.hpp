@@ -31,9 +31,9 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace snark {
-                template<typename ZkScheme>
-                class proof : public zk::proof<ZkScheme> {
-                    typedef zk::proof<ZkScheme> policy_type;
+                template<typename ProofSystemType>
+                class proof : public zk::proof<ProofSystemType> {
+                    typedef zk::proof<ProofSystemType> policy_type;
 
                 public:
                     typedef typename policy_type::scheme_type scheme_type;

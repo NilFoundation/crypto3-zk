@@ -31,9 +31,9 @@ namespace nil {
     namespace crypto3 {
         namespace zk {
             namespace snark {
-                template<typename ZkScheme>
+                template<typename ProofSystemType>
                 struct verification_key {
-                    typedef ZkScheme scheme_type;
+                    typedef ProofSystemType scheme_type;
                 };
             }    // namespace snark
         }        // namespace zk

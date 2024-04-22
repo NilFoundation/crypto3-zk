@@ -46,7 +46,7 @@
 #include <nil/crypto3/zk/snark/arithmetization/plonk/gate.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint_system.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/constraint.hpp>
 #include <nil/crypto3/zk/math/expression.hpp>
 #include <nil/crypto3/zk/math/expression_evaluator.hpp>
@@ -69,7 +69,7 @@ namespace nil {
                     using variable_type = plonk_variable<typename FieldType::value_type>;
                     using polynomial_dfs_variable_type = plonk_variable<polynomial_dfs_type>;
 
-                    typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
+                    typedef placeholder<FieldType, ParamsType> policy_type;
 
                     constexpr static const std::size_t argument_size = 1;
 

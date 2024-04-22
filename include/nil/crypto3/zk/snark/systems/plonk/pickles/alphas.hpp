@@ -38,7 +38,6 @@ namespace nil {
         namespace zk {
             namespace snark {
                 enum argument_type;
-
                 template<typename FieldType>
                 struct Alphas {
                     /// The next power of alpha to use
@@ -49,16 +48,16 @@ namespace nil {
                     /// The powers of alpha: 1, alpha, alpha^2, etc.
                     /// If set to [Some], you can't register new constraints.
                     std::vector<typename FieldType::value_type> alphas;
-                    std::unordered_map<argument_type, std::pair<int, int>> mapping; 
+                    std::unordered_map<argument_type, std::pair<int, int>> mapping;
 
                     Alphas() : next_power(0) {}
                     // Create alphas from 0 to next_power - 1
 
-                    void register_(argument_type arg, int power){
-                        if(mapping.find(arg) == mapping.end()){
+                    void register_(argument_type arg, int power) {
+                        if (mapping.find(arg) == mapping.end()) {
                             mapping[arg] = std::make_pair(next_power, power);
                         }
-                        
+
                         next_power += power;
                     }
 
@@ -76,7 +75,7 @@ namespace nil {
 
                     // Return num alphas
                     std::vector<typename FieldType::value_type> get_alphas(argument_type arg, std::size_t num) {
-                        if(mapping.find(arg) == mapping.end()){
+                        if (mapping.find(arg) == mapping.end()) {
                             assert(false);
                         }
                         std::pair<int, int> range = mapping[arg];

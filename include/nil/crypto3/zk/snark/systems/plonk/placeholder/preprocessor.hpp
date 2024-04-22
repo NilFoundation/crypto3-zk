@@ -42,7 +42,7 @@
 #include <nil/crypto3/zk/math/expression.hpp>
 #include <nil/crypto3/zk/math/expression_visitors.hpp>
 #include <nil/crypto3/zk/math/permutation.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_policy.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/detail/placeholder_scoped_profiler.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/copy_constraint.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/table_description.hpp>
@@ -64,7 +64,7 @@ namespace nil {
 
                 template<typename FieldType, typename ParamsType>
                 class placeholder_public_preprocessor {
-                    typedef detail::placeholder_policy<FieldType, ParamsType> policy_type;
+                    typedef placeholder<FieldType, ParamsType> policy_type;
                     typedef typename plonk_constraint<FieldType>::variable_type variable_type;
                     typedef typename math::polynomial<typename FieldType::value_type> polynomial_type;
                     typedef typename math::polynomial_dfs<typename FieldType::value_type> polynomial_dfs_type;
@@ -613,7 +613,7 @@ namespace nil {
 
                 template<typename FieldType, typename ParamsType>
                 class placeholder_private_preprocessor {
-                    using policy_type = detail::placeholder_policy<FieldType, ParamsType>;
+                    using policy_type = placeholder<FieldType, ParamsType>;
 
                 public:
                     struct preprocessed_data_type {

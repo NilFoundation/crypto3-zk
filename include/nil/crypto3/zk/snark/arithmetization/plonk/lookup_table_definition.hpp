@@ -276,11 +276,9 @@ namespace nil {
 
                         // Place table into constant_columns.
                         for( std::size_t i = 0; i < table->get_table().size(); i++ ){
+                            usable_rows_after = std::max(usable_rows_after, start_row + table->get_table()[i].size());
                             if(constant_columns[start_constant_column + i].size() < start_row + table->get_table()[i].size()){
                                 constant_columns[start_constant_column + i].resize(start_row + table->get_table()[i].size());
-                                if( usable_rows_after < start_row + table->get_table()[i].size() ){
-                                    usable_rows_after = start_row + table->get_table()[i].size();
-                                }
                             }
                             for( std::size_t j = 0; j < table->get_table()[i].size(); j++ ){
                                 constant_columns[start_constant_column + i][start_row + j] = table->get_table()[i][j];
@@ -306,7 +304,7 @@ namespace nil {
                             }
                             // Create selector
                             plonk_column<FieldType> selector_column(usable_rows_after, FieldType::value_type::zero());
-                            // std::cout  << "selector for " << subtable_name << " from " << start_row + subtable.begin << " to " << start_row + subtable.end << std::endl;
+                            // std::cout  << "selector for " << table_name << "/" << subtable_name << " from " << start_row + subtable.begin << " to " << start_row + subtable.end << std::endl;
                             for(std::size_t k = subtable.begin; k <= subtable.end; k++){
                                 selector_column[start_row + k] = FieldType::value_type::one();
                             }

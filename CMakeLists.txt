@@ -50,8 +50,6 @@ cm_find_package(CM)
 include(CMDeploy)
 include(FindPkgConfig)
 
-option(BUILD_TESTS "Build unit tests" FALSE)
-
 cm_setup_version(VERSION 0.1.0 PREFIX ${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME})
 
 add_library(${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME} INTERFACE)
@@ -81,6 +79,5 @@ cm_deploy(TARGETS ${CMAKE_WORKSPACE_NAME}_${CURRENT_PROJECT_NAME}
           NAMESPACE ${CMAKE_WORKSPACE_NAME}::)
 
 
-if(BUILD_TESTS)
-    add_subdirectory(test)
-endif()
+include(CMTest)
+cm_add_test_subdirectory(test)

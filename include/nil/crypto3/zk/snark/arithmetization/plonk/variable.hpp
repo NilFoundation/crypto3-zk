@@ -36,6 +36,7 @@
 #include <functional>
 #include <map>
 #include <boost/functional/hash.hpp>
+#include <boost/json/object.hpp>
 
 namespace nil {
     namespace crypto3 {
